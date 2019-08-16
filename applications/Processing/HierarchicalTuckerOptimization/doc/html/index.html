@@ -1,0 +1,134 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Missing trace interpolation of 3D seismic data using the</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.1">
+      <meta name="date" content="2014-04-11">
+      <meta name="m-file" content="index">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>Missing trace interpolation of 3D seismic data using the</h1>
+         <introduction></introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Hierarchical Tucker tensor format</a></li>
+               <li><a href="#2">Downloading &amp; Dependencies</a></li>
+               <li><a href="#3">Running &amp; Parallelism</a></li>
+               <li><a href="#4">Functions</a></li>
+               <li><a href="#5">Examples and results</a></li>
+               <li><a href="#6">References</a></li>
+               <li><a href="#7">Acknowledgements</a></li>
+            </ul>
+         </div>
+         <h2>Hierarchical Tucker tensor format<a name="1"></a></h2>
+         <p>This applications is available only in the software release for members of SINBAD consortium.</p>
+         <p>This software provides an algorithm for missing trace/receiver interpolation of 3D seismic data using the latent Hierarchical
+            Tucker tensor format. The algorithm operates on a single frequency slice, although an extension to an arbitrary number of
+            frequency slices is straightforward.
+         </p>
+         <p>Author: Curt Da Silva (<a href="mailto:curtd@math.ubc.ca">curtd@math.ubc.ca</a>)
+         </p>
+         <p>Date: March, 2014</p>
+         <h2>Downloading &amp; Dependencies<a name="2"></a></h2>
+         <p>The synthetic examples code can be found in the <a href="https://slim.gatech.edu/consortiumsoftware">SLIM software release</a> under <tt>applications/Processing/HierarchicalTuckerOptimization</tt>.
+         </p>
+         <p>The code has been tested with <i>Matlab R2013a</i> and supports, but does not require, the Parallel Computing Toolbox.
+         </p>
+         <p>This code uses the following packages, also found in the <tt>tools</tt> part of the <a href="https://slim.gatech.edu/consortiumsoftware">SLIM software release</a>.
+         </p>
+         <div>
+            <ul>
+               <li>_utilities/SPOT-SLIM - object oriented framework for matrix-free linear algebra.</li>
+               <li>_tools/solvers/HTOpt - Hierarchical Tucker tensor algorithms</li>
+            </ul>
+         </div>
+         <h2>Running &amp; Parallelism<a name="3"></a></h2>
+         <p>All of the examples and results are produced by the scripts found in this software release under <tt>/applications/Processing/HierarchicalTuckerOptimization/examples</tt>. Start matlab from <tt>/applications/Processing/HierarchicalTuckerOptimization</tt> to add the appropriate paths.
+         </p>
+         <p>To run the scripts, follow the instructions in the README.md file enclosed with the code</p>
+         <h2>Functions<a name="4"></a></h2>
+         <p>The missing-trace tensor interpolation using Hierarchical Tucker tensors can be found in <tt>_tools/algorithms/HTOpt</tt>, with accompanying documentation in the README.md file.
+         </p>
+         <h2>Examples and results<a name="5"></a></h2>
+         <p>Several examples (serial and parallel versions) of missing trace interpolation using these methods can be found in <tt>applications/Processing/HierarchicalTuckerOptimization/examples</tt></p>
+         <p>Results are of missing-receiver interpolation is shown in <a href="interp4Dview.html">interp4Dview.m</a></p>
+         <h2>References<a name="6"></a></h2>
+         <p><a href="https://slim.gatech.edu/Publications/Public/TechReport/2014/dasilva2014htuck/dasilva2014htuck.pdf">[1]</a> C. Da Silva and F. J. Herrmann, 2014. Optimization on the Hierarchical Tucker manifold - applications to tensor completion
+         </p>
+         <p><a href="https://slim.gatech.edu/Publications/Public/Conferences/SAMPTA/2013/dasilva2013SAMPTAhtuck/dasilva2013SAMPTAhtuck.pdf">[2]</a> C. Da Silva and F. J. Herrmann, 2013. Hierarchical Tucker Tensor Optimization - Applications to Tensor Completion
+         </p>
+         <h2>Acknowledgements<a name="7"></a></h2>
+         <p>Thanks to our sponsors and NSERC for their financial support.</p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Missing trace interpolation of 3D seismic data using the
+%% Hierarchical Tucker tensor format
+%
+% This applications is available only in the software release for members of SINBAD consortium.
+%
+% This software provides an algorithm for missing trace/receiver
+% interpolation of 3D seismic data using the latent Hierarchical
+% Tucker tensor format. The algorithm operates on a single
+% frequency slice, although an extension to an arbitrary number of
+% frequency slices is straightforward.  
+%
+% Author: Curt Da Silva (curtd@math.ubc.ca)
+%
+% Date: March, 2014
+
+%% Downloading & Dependencies
+% The synthetic examples code can be found in the <https://slim.gatech.edu/consortiumsoftware SLIM software release> under
+% |applications/Processing/HierarchicalTuckerOptimization|.
+%
+% The code has been tested with _Matlab R2013a_ and supports, but does not require, the Parallel Computing Toolbox.
+%
+% This code uses the following packages, also found in the |tools| part of the 
+% <https://slim.gatech.edu/consortiumsoftware SLIM software release>.
+%
+% * _utilities/SPOT-SLIM - object oriented framework for matrix-free linear algebra.
+% * _tools/solvers/HTOpt - Hierarchical Tucker tensor algorithms
+
+%% Running & Parallelism
+% All of the examples and results are produced by the scripts found in this software release under |/applications/Processing/HierarchicalTuckerOptimization/examples|.
+% Start matlab from |/applications/Processing/HierarchicalTuckerOptimization| to add the appropriate paths.
+%
+% To run the scripts, follow the instructions in the README.md file enclosed with the code
+
+%% Functions
+% The missing-trace tensor interpolation using Hierarchical Tucker
+% tensors can be found in |_tools/algorithms/HTOpt|, with
+% accompanying documentation in the README.md file.
+% 
+
+%% Examples and results
+% Several examples (serial and parallel versions) of missing trace
+% interpolation using these methods can be found in 
+% |applications/Processing/HierarchicalTuckerOptimization/examples|
+% 
+% Results are of missing-receiver interpolation is shown in <interp4Dview.html interp4Dview.m>
+
+%% References
+% <https://slim.gatech.edu/Publications/Public/TechReport/2014/dasilva2014htuck/dasilva2014htuck.pdf [1]> C. Da Silva and F. J. Herrmann, 2014. Optimization on the Hierarchical Tucker manifold - applications to tensor completion
+%
+%
+% <https://slim.gatech.edu/Publications/Public/Conferences/SAMPTA/2013/dasilva2013SAMPTAhtuck/dasilva2013SAMPTAhtuck.pdf [2]> C. Da Silva and F. J. Herrmann, 2013. Hierarchical Tucker Tensor Optimization - Applications to Tensor Completion
+
+%% Acknowledgements
+% Thanks to our sponsors and NSERC for their financial support.
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

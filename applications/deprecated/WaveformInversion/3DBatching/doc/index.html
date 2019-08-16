@@ -1,0 +1,154 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>3D Frequency-domain FWI with batching</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 7.13">
+      <meta name="date" content="2013-04-04">
+      <meta name="m-file" content="index">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>3D Frequency-domain FWI with batching</h1>
+         <introduction>
+            <p>This software release includes a demonstration of 3D frequency-domain FWI inversion using a row-projected Helmholtz solver
+               described in
+            </p>
+            <p>[1] T. van Leeuwen, D. Gordon, R. Gordon, and F.J. Herrmann, <i>Preconditioning the Helmholtz equation via row-projections</i>, in EAGE technical program, 2012
+            </p>
+            <p>[2] T. van Leeuwen, <i>Fourier analysis of the CGMN method for solving the Helmholtz equation</i>, arXiv:1210.2644
+            </p>
+            <p>[3] T. van Leeuwen and F.J. Herrmann, <i>3D Frequency-domain seismic inversion using a row-projected Helmholtz solver</i>, UBC Tech. report.
+            </p>
+            <p>Author: Tristan van Leeuwen Date  : March, 2013</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Downloading &amp; Dependencies</a></li>
+               <li><a href="#2">Running &amp; Parallelism</a></li>
+               <li><a href="#3">Functions</a></li>
+               <li><a href="#4">Examples and results</a></li>
+            </ul>
+         </div>
+         <h2>Downloading &amp; Dependencies<a name="1"></a></h2>
+         <p>The code can be found in the <a href="https://slim.gatech.edu/consortiumsoftware">SLIM sofware release</a> under <tt>/applications/WaveformInversion/3DBatching</tt>.
+         </p>
+         <p>The code has been tested with <i>Matlab R2012b</i> and requires the Parallel Computing Toolbox for some of the functionality.
+         </p>
+         <p>This code uses the following packages, also found in the <tt>tools</tt> part of the <a href="https://slim.gatech.edu/consortiumsoftware">SLIM software release</a>.
+         </p>
+         <div>
+            <ul>
+               <li><i>utilities/SPOT</i> - object oriented framework for matrix-free linear algebra.
+               </li>
+               <li><i>utilities/pSPOT</i> - parallel extension of SPOT.
+               </li>
+               <li><i>algorithms/3DFreqModeling</i> - 3D variable-density acoustic modeling
+               </li>
+               <li><i>operators/misc</i> - Misc. operators such as interpolation, smoothing and splines
+               </li>
+               <li><i>functions/misc</i> - Misc. functions.
+               </li>
+            </ul>
+         </div>
+         <h2>Running &amp; Parallelism<a name="2"></a></h2>
+         <p>All the examples and results are produced by the scripts found in this software release under <tt>applications/WaveformInversion/3DBatching/</tt>. Start matlab from that directory or run <tt>startup</tt> in that directory to add the appropriate paths.
+         </p>
+         <p>To run the scripts follow the instrictions in the README file enclosed with the code. Most scripts can be run in serial mode.</p>
+         <p>Read more about <a href="https://slim.gatech.edu/SoftwareDemos/tools/">SLIM's approach to parallel computing in Matlab</a>.
+         </p>
+         <h2>Functions<a name="3"></a></h2>
+         <p>The functions specific to this package can be found in the <tt>mbin</tt> directory.
+         </p>
+         <div>
+            <ul>
+               <li><tt>misfit</tt>      - Least-squares misfit function for 3D FWI including source-estimation
+               </li>
+               <li><tt>lbfgs_batch</tt> - L-BFGS with Wolfe linesearch and batching
+               </li>
+               <li><tt>runFWI</tt>      - driver for FWI
+               </li>
+               <li><tt>runCARPCG</tt>   - driver for rowprojected Helmholtz solver
+               </li>
+               <li><tt>getoption</tt>   - option parser
+               </li>
+            </ul>
+         </div>
+         <h2>Examples and results<a name="4"></a></h2>
+         <p>Scripts to reproduce some of the examples found in [3] can be found in the <tt>scripts</tt> directory. <a href="results.html">The results are shown here</a>.
+         </p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% 3D Frequency-domain FWI with batching
+%
+% This software release includes a demonstration of 3D frequency-domain
+% FWI inversion using a row-projected Helmholtz solver described in 
+%
+% [1] T. van Leeuwen, D. Gordon, R. Gordon, and F.J. Herrmann, _Preconditioning the Helmholtz equation via row-projections_, in EAGE technical program, 2012
+%
+% [2] T. van Leeuwen, _Fourier analysis of the CGMN method for solving the Helmholtz equation_, arXiv:1210.2644
+%
+% [3] T. van Leeuwen and F.J. Herrmann, _3D Frequency-domain seismic inversion using a row-projected Helmholtz solver_, UBC Tech. report.
+%
+% Author: Tristan van Leeuwen
+% Date  : March, 2013
+
+
+%% Downloading & Dependencies
+% The code can be found in the <https://slim.gatech.edu/consortiumsoftware SLIM sofware release> under
+% |/applications/WaveformInversion/3DBatching|.
+%
+% The code has been tested with _Matlab R2012b_ and requires the Parallel
+% Computing Toolbox for some of the functionality.
+%
+% This code uses the following packages, also found in the |tools| part
+% of the <https://slim.gatech.edu/consortiumsoftware SLIM software release>.
+%
+% * _utilities/SPOT_ - object oriented framework for matrix-free linear algebra.
+% * _utilities/pSPOT_ - parallel extension of SPOT.
+% * _algorithms/3DFreqModeling_ - 3D variable-density acoustic modeling
+% * _operators/misc_ - Misc. operators such as interpolation, smoothing and splines
+% * _functions/misc_ - Misc. functions.
+
+%% Running & Parallelism
+% All the examples and results are produced by the scripts found in
+% this software release under |applications/WaveformInversion/3DBatching/|. 
+% Start matlab from that directory or run |startup| in that directory to add the appropriate paths.
+%
+% To run the scripts follow the instrictions in the README file enclosed
+% with the code.
+% Most scripts can be run in serial mode.
+% 
+% Read more about <https://slim.gatech.edu/SoftwareDemos/tools/ SLIM's approach to parallel computing in Matlab>.
+
+%% Functions
+% The functions specific to this package can be found in the |mbin|
+% directory.
+% 
+% * |misfit|      - Least-squares misfit function for 3D FWI including source-estimation
+% * |lbfgs_batch| - L-BFGS with Wolfe linesearch and batching
+% * |runFWI|      - driver for FWI
+% * |runCARPCG|   - driver for rowprojected Helmholtz solver
+% * |getoption|   - option parser
+
+%% Examples and results
+%
+% Scripts to reproduce some of the examples found in [3] can be found in the |scripts| directory. 
+% <results.html The results are shown here>.
+
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

@@ -1,0 +1,380 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>FWI Template</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 7.12">
+      <meta name="date" content="2012-03-12">
+      <meta name="m-file" content="fwitemplate">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>FWI Template</h1>
+         <introduction>
+            <p>This script sketches a possible procedure for running the FWI code on your own model and data. The script contains dummy values
+               for the velocity model etc. You can run it directly or replace the dummy values with your own. Please contact us if you have
+               any special needs or questions.
+            </p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">define velocity model</a></li>
+               <li><a href="#2">define modeling parameters</a></li>
+               <li><a href="#3">define source matrix</a></li>
+               <li><a href="#6">model data</a></li>
+               <li><a href="#9">Read data</a></li>
+               <li><a href="#10">Sanity check before proceeding</a></li>
+               <li><a href="#11">Simple least-squares inversion</a></li>
+               <li><a href="#14">Simultaneous source FWI</a></li>
+               <li><a href="#16">Batching optimization</a></li>
+            </ul>
+         </div>
+         <h2>define velocity model<a name="1"></a></h2>
+         <p>Read the velocity model(s) into matlab and define the grid parameters {o,d,n}. The model should be a vector with slowness-squared
+            values in [s^2/km^2] with depth as the fast dimension.
+         </p><pre class="codeinput"><span class="comment">% random two-layer model</span>
+m  = 1/2.^2*ones(51*51,1) - .1*vec(sort(round(rand(51,51,1))));
+m0 = 1/2.^2*ones(51*51,1);
+<span class="comment">% origin of the model, this is not really used so use o = [0 0]</span>
+o = [0 0];
+<span class="comment">% grid spacing in meters in the z and x direction respectively</span>
+d = [10 10];
+<span class="comment">% size of the model in the z and x direction respectively</span>
+n = [51 51];
+
+figure;imagesc(reshape(1./sqrt(m),n),[2 3]);colorbar;
+title(<span class="string">'velocity [km/s]'</span>);
+</pre><h2>define modeling parameters<a name="2"></a></h2>
+         <p>Next, define the modeling parameters</p><pre class="codeinput"><span class="comment">% grid:</span>
+model.o = o;
+model.d = d;
+model.n = n;
+<span class="comment">% number of boundary points in each direction, the size should be on the</span>
+<span class="comment">% order of the largest wavelengt.</span>
+model.nb = [50 50];
+<span class="comment">%frequencies in Herz</span>
+model.freq = [5 10 15];
+<span class="comment">%peak-frequency of Ricker wavelet</span>
+model.f0 = 15;
+<span class="comment">%phase-shift of wavelet</span>
+model.t0 = .1;
+<span class="comment">%source grid in z and x direction</span>
+model.zsrc = 10;
+model.xsrc = [0:10:500];
+<span class="comment">%receiver grid in z and x direction</span>
+model.zrec = 10;
+model.xrec = [0:10:500];
+<span class="comment">%</span>
+</pre><h2>define source matrix<a name="3"></a></h2>
+         <p>The source matrix is organized as follows. Each column represents a gridded source function which is defined on the source-grid.
+            The number of rows of the matrix should match the size of the source-grid. The number of columns defines the number of sources.
+            For example, to use point sources let Q be an identity matrix
+         </p><pre class="codeinput">Q = speye(length(model.xsrc));
+</pre><p>The number of sources, receivers and frequencues are now defined as</p><pre class="codeinput">nsrc  = size(Q,2);
+nrec  = length(model.xrec)*length(model.zrec);
+nfreq = length(model.freq);
+</pre><p>For larger problems it is advisable to start a parallel pool. Keep in mind that the computation is done parallel over frequencies
+            when choosing the number of workers.
+         </p><pre class="codeinput">parpool(3)
+</pre><h2>model data<a name="6"></a></h2>
+         <p>Data can now be modeled for a model m via</p><pre class="codeinput">D = F(m,Q,model);
+</pre><p>see also help F.</p>
+         <p>The data will be given as a distributed vector with underlying dimensions <tt>[nrec, nsrc, nfreq]</tt>. In order to write the data to disk, use <tt>gather(D)</tt> to get the data as normal matlab array. In order to plot the data, first reshape to a data-cube <tt>reshape(D,[nrec, nsrc, nfreq])</tt>.
+         </p><pre class="codeinput"><span class="comment">% plot the data</span>
+cube = reshape(gather(D),[nrec, nsrc, nfreq]);
+figure;
+subplot(1,3,1);
+imagesc(real(cube(:,:,1)));title([<span class="string">'Data @ '</span> num2str(model.freq(1)) <span class="string">' Hz'</span>]);
+subplot(1,3,2);
+imagesc(real(cube(:,:,2)));title([<span class="string">'Data @ '</span> num2str(model.freq(2)) <span class="string">' Hz'</span>]);
+subplot(1,3,3);
+imagesc(real(cube(:,:,3)));title([<span class="string">'Data @ '</span> num2str(model.freq(3)) <span class="string">' Hz'</span>]);
+</pre><h2>Read data<a name="9"></a></h2>
+         <p>Alternatively, read data that match the above size specifications. Use <tt>distributed(D)</tt> to convert the Matlab array into a distributed array.
+         </p>
+         <h2>Sanity check before proceeding<a name="10"></a></h2>
+         <p>At this point, we need data <tt>D</tt> as distrubuted array, a source matrix <tt>Q</tt>, an initial model <tt>m0</tt> and a struct with model parameters <tt>model</tt>. Here are some checks to make sure that they are consistent with each other.
+         </p><pre class="codeinput"><span class="comment">% size of data according to model</span>
+nsrc  = size(Q,2);
+nrec  = length(model.xrec)*length(model.zrec);
+nfreq = length(model.freq);
+
+<span class="comment">% check size of D</span>
+<span class="keyword">if</span> size(D,2)~=1
+    error(<span class="string">'Data is not a vector, try D = vec(D)\n'</span>);
+<span class="keyword">end</span>
+<span class="keyword">if</span> size(D,1)~=nsrc*nrec*nfreq
+    error(<span class="string">'Size of D does not match specifications in model struct.\n'</span>);
+<span class="keyword">end</span>
+<span class="keyword">if</span> ~isdistributed(D)
+    error(<span class="string">'Data is not distributed, try D = distributed(D)\n'</span>);
+<span class="keyword">end</span>
+
+<span class="comment">% check size of m0</span>
+<span class="keyword">if</span> size(m0,2)~=1
+    error(<span class="string">'model is not a vector, try m0 = vec(m0)\n'</span>);
+<span class="keyword">end</span>
+<span class="keyword">if</span> size(m0,1)~=prod(model.n)
+    error(<span class="string">'Size of m0 does not match specifications in model struct.\n'</span>);
+<span class="keyword">end</span>
+
+<span class="comment">% check size of Q</span>
+<span class="keyword">if</span> size(Q,1)~=length(model.xsrc)*length(model.zsrc);
+    error(<span class="string">'Length of source vector does not match source-grid definition in model struct\n'</span>);
+<span class="keyword">end</span>
+</pre><h2>Simple least-squares inversion<a name="11"></a></h2>
+         <p>For a simple least-squares inversion, first create a function handle the misfit</p><pre class="codeinput">fh1 = @(x)Jls(x,Q,D,model);
+</pre><p>see also help Jls.</p>
+         <p>We can now start LBFGS with the default options as:</p><pre class="codeinput">m1 = mylbfgs(fh1,m0);
+
+<span class="comment">% plot the result</span>
+figure;
+imagesc(reshape(1./sqrt(m1),model.n),[1.9 2.1]);colorbar;
+title(<span class="string">'LBFGS reconstruction'</span>);
+</pre><p>For more options, type help mylbfgs</p>
+         <h2>Simultaneous source FWI<a name="14"></a></h2>
+         <p>To define 2 random simultaneous sources we can multiply <tt>Q</tt> with a random matrix, for example
+         </p><pre class="codeinput">W = randn(size(Q,2),2);
+</pre><p>The function-handle is of the form, params can be used to specify the penalty function.</p><pre class="codeinput">params = [];
+fh2 = @(x)JW(x,Q,D,W,model,params);
+m2  = mylbfgs(fh2,m0);
+
+<span class="comment">% plot the result</span>
+figure;
+imagesc(reshape(1./sqrt(m2),model.n),[1.9 2.1]);colorbar;
+title(<span class="string">'SimSource LBFGS reconstruction'</span>);
+</pre><h2>Batching optimization<a name="16"></a></h2>
+         <p>Here, the function handle is of the form</p><pre class="codeinput">params = [];
+fh3 = @(x,I)JI_src(x,Q,D,I,model,params);
+</pre><p>params is used to specify additional options, see help JI_src.</p>
+         <p>For the optimization, use lbfgsbatch (see als help lbfgsbatch):</p><pre class="codeinput"><span class="comment">% total number of sources</span>
+options.m = nsrc;
+m3 = lbfgsbatch(fh3,m0,options);
+
+<span class="comment">% plot the result</span>
+figure;
+imagesc(reshape(1./sqrt(m3),model.n),[1.9 2.1]);colorbar;
+title(<span class="string">'Batching LBFGS reconstruction'</span>);
+</pre><p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% FWI Template
+% This script sketches a possible procedure for running the FWI code on your own model and data.
+% The script contains dummy values for the velocity model etc. You can run
+% it directly or replace the dummy values with your own.
+% Please contact us if you have any special needs or questions.
+
+
+%% define velocity model
+%
+% Read the velocity model(s) into matlab and define the grid parameters {o,d,n}. 
+% The model should be a vector with slowness-squared values in [s^2/km^2] with depth as the fast dimension. 
+
+% random two-layer model
+m  = 1/2.^2*ones(51*51,1) - .1*vec(sort(round(rand(51,51,1)))); 
+m0 = 1/2.^2*ones(51*51,1);
+% origin of the model, this is not really used so use o = [0 0]
+o = [0 0];
+% grid spacing in meters in the z and x direction respectively
+d = [10 10];
+% size of the model in the z and x direction respectively
+n = [51 51];
+
+figure;imagesc(reshape(1./sqrt(m),n),[2 3]);colorbar;
+title('velocity [km/s]');
+
+%% define modeling parameters
+%
+% Next, define the modeling parameters
+
+% grid:
+model.o = o;
+model.d = d;
+model.n = n;
+% number of boundary points in each direction, the size should be on the
+% order of the largest wavelengt.
+model.nb = [50 50];
+%frequencies in Herz
+model.freq = [5 10 15];
+%peak-frequency of Ricker wavelet
+model.f0 = 15;
+%phase-shift of wavelet
+model.t0 = .1;
+%source grid in z and x direction
+model.zsrc = 10;
+model.xsrc = [0:10:500];
+%receiver grid in z and x direction
+model.zrec = 10;
+model.xrec = [0:10:500];
+%
+
+
+%% define source matrix
+%
+% The source matrix is organized as follows. Each column represents a gridded source function which is 
+% defined on the source-grid. The number of rows of the matrix should match the size of the source-grid.
+% The number of columns defines the number of sources. 
+% For example, to use point sources let Q be an identity matrix
+
+Q = speye(length(model.xsrc));
+
+
+%%
+% The number of sources, receivers and frequencues are now defined as 
+nsrc  = size(Q,2);
+nrec  = length(model.xrec)*length(model.zrec);
+nfreq = length(model.freq);
+
+%%
+% For larger problems it is advisable to start a parallel pool. 
+% Keep in mind that the computation is done parallel over frequencies when choosing the number of workers.
+
+parpool(3)
+
+%% model data
+%
+% Data can now be modeled for a model m via
+
+D = F(m,Q,model);
+
+%%
+% see also help F.
+%
+
+%%
+% The data will be given as a distributed vector with underlying dimensions |[nrec, nsrc, nfreq]|. 
+% In order to write the data to disk, use |gather(D)| to get the data as normal matlab array.
+% In order to plot the data, first reshape to a data-cube |reshape(D,[nrec, nsrc, nfreq])|.
+
+% plot the data
+cube = reshape(gather(D),[nrec, nsrc, nfreq]);
+figure;
+subplot(1,3,1);
+imagesc(real(cube(:,:,1)));title(['Data @ ' num2str(model.freq(1)) ' Hz']);
+subplot(1,3,2);
+imagesc(real(cube(:,:,2)));title(['Data @ ' num2str(model.freq(2)) ' Hz']);
+subplot(1,3,3);
+imagesc(real(cube(:,:,3)));title(['Data @ ' num2str(model.freq(3)) ' Hz']);
+
+
+%% Read data
+% Alternatively, read data that match the above size specifications.
+% Use |distributed(D)| to convert the Matlab array into a distributed array.
+
+%% Sanity check before proceeding
+% 
+% At this point, we need data |D| as distrubuted array, a source matrix |Q|, an initial model
+% |m0| and a struct with model parameters |model|. Here are some checks to
+% make sure that they are consistent with each other.
+
+% size of data according to model
+nsrc  = size(Q,2);
+nrec  = length(model.xrec)*length(model.zrec);
+nfreq = length(model.freq);
+
+% check size of D
+if size(D,2)~=1
+    error('Data is not a vector, try D = vec(D)\n');
+end
+if size(D,1)~=nsrc*nrec*nfreq
+    error('Size of D does not match specifications in model struct.\n');
+end
+if ~isdistributed(D)
+    error('Data is not distributed, try D = distributed(D)\n');
+end
+
+% check size of m0
+if size(m0,2)~=1
+    error('model is not a vector, try m0 = vec(m0)\n');
+end
+if size(m0,1)~=prod(model.n)
+    error('Size of m0 does not match specifications in model struct.\n');
+end
+
+% check size of Q
+if size(Q,1)~=length(model.xsrc)*length(model.zsrc);
+    error('Length of source vector does not match source-grid definition in model struct\n');
+end
+
+
+%% Simple least-squares inversion
+% 
+% For a simple least-squares inversion, first create a function handle the misfit
+
+fh1 = @(x)Jls(x,Q,D,model);
+
+%% 
+% see also help Jls.
+%
+% We can now start LBFGS with the default options as:
+
+m1 = mylbfgs(fh1,m0);
+
+% plot the result
+figure;
+imagesc(reshape(1./sqrt(m1),model.n),[1.9 2.1]);colorbar;
+title('LBFGS reconstruction');
+
+%%
+% For more options, type help mylbfgs
+
+%% Simultaneous source FWI
+%
+% To define 2 random simultaneous sources we can multiply |Q| with a random
+% matrix, for example
+
+W = randn(size(Q,2),2);
+
+%%
+% The function-handle is of the form, params can be used to specify the
+% penalty function.
+
+params = [];
+fh2 = @(x)JW(x,Q,D,W,model,params);
+m2  = mylbfgs(fh2,m0);
+
+% plot the result
+figure;
+imagesc(reshape(1./sqrt(m2),model.n),[1.9 2.1]);colorbar;
+title('SimSource LBFGS reconstruction');
+
+
+%% Batching optimization
+%
+% Here, the function handle is of the form
+
+params = [];
+fh3 = @(x,I)JI_src(x,Q,D,I,model,params);
+
+%%
+% params is used to specify additional options, see help JI_src.
+%
+% For the optimization, use lbfgsbatch (see als help lbfgsbatch):
+
+% total number of sources
+options.m = nsrc;
+m3 = lbfgsbatch(fh3,m0,options);
+
+% plot the result
+figure;
+imagesc(reshape(1./sqrt(m3),model.n),[1.9 2.1]);colorbar;
+title('Batching LBFGS reconstruction');
+
+
+
+
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

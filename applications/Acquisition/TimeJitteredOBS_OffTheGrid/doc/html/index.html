@@ -1,0 +1,152 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Time-jittered blended marine acquisition on non-uniform spatial grids</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.4">
+      <meta name="date" content="2015-08-12">
+      <meta name="m-file" content="index">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>Time-jittered blended marine acquisition on non-uniform spatial grids</h1>
+         <introduction>
+            <p>This application is available only in the software release for members of SINBAD consortium.</p>
+            <p>This package contains a MATLAB implementation of a 2-D time-jittered blended marine acquisition scheme on non-uniform spatial
+               (source) grid, and a deblending algorithm based on sparse inversion via one-norm-minimization incorporating the non-equispaced
+               fast discrete curvelet transform.
+            </p>
+            <p>Author: Haneet Wason (<a href="mailto:hwason@eos.ubc.ca">hwason@eos.ubc.ca</a>)
+            </p>
+            <p>Date: August, 2015</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Downloading &amp; Dependencies</a></li>
+               <li><a href="#2">Functions</a></li>
+               <li><a href="#3">Running &amp; Parallelism</a></li>
+               <li><a href="#4">Examples and results</a></li>
+               <li><a href="#5">References</a></li>
+               <li><a href="#6">Acknowledgements</a></li>
+            </ul>
+         </div>
+         <h2>Downloading &amp; Dependencies<a name="1"></a></h2>
+         <p>The code can be found in the <a href="https://slim.gatech.edu/consortiumsoftware">SLIM sofware release</a> under <tt>applications/Acquisition/TimeJitteredOBS_OffTheGrid</tt>.
+         </p>
+         <p>The code has been tested with <i>Matlab R2014b</i>.
+         </p>
+         <p>This code uses the following packages, also found in the <tt>tools</tt> part of the <a href="https://slim.gatech.edu/consortiumsoftware">SLIM software release</a>.
+         </p>
+         <div>
+            <ul>
+               <li><i>utilities/SPOT</i> - object oriented framework for matrix-free linear algebra.
+               </li>
+               <li><i>utilities/SegyMAT</i> - Matlab/Octave toolbox for reading and writing SEG-Y formatted files.
+               </li>
+               <li><i>functions/misc</i> - miscellaneous functions.
+               </li>
+               <li><i>solvers/SPGL1-SLIM</i> - SLIM version of SPGL1 solver.
+               </li>
+               <li><i>transforms/CurveLab-2.1.2-SLIM</i> - curvelet transform functions.
+               </li>
+            </ul>
+         </div>
+         <h2>Functions<a name="2"></a></h2>
+         <p>Some functions specific to this package can be found in the <tt>applications/Acquisition/TimeJitteredOBS_OffTheGrid/misc_funcs</tt> directory.
+         </p>
+         <h2>Running &amp; Parallelism<a name="3"></a></h2>
+         <p>All the examples and results are produced by the scripts found in this software release under <tt>applications/Acquisition/TimeJitteredOBS_OffTheGrid</tt>. Start matlab from that directory or run <tt>startup</tt> in that directory to add the appropriate paths.
+         </p>
+         <p>To run the scripts follow the instructions in the README file enclosed with the code.</p>
+         <p>Read more about <a href="https://slim.gatech.edu/SoftwareDemos/tools/">SLIM's approach to parallel computing in Matlab</a>.
+         </p>
+         <h2>Examples and results<a name="4"></a></h2>
+         <p><a href="example.html">Examples and results are shown here.</a> Scripts to reproduce the results can be found under <tt>applications/Acquisition/TimeJitteredOBS_OffTheGrid/examples</tt>.
+         </p>
+         <h2>References<a name="5"></a></h2>
+         <p><a href="https://slim.gatech.edu/content/time-jittered-ocean-bottom-seismic-acquisition">[1]</a> Haneet Wason and Felix J. Herrmann [2013]. Time-jittered ocean bottom seismic acquisition. SEG Technical Program Expanded
+            Abstracts, vol. 32, pp. 1-6.
+         </p>
+         <p><a href="https://slim.gatech.edu/content/nonequispaced-curvelet-transform-seismic-data-reconstruction-sparsity-promoting-approach">[2]</a> Gilles Hennenfent, Lloyd Fenelon and Felix J. Herrmann [2010]. Nonequispaced curvelet transform for seismic data reconstruction:
+            a sparsity-promoting approach, Geophysics, vol. 75, pp. WB203-WB210.
+         </p>
+         <p><a href="https://slim.gatech.edu/content/compressed-sensing-4-d-marine%E2%80%93-recovery-dense-time-lapse-data-subsampled-data-without-repeti">[3]</a> Haneet Wason, Felix Oghenekohwo and Felix J. Herrmann [2015]. Presented at the 77th EAGE Conference &amp; Exhibition (2015),
+            doi: 10.3997/2214-4609.201413088.
+         </p>
+         <h2>Acknowledgements<a name="6"></a></h2>
+         <p>Thanks to our sponsors and NSERC for their financial support.</p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Time-jittered blended marine acquisition on non-uniform spatial grids
+%
+% This application is available only in the software release for members of SINBAD consortium.
+% 
+% This package contains a MATLAB implementation of a 2-D time-jittered blended marine acquisition scheme on non-uniform spatial (source) grid, and a deblending algorithm based on sparse inversion via one-norm-minimization incorporating the non-equispaced fast discrete curvelet transform.
+% 
+% Author: Haneet Wason (hwason@eos.ubc.ca)
+%
+% Date: August, 2015
+
+
+%% Downloading & Dependencies
+%
+% The code can be found in the <https://slim.gatech.edu/consortiumsoftware SLIM sofware release> under
+% |applications/Acquisition/TimeJitteredOBS_OffTheGrid|.
+%
+% The code has been tested with _Matlab R2014b_.
+%
+% This code uses the following packages, also found in the |tools| part of the <https://slim.gatech.edu/consortiumsoftware SLIM software release>.
+%
+% * _utilities/SPOT_ - object oriented framework for matrix-free linear algebra.
+% * _utilities/SegyMAT_ - Matlab/Octave toolbox for reading and writing SEG-Y formatted files.
+% * _functions/misc_ - miscellaneous functions.
+% * _solvers/SPGL1-SLIM_ - SLIM version of SPGL1 solver.
+% * _transforms/CurveLab-2.1.2-SLIM_ - curvelet transform functions.
+
+
+%% Functions
+%
+% Some functions specific to this package can be found in the |applications/Acquisition/TimeJitteredOBS_OffTheGrid/misc_funcs| directory.
+
+
+%% Running & Parallelism
+%
+% All the examples and results are produced by the scripts found in this software release under |applications/Acquisition/TimeJitteredOBS_OffTheGrid|. Start matlab from that directory or run |startup| in that directory to add the appropriate paths.
+%
+% To run the scripts follow the instructions in the README file enclosed with the code.
+%
+% Read more about <https://slim.gatech.edu/SoftwareDemos/tools/ SLIM's approach to parallel computing in Matlab>.
+
+
+%% Examples and results
+%
+% <example.html Examples and results are shown here.> Scripts to reproduce the results can be found under |applications/Acquisition/TimeJitteredOBS_OffTheGrid/examples|. 
+
+
+%% References
+%
+% <https://slim.gatech.edu/content/time-jittered-ocean-bottom-seismic-acquisition [1]> Haneet Wason and Felix J. Herrmann [2013]. Time-jittered ocean bottom seismic acquisition. SEG Technical Program Expanded Abstracts, vol. 32, pp. 1-6.
+%
+% <https://slim.gatech.edu/content/nonequispaced-curvelet-transform-seismic-data-reconstruction-sparsity-promoting-approach [2]> Gilles Hennenfent, Lloyd Fenelon and Felix J. Herrmann [2010]. Nonequispaced curvelet transform for seismic data reconstruction: a sparsity-promoting approach, Geophysics, vol. 75, pp. WB203-WB210.
+%
+% <https://slim.gatech.edu/content/compressed-sensing-4-d-marine–-recovery-dense-time-lapse-data-subsampled-data-without-repeti [3]> Haneet Wason, Felix Oghenekohwo and Felix J. Herrmann [2015]. Presented at the 77th EAGE Conference & Exhibition (2015), doi: 10.3997/2214-4609.201413088.
+
+
+%% Acknowledgements
+% Thanks to our sponsors and NSERC for their financial support.
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

@@ -1,0 +1,21 @@
+import os
+from rsf.proj import *
+
+########################################################################
+# RETRIEVE DATA
+########################################################################
+# define SLIM FTP server information
+FTPserver = {
+        'server': 'ftp.slim.gatech.edu',
+        'login': 'ftp',
+        'password':''}
+
+loc = os.path.join('SoftwareRelease','WaveformInversion','2DRobustBatching','results','bg2_batch')
+files = []
+for elm in xrange(1,17): files.append('mn_'+str(elm)+'.rsf')
+
+# fetch data from FTP server
+for elm in files:
+        Fetch(elm,loc,FTPserver)
+
+End()

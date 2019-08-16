@@ -1,0 +1,110 @@
+2015-07-08 Curt Da Silva <curtd@math.ubc.ca>
+    * Reformulated 3D FWI code to use the PDEfunc organization from the 2D case. Everything works and tests both now exist and pass, now just working on ensuring that subsampling for helmholtz solves gives correct results.
+
+2015-02-11  Rafael Lago  <rlago@eos.ubc.ca>
+    * Do not use MigrationFD just yet... it gives funny results for the moment.
+    It needs heavy debugging!
+
+2014-10-28  Rafael Lago  <rlago@eos.ubc.ca>
+    * cut_pml option implemented in discrete_helmholtz function.
+    
+2014-09-30  Rafael Lago  <rlago@eos.ubc.ca>
+    * setup_solver function implemented; it returns a pointer to a function
+    that is used to solve the linear system. This could be integrated with
+    opSpot in the future.
+    * WaveEquationFD is using setup_solver routine in addition to 
+    discrete_helmholtz; this simplifies plenty of things in there.
+    * Fixed a bug in discrete_helmholtz in line 149 which would prevent the
+    code from discretizing when the model was given in slowness squared.
+    * Updated the description in test_helmholtz_derivative.m to explain that
+    two tests are needed - one for m/s and another for s2/m2.
+    * MigrationFD implemented, but on pre-alpha building. Do not use it.
+
+2014-09-30  Rafael Lago  <rlago@eos.ubc.ca>
+
+    * Renamed FwdFD to WaveEquationFD; this is now the "omnifunction" of 
+    3DFreqModeling. ForwardFD is a wrapper to WaveEquation that reorganize
+    some output parameters.
+    *Hoping to start the migration operator soon...
+
+2014-09-10  Rafael Lago  <rlago@eos.ubc.ca>
+
+    * Started the implementation of FwdFD (to replace F3d). Still in alpha
+    testing at the moment.
+
+
+2014-08-27  Rafael Lago  <rlago@eos.ubc.ca>
+
+    * Fixed several bugs in the demos concerning H' instead of H.'. Please, be 
+    careful with this! I use transpose(H) troughtout the code from now on just 
+    to make sure.
+
+2014-08-15  Rafael Lago  <rlago@eos.ubc.ca>
+
+    * 7 points stencil added, and not validated. It seems to be working 
+    correctly, and it uses the same matrix-vector product routine as the 
+    27 points stencil. In the case of the 7 points stencil, length(idx)=7.
+
+
+2014-08-05  Rafael Lago  <rlago@eos.ubc.ca>
+
+    * Mass lumping added again because nobody knows how to remove it properly.
+    It seems that we need to rework the weights, and that would take a lot of
+    work.
+    * Mass lumping implemented CORRECTLY.
+    * The action of the Jacobian implemented CORRECTLY, with the mass lumping.
+    Gradient test was passed.
+    * helmholtz_3d_frechet was renamed to helmholtz_3d_derivative.
+    * helmholtz_3d still helmholtz_3d.
+    * A lot of rework was done in the test folder. The tests are now properly
+    commented and explained, they use plog function extensively and plots are
+    a little bit more consistent
+
+2014-05-23  Rafael Lago  <rlago@eos.ubc.ca>
+
+    * Mass lumping removed due to nobody understanding what was wrong with it
+    * helmholtz_3d_operto renamed to helmholtz_3d (since its not really
+    Operto et al's stencil anymore)
+    * helmholtz_3d_operto_frechet renamed to helmholtz_3d_frechet (since its 
+    not really Operto et al's stencil anymore)
+    * Gradient test and Frechet test added (rudimentary version, need to be 
+    "nicefied" before releasing) in test folder
+
+2014-05-06  Rafael Lago  <rlago@eos.ubc.ca>
+
+    * minor modifications on demos
+    * helmholtz_3d_operto now requires one extra argument: unit. It has to be
+    set to "meters_per_second" or "slowness_squared" (string).
+    * helmholtz_3d_operto_frechet addeded - under testing
+    * Naturally - the discretization now supports both units. The matrix
+    generated should be identical, but not the Frechet derivative.
+    * "legacy" folder renamed to "doc"; added pdfs explaining the Frechet 
+    derivative computation trick;
+
+2014-04-16  Rafael Lago  <rlago@eos.ubc.ca>
+
+    * Fixed a bug in H2sparse.m routine; now it should work properly.
+    * Multiple changes in helmholtz_3d_operto; it is now much, much faster, but
+    also quite unreadable... for this reason, a new directory has been added, 
+    called "legacy". In there you can find some more readable (although 
+    equivalent up to machine precision) version of the same routine.
+
+2014-03-14  Rafael Lago  <rlago@eos.ubc.ca>
+
+    * Fixed a bug with boundaries not being equal to zero
+    * Added a demo2, which runs the forward modelling in parallel (discretization
+    is done in sequential) and a demo3 which runs the old discretization code 
+    (for purposes of comparison with new code)
+
+2014-02-18  Rafael Lago  <rlago@eos.ubc.ca>
+
+    * Added Zhilong's matrix-vector routine (mex file). 
+    * The size of the problem in run_demo1 has been reduced and now an option 
+    for having the exact (unphysical) solution has been adeded for the purpose 
+    of testing (a line needs to be uncommented in run_demo1.m)
+
+2014-02-17  Rafael Lago  <rlago@eos.ubc.ca>
+
+    * Initial commit
+    
+    

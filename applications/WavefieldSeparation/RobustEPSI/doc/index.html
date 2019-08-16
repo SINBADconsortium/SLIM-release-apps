@@ -1,0 +1,130 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Robust Estimation of Primaries by Sparse Inversion via one-norm minimization</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 7.13">
+      <meta name="date" content="2013-04-30">
+      <meta name="m-file" content="index">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>Robust Estimation of Primaries by Sparse Inversion via one-norm minimization</h1>
+         <introduction>
+            <p>This package is an application for simultaneous multiple removal and estimation of the source signature. It is based on the
+               Estimation of Primaries by Sparse Inversion approach but reformulated via block- coordinate descent and convexification to
+               L1 minimization. We believe this is therefore more robust to artifacts, and should converge quicker and more reliably that
+               the original formulation.
+            </p>
+            <p><i>This package is available only in the software release for members of SINBAD consortium.</i></p>
+            <p>Tim Tai-Yi Lin (<a href="mailto:tlin@eos.ubc.ca">tlin@eos.ubc.ca</a>),  April 30th 2013
+            </p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">How is the package organized?</a></li>
+               <li><a href="#4">Getting up and running</a></li>
+               <li><a href="#5">Do I need the MATLAB Parallel Computation Toolbox?</a></li>
+               <li><a href="#7">More information</a></li>
+               <li><a href="#8">References</a></li>
+            </ul>
+         </div>
+         <h2>How is the package organized?<a name="1"></a></h2>
+         <p>Robust EPSI is divided into two parts in this release.</p>
+         <p>The <b>program</b> itself (implemented in pure MATLAB) is contained in <tt>{$SLIM_ROOT}/tools/algorithms/REPSI/</tt>. However, its main driver file (<tt>EPSI_SLIM_main.m</tt>) is designed for experimentation, and requires a large myriad of options to be set. Even though only a few of the options
+            are required, I nevertheless consider it too complicated to directly invoke as a utility.
+         </p>
+         <p>Therefore, <b>interaction</b> with the Robust EPSI program should be done through the helper scripts in <tt>{$SLIM_ROOT}/applications/WavefieldSeparation/RobustEPSI/</tt>. Each subdirectory contained therein (except for <tt>data</tt> and <tt>doc</tt>) contain the helper scripts to necessary to process a specific dataset. See the file <tt>README_examples.txt</tt> for documentation on all the example datasets contained in this software release.
+         </p>
+         <h2>Getting up and running<a name="4"></a></h2>
+         <p>A basic walkthrough can be found <a href="example.html">here</a>.
+         </p>
+         <h2>Do I need the MATLAB Parallel Computation Toolbox?<a name="5"></a></h2>
+         <p><i>No.</i> Robust EPSI is explicitly designed to work without the MATLAB Parallel Computation Toolbox. If your machine has enough memory
+            to process the prestack data, it is perfectly fine to simply execute without parallel mode (setting <tt>parallel = 0</tt>). The total memory requirement is currently about 25x the stored single-precision filesize of SU data, or 80x if using the
+            Curvelet-Wavelet-based transform domain.
+         </p>
+         <p>Parallel execution mode for RobustEPSI mostly takes advantage of the shared-memory mode, and is meant to overcome the single-machine
+            memory limit. If you lack the license necessary for distributed execution of parallel code, I recommend turning off parallel
+            mode entirely to avoid the execution overhead associated with using distributed arrays. Because the Robust EPSI code is painstakingly
+            vectorized, in most cases invoking parallel execution mode actually results in a slowdown for single-machine execution.
+         </p>
+         <h2>More information<a name="7"></a></h2>
+         <p>See the included <tt>README.txt</tt> and <tt>README_example.txt</tt> for a more detailed description of the program.
+         </p>
+         <h2>References<a name="8"></a></h2>
+         <p><a href="https://slim.gatech.edu/node/6681">[1]</a>. Tim T.Y. Lin and Felix J. Herrmann, [2012] Robust estimation of primaries by sparse inversion via one-norm minimization,
+            UBC Technical Report TR-2012-02
+         </p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Robust Estimation of Primaries by Sparse Inversion via one-norm minimization
+% This package is an application for simultaneous multiple removal and
+% estimation of the source signature. It is based on the Estimation of Primaries
+% by Sparse Inversion approach but reformulated via block- coordinate descent
+% and convexification to L1 minimization. We believe this is therefore more
+% robust to artifacts, and should converge quicker and more reliably that the
+% original formulation.
+%
+% _This package is available only in the software release for members of SINBAD consortium._ 
+%
+% Tim Tai-Yi Lin (tlin@eos.ubc.ca),  April 30th 2013
+
+%% How is the package organized?
+% Robust EPSI is divided into two parts in this release.
+%%
+% The *program* itself (implemented in pure MATLAB) is contained in
+% |{$SLIM_ROOT}/tools/algorithms/REPSI/|. However, its main driver file (|EPSI_SLIM_main.m|)
+% is designed for experimentation, and requires a large myriad of options to be
+% set. Even though only a few of the options are required, I nevertheless
+% consider it too complicated to directly invoke as a utility.
+%%
+% Therefore, *interaction* with the Robust EPSI program should be done through
+% the helper scripts in |{$SLIM_ROOT}/applications/WavefieldSeparation/RobustEPSI/|. Each
+% subdirectory contained therein (except for |data| and |doc|) contain the
+% helper scripts to necessary to process a specific dataset. See the file
+% |README_examples.txt| for documentation on all the example datasets contained
+% in this software release.
+
+
+%% Getting up and running
+% A basic walkthrough can be found <example.html here>.
+
+%% Do I need the MATLAB Parallel Computation Toolbox?
+% _No._ Robust EPSI is explicitly designed to work without the MATLAB Parallel
+% Computation Toolbox. If your machine has enough memory to process the prestack
+% data, it is perfectly fine to simply execute without parallel mode (setting
+% |parallel = 0|). The total memory requirement is currently about 25x the
+% stored single-precision filesize of SU data, or 80x if using the
+% Curvelet-Wavelet-based transform domain.
+%%
+% Parallel execution mode for RobustEPSI mostly takes advantage of the
+% shared-memory mode, and is meant to overcome the single-machine memory limit.
+% If you lack the license necessary for distributed execution of parallel code,
+% I recommend turning off parallel mode entirely to avoid the execution overhead
+% associated with using distributed arrays. Because the Robust EPSI code is
+% painstakingly vectorized, in most cases invoking parallel execution mode
+% actually results in a slowdown for single-machine execution.
+
+%% More information
+% See the included |README.txt| and |README_example.txt| for a more detailed description of the program. 
+
+%% References 
+% <https://slim.gatech.edu/node/6681 [1]>. Tim T.Y. Lin and Felix J. Herrmann, [2012] Robust estimation of primaries by sparse inversion via one-norm minimization, UBC Technical Report TR-2012-02
+
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

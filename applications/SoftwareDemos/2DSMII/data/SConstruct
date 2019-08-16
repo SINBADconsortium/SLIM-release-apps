@@ -1,0 +1,19 @@
+import os
+from rsf.proj import *
+
+########################################################################
+# RETRIEVE DATA
+########################################################################
+# define SLIM FTP server information
+FTPserver = {
+        'server': 'ftp.slim.gatech.edu',
+        'login': 'ftp',
+        'password':''}
+
+loc = os.path.join('SoftwareRelease','SoftwareDemos','2DSMII','data')
+files = [ 'bg_vp.odn','bg_vp.odn@','bg_v0.odn','bg_v0.odn@','crosswell_vp.odn' ,'crosswell_vp.odn@','marm_vp.odn' ,'marm_vp.odn@']
+# fetch data from FTP server
+for elm in files:
+        Fetch(elm,loc,FTPserver)
+
+

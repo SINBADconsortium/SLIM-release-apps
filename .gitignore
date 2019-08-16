@@ -1,0 +1,19 @@
+# Junk
+*.DS_Store
+*.rsfproj
+.sconsign.dblite
+
+# installation-created files
+environment.sh
+environment.csh
+
+# data files
+*.mex*
+*.rsf*
+*.su*
+*.odn*
+*.mat
+*.dat
+*_log
+*.log
+*~

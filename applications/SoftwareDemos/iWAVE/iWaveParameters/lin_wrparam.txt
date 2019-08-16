@@ -1,0 +1,57 @@
+
+%% Default setting
+
+order  = 2;                % Accurate order in time
+cfl    = 0.4;              % CFL stable condition number
+cmax   = 4.5;              % max velocity
+cmin   = 1;                % min velocity
+dmax   = 6;                % max density
+dmin   = 0.5;              % min density
+fpeak  = model.f0/1000;    % central frequency
+max_step = 0;              % 1 = set adaptively, 0 = use standard cfl from cmax
+
+% Model information
+
+window_grid  = fname_bulk;    % window grid
+window_width = 0;             % window width
+
+
+
+%Output info:
+dump_pi    = 0   ;        % dump parallel/dom. decomp info
+dump_lda   = 0   ;        % dump grid data for allocated arrays
+dump_ldc   = 0   ;        % dump grid data for computational arrays
+dump_term  = 0   ;        % dump terminator data
+dump_steps = 0   ;        % print major steps in IWaveOp
+printact   = 0   ;        % per-time-step verbosity level
+                          % 0 - none
+                          % 1 - time step index
+                          % 2 - internal time step info
+                          % > 5: dump everything
+
+dump_pars  = 0   ;        % print parameter table in IWaveOp
+
+
+% Parallel parameters
+mpi_np1 = 1;    % domain decomposition for 1st direction
+mpi_np2 = 1;    % domain decomposition for 2nd direction
+mpi_np3 = 1;    % domain decomposition for 3rd direction
+partask = 1;    % number of shots simulate parallelly
+
+% pml setting
+
+nl1 = 0.5;      % z - neg
+nl2 = 0.5;      % z - pos
+nr1 = 0.5;      % x - neg
+nr2 = 0.5;      % x - pos
+
+% source setting
+refamp  = 1;       % reference amplitude
+refdist = 1000;    % reference distance
+sampord = 1;       % sampling order
+pmlampl = 100.0;
+scheme_npml = 24;  % accurate order in pml
+scheme_phys = 24;  % accurate order in phys
+srctype = 'point'; % source type
+
+

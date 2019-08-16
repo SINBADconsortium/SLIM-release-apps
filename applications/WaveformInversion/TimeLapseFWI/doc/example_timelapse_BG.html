@@ -1,0 +1,208 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Timelapse FWI: examples and results</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 7.13">
+      <meta name="date" content="2015-01-27">
+      <meta name="m-file" content="example_timelapse_BG">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>Timelapse FWI: examples and results</h1>
+         <introduction>
+            <p>Author: Felix Oghenekohwo (<a href="mailto:foghenekohwo@eos.ubc.ca">foghenekohwo@eos.ubc.ca</a>)
+            </p>
+            <p>Date: February, 2015</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#2">True BG timelapse models</a></li>
+               <li><a href="#3">Parallel or Independent Inversion results</a></li>
+               <li><a href="#4">Joint Inversion results</a></li>
+            </ul>
+         </div><pre class="codeinput"><span class="comment">% Set paths</span>
+curdir = pwd;
+basedir = curdir(1:end-4);
+datadir = [basedir <span class="string">'/data/'</span>];
+resultsdir = [basedir <span class="string">'/results/timelapse_BG'</span>];
+
+<span class="comment">% Load Stored data</span>
+load([datadir <span class="string">'/ObsData.mat'</span>])
+load([datadir <span class="string">'/BG_timelapse_model.mat'</span>])
+
+<span class="comment">% Load previously computed results</span>
+load([resultsdir <span class="string">'/JRM_Updates.mat'</span>])
+
+joint_base = reshape(1e3./sqrt(JBase(:,end,end)),131,451);
+joint_mon =  reshape(1e3./sqrt(JMon(:,end,end)),131,451);
+joint4D = joint_base - joint_mon;
+
+
+load([resultsdir <span class="string">'/IRS_Updates.mat'</span>])
+ind_base = reshape(1e3./sqrt(IBase(:,end,end)),131,451);
+ind_mon =  reshape(1e3./sqrt(IMon(:,end,end)),131,451);
+ind4D = ind_base - ind_mon;
+
+
+<span class="comment">% Plotting parameters</span>
+caxModel = [1450 4500];
+cax4D = [-25 230];
+scrsz = get(0,<span class="string">'ScreenSize'</span>);
+xlab = <span class="string">'x [m]'</span>;ylab = <span class="string">'z [m]'</span>;
+</pre><h2>True BG timelapse models<a name="2"></a></h2><pre class="codeinput">figure(1);
+set(gcf,<span class="string">'Position'</span>,[1050 scrsz(4)/2 scrsz(3)/2 scrsz(4)/1.2]);
+subplot(311);imagesc(x,z,vbase);axis <span class="string">image</span>;caxis(caxModel);
+xlabel(xlab);ylabel(ylab);
+title(<span class="string">'True baseline'</span>);colorbar;
+set(gca,<span class="string">'plotboxaspectratio'</span>,[4 1 1]);
+subplot(312);imagesc(x,z,vmon);axis <span class="string">image</span>;caxis(caxModel);
+xlabel(xlab);ylabel(ylab);
+title(<span class="string">'True monitor'</span>);colorbar;colormap(<span class="string">'jet'</span>);
+set(gca,<span class="string">'plotboxaspectratio'</span>,[4 1 1]);colormap(jet);
+subplot(313);imagesc(x,z,vbase-vmon);axis <span class="string">image</span>;
+xlabel(xlab);ylabel(ylab);
+title(<span class="string">'Timelapse'</span>);colorbar;caxis(cax4D);
+set(gca,<span class="string">'plotboxaspectratio'</span>,[4 1 1]);colormap(<span class="string">'jet'</span>);
+</pre><img vspace="5" hspace="5" src="example_timelapse_BG_01.png"> <h2>Parallel or Independent Inversion results<a name="3"></a></h2><pre class="codeinput">figure(2);
+set(gcf,<span class="string">'Position'</span>,[1050 scrsz(4)/2 scrsz(3)/2 scrsz(4)/1.2]);
+subplot(311);imagesc(x,z,ind_base);axis <span class="string">image</span>;caxis(caxModel);
+xlabel(xlab);ylabel(ylab);
+title(<span class="string">'Baseline via Parallel Inversion'</span>);colorbar;
+set(gca,<span class="string">'plotboxaspectratio'</span>,[4 1 1]);
+subplot(312);imagesc(x,z,ind_mon);axis <span class="string">image</span>;caxis(caxModel);
+xlabel(xlab);ylabel(ylab);
+title(<span class="string">'Monitor via Parallel Inversion'</span>);colorbar;colormap(<span class="string">'jet'</span>);
+set(gca,<span class="string">'plotboxaspectratio'</span>,[4 1 1]);colormap(jet);
+subplot(313);imagesc(x,z,ind4D);axis <span class="string">image</span>;
+xlabel(xlab);ylabel(ylab);
+title(<span class="string">'Timelapse via Parallel Inversion'</span>);colorbar;caxis(cax4D);
+set(gca,<span class="string">'plotboxaspectratio'</span>,[4 1 1]);colormap(<span class="string">'jet'</span>);
+</pre><img vspace="5" hspace="5" src="example_timelapse_BG_02.png"> <h2>Joint Inversion results<a name="4"></a></h2><pre class="codeinput">figure(3);
+set(gcf,<span class="string">'Position'</span>,[1050 scrsz(4)/2 scrsz(3)/2 scrsz(4)/1.2]);
+subplot(311);imagesc(x,z,joint_base);axis <span class="string">image</span>;caxis(caxModel);
+xlabel(xlab);ylabel(ylab);
+title(<span class="string">'Baseline via Joint Inversion'</span>);colorbar;
+set(gca,<span class="string">'plotboxaspectratio'</span>,[4 1 1]);
+subplot(312);imagesc(x,z,joint_mon);axis <span class="string">image</span>;caxis(caxModel);
+xlabel(xlab);ylabel(ylab);
+title(<span class="string">'Monitor via Joint Inversion'</span>);colorbar;colormap(<span class="string">'jet'</span>);
+set(gca,<span class="string">'plotboxaspectratio'</span>,[4 1 1]);colormap(jet);
+subplot(313);imagesc(x,z,joint4D);axis <span class="string">image</span>;
+xlabel(xlab);ylabel(ylab);
+title(<span class="string">'Timelapse via Joint Inversion'</span>);colorbar;caxis(cax4D);
+set(gca,<span class="string">'plotboxaspectratio'</span>,[4 1 1]);colormap(<span class="string">'jet'</span>);
+</pre><img vspace="5" hspace="5" src="example_timelapse_BG_03.png"> <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Timelapse FWI: examples and results 
+%
+% Author: Felix Oghenekohwo (foghenekohwo@eos.ubc.ca)
+%
+% Date: February, 2015
+
+%%
+
+% Set paths
+curdir = pwd;
+basedir = curdir(1:end-4);
+datadir = [basedir '/data/'];
+resultsdir = [basedir '/results/timelapse_BG'];
+
+% Load Stored data
+load([datadir '/ObsData.mat']) 
+load([datadir '/BG_timelapse_model.mat']) 
+
+% Load previously computed results
+load([resultsdir '/JRM_Updates.mat']) 
+
+joint_base = reshape(1e3./sqrt(JBase(:,end,end)),131,451);
+joint_mon =  reshape(1e3./sqrt(JMon(:,end,end)),131,451);
+joint4D = joint_base - joint_mon;
+
+
+load([resultsdir '/IRS_Updates.mat']) 
+ind_base = reshape(1e3./sqrt(IBase(:,end,end)),131,451);
+ind_mon =  reshape(1e3./sqrt(IMon(:,end,end)),131,451);
+ind4D = ind_base - ind_mon;
+
+
+% Plotting parameters
+caxModel = [1450 4500];
+cax4D = [-25 230];
+scrsz = get(0,'ScreenSize');
+xlab = 'x [m]';ylab = 'z [m]';
+
+%% True BG timelapse models
+
+figure(1);
+set(gcf,'Position',[1050 scrsz(4)/2 scrsz(3)/2 scrsz(4)/1.2]);
+subplot(311);imagesc(x,z,vbase);axis image;caxis(caxModel);
+xlabel(xlab);ylabel(ylab);
+title('True baseline');colorbar;
+set(gca,'plotboxaspectratio',[4 1 1]);
+subplot(312);imagesc(x,z,vmon);axis image;caxis(caxModel);
+xlabel(xlab);ylabel(ylab);
+title('True monitor');colorbar;colormap('jet');
+set(gca,'plotboxaspectratio',[4 1 1]);colormap(jet);
+subplot(313);imagesc(x,z,vbase-vmon);axis image;
+xlabel(xlab);ylabel(ylab);
+title('Timelapse');colorbar;caxis(cax4D);
+set(gca,'plotboxaspectratio',[4 1 1]);colormap('jet');
+
+%% Parallel or Independent Inversion results
+figure(2);
+set(gcf,'Position',[1050 scrsz(4)/2 scrsz(3)/2 scrsz(4)/1.2]);
+subplot(311);imagesc(x,z,ind_base);axis image;caxis(caxModel);
+xlabel(xlab);ylabel(ylab);
+title('Baseline via Parallel Inversion');colorbar;
+set(gca,'plotboxaspectratio',[4 1 1]);
+subplot(312);imagesc(x,z,ind_mon);axis image;caxis(caxModel);
+xlabel(xlab);ylabel(ylab);
+title('Monitor via Parallel Inversion');colorbar;colormap('jet');
+set(gca,'plotboxaspectratio',[4 1 1]);colormap(jet);
+subplot(313);imagesc(x,z,ind4D);axis image;
+xlabel(xlab);ylabel(ylab);
+title('Timelapse via Parallel Inversion');colorbar;caxis(cax4D);
+set(gca,'plotboxaspectratio',[4 1 1]);colormap('jet');
+
+
+%% Joint Inversion results
+figure(3);
+set(gcf,'Position',[1050 scrsz(4)/2 scrsz(3)/2 scrsz(4)/1.2]);
+subplot(311);imagesc(x,z,joint_base);axis image;caxis(caxModel);
+xlabel(xlab);ylabel(ylab);
+title('Baseline via Joint Inversion');colorbar;
+set(gca,'plotboxaspectratio',[4 1 1]);
+subplot(312);imagesc(x,z,joint_mon);axis image;caxis(caxModel);
+xlabel(xlab);ylabel(ylab);
+title('Monitor via Joint Inversion');colorbar;colormap('jet');
+set(gca,'plotboxaspectratio',[4 1 1]);colormap(jet);
+subplot(313);imagesc(x,z,joint4D);axis image;
+xlabel(xlab);ylabel(ylab);
+title('Timelapse via Joint Inversion');colorbar;caxis(cax4D);
+set(gca,'plotboxaspectratio',[4 1 1]);colormap('jet');
+
+
+
+
+
+
+
+
+
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

@@ -1,0 +1,259 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>spgLR_bgdata_view</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.1">
+      <meta name="date" content="2015-02-03">
+      <meta name="m-file" content="spgLR_bgdata_view">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content"><pre class="codeinput"><span class="comment">% Which experiment to load, see spglr_experiments/ directory for details</span>
+experiment = 1;
+
+<span class="comment">% Which source coordinates to use to produce figures</span>
+srcx = 30; srcy = 30;
+
+baseDir = pwd;
+baseDir = baseDir(1:end-3);
+resultsDir = [baseDir <span class="string">'results/'</span>];
+dataDir = [baseDir <span class="string">'data/'</span>];
+dataDir = <span class="string">'~/scratch/'</span>;
+rng(<span class="string">'default'</span>);
+<span class="keyword">if</span> exist(resultsDir,<span class="string">'dir'</span>)==0
+    mkdir(resultsDir);
+<span class="keyword">end</span>
+
+assert(exist(<span class="string">'experiment'</span>,<span class="string">'var'</span>)==1,<span class="string">'Need experiment variable'</span>);
+assert(parpool_size()&gt;0,<span class="string">'Need open parallel pool'</span>);
+
+numWorkers = parpool_size();
+
+<span class="comment">% Get experiment parameters</span>
+eval([<span class="string">'spgLR_experiment'</span> num2str(experiment)]);
+v2struct(params);
+
+rng(rand_seed);
+
+<span class="comment">% Load data</span>
+<span class="keyword">switch</span> freqIndex
+  <span class="keyword">case</span> 75
+    dload([dataDir <span class="string">'bgdata_freq75.mat'</span>]);
+  <span class="keyword">case</span> 125
+    dload([dataDir <span class="string">'bgdata_freq125.mat'</span>]);
+<span class="keyword">end</span>
+
+<span class="comment">% the original data b has dimensions [nrecs,nrecs,nsrcs,nsrcs]</span>
+<span class="comment">%</span>
+<span class="comment">% the provided b has been matricized, so b = matricize(b_original,[1 3],[2 4]);</span>
+<span class="comment">%</span>
+nrecs = dims(1); nsrcs = dims(3);
+
+m = nsrcs*nrecs; n = nsrcs*nrecs;
+
+<span class="comment">% Set up results directories</span>
+saveDir = resultsDir;
+
+saveFile = [saveDir <span class="string">'spgLR_experiment'</span> num2str(experiment) <span class="string">'.mat'</span>];
+
+<span class="comment">% Load results</span>
+dload(saveFile);
+
+<span class="keyword">spmd</span>,
+    e = redistribute(e,getCodistributor(b));
+    bloc = getLocalPart(b); eloc = getLocalPart(e);
+    bloc(~eloc) = 0;
+    bsub = codistributed.build(bloc,getCodistributor(b));
+    bloc=[]; eloc = [];
+<span class="keyword">end</span>
+
+src_idx = sub2ind([nsrcs,nsrcs],srcx,srcy);
+
+pdims = [nrecs,nsrcs,nrecs,nsrcs];
+P = oppPermute(pdims,[1 3 2 4]);
+
+<span class="comment">% Compare interpolated, true results</span>
+Xest = Lest * Rest';
+<span class="keyword">spmd</span>,Xest = redistribute(Xest,getCodistributor(b)); <span class="keyword">end</span>
+<span class="keyword">spmd</span>
+    bloc = getLocalPart(b);
+    eloc = getLocalPart(e);
+    xloc = getLocalPart(Xest);
+    bNormTrain = norm(bloc(eloc))^2;
+    bNormTest = norm(bloc(~eloc))^2;
+    trainErr = norm(bloc(eloc)-xloc(eloc))^2;
+    testErr = norm(bloc(~eloc)-xloc(~eloc))^2;
+    recovery = [bNormTrain,bNormTest,trainErr,testErr];
+    xloc = []; bloc = []; eloc = [];
+<span class="keyword">end</span>
+
+recovery = pSPOT.utils.global_sum(recovery); recovery = recovery{1};
+trainErr = sqrt(recovery(3)/recovery(1));
+testErr = sqrt(recovery(4)/recovery(2));
+
+disp(<span class="string">'-------SPGLR results-------'</span>);
+disp([<span class="string">'Percentage missing receivers: '</span> num2str( subPercent*100 )]);
+disp([<span class="string">'Rank: '</span> num2str(rank)]);
+disp([<span class="string">'Total runtime: '</span> num2str( spgLRTime/3600 ) <span class="string">'h'</span>]);
+disp([<span class="string">'Number of workers: '</span> num2str( numWorkers ) ]);
+disp([<span class="string">'Train (data fit) error: '</span> num2str(-20*log10(trainErr),3)  <span class="string">'dB'</span>]);
+disp([<span class="string">'Test (recovery) error: '</span> num2str(-20*log10(testErr),3) <span class="string">'dB'</span>]);
+
+
+<span class="comment">% extract slices to display</span>
+toStandardOrder = @(x) pSPOT.utils.distVec2distArray(P* pSPOT.utils.distVectorize(x),[nrecs^2,nsrcs^2]);
+
+bsub = toStandardOrder(bsub);
+bsub_csg = reshape( gather(bsub(:,src_idx)),nrecs,nrecs);
+b = toStandardOrder(b);
+b_csg = reshape( gather(b(:,src_idx)) , nrecs, nrecs );
+
+Xest = toStandardOrder(Xest);
+
+X_csg = reshape( gather(Xest(:,src_idx)) , nrecs, nrecs );
+
+figopts = struct;
+figopts.xlabel = <span class="string">'receiver x'</span>;
+figopts.ylabel = <span class="string">'receiver y'</span>;
+figopts.caxis_ctr = true;
+figopts.cmap = <span class="string">'seismic_colormap'</span>;
+close <span class="string">all</span>;
+multi_imagesc(figopts,b_csg,bsub_csg,X_csg,b_csg-X_csg);
+
+disp([<span class="string">'Slice SNR (data fit + recovery) : '</span> num2str(SNR(vec(b_csg),vec(X_csg)),3) <span class="string">'dB'</span>]);
+</pre><pre class="codeoutput">-------SPGLR results-------
+Percentage missing receivers: 75
+Rank: 250
+Total runtime: 4.659h
+Number of workers: 8
+Train (data fit) error: 14.1dB
+Test (recovery) error: 13.7dB
+Slice SNR (data fit + recovery) : 13.8dB
+</pre><img vspace="5" hspace="5" src="spgLR_bgdata_view_01.png"> <img vspace="5" hspace="5" src="spgLR_bgdata_view_02.png"> <img vspace="5" hspace="5" src="spgLR_bgdata_view_03.png"> <img vspace="5" hspace="5" src="spgLR_bgdata_view_04.png"> <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+% Which experiment to load, see spglr_experiments/ directory for details
+experiment = 1;
+
+% Which source coordinates to use to produce figures 
+srcx = 30; srcy = 30;
+
+baseDir = pwd;
+baseDir = baseDir(1:end-3);
+resultsDir = [baseDir 'results/'];
+dataDir = [baseDir 'data/'];
+dataDir = '~/scratch/';
+rng('default');
+if exist(resultsDir,'dir')==0
+    mkdir(resultsDir);
+end
+
+assert(exist('experiment','var')==1,'Need experiment variable');
+assert(parpool_size()>0,'Need open parallel pool');
+
+numWorkers = parpool_size();
+
+% Get experiment parameters
+eval(['spgLR_experiment' num2str(experiment)]);    
+v2struct(params);
+
+rng(rand_seed);
+
+% Load data
+switch freqIndex
+  case 75
+    dload([dataDir 'bgdata_freq75.mat']);
+  case 125
+    dload([dataDir 'bgdata_freq125.mat']);
+end
+
+% the original data b has dimensions [nrecs,nrecs,nsrcs,nsrcs]
+%
+% the provided b has been matricized, so b = matricize(b_original,[1 3],[2 4]);
+%
+nrecs = dims(1); nsrcs = dims(3);
+
+m = nsrcs*nrecs; n = nsrcs*nrecs;
+
+% Set up results directories
+saveDir = resultsDir;
+
+saveFile = [saveDir 'spgLR_experiment' num2str(experiment) '.mat'];
+
+% Load results
+dload(saveFile);
+
+spmd,
+    e = redistribute(e,getCodistributor(b));
+    bloc = getLocalPart(b); eloc = getLocalPart(e);
+    bloc(~eloc) = 0;
+    bsub = codistributed.build(bloc,getCodistributor(b));
+    bloc=[]; eloc = [];
+end
+
+src_idx = sub2ind([nsrcs,nsrcs],srcx,srcy);
+
+pdims = [nrecs,nsrcs,nrecs,nsrcs];
+P = oppPermute(pdims,[1 3 2 4]);
+
+% Compare interpolated, true results
+Xest = Lest * Rest'; 
+spmd,Xest = redistribute(Xest,getCodistributor(b)); end  
+spmd    
+    bloc = getLocalPart(b);
+    eloc = getLocalPart(e);
+    xloc = getLocalPart(Xest);
+    bNormTrain = norm(bloc(eloc))^2;
+    bNormTest = norm(bloc(~eloc))^2;
+    trainErr = norm(bloc(eloc)-xloc(eloc))^2;
+    testErr = norm(bloc(~eloc)-xloc(~eloc))^2;
+    recovery = [bNormTrain,bNormTest,trainErr,testErr];
+    xloc = []; bloc = []; eloc = [];
+end
+
+recovery = pSPOT.utils.global_sum(recovery); recovery = recovery{1};
+trainErr = sqrt(recovery(3)/recovery(1)); 
+testErr = sqrt(recovery(4)/recovery(2));
+
+disp('REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-SPGLR resultsREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-');
+disp(['Percentage missing receivers: ' num2str( subPercent*100 )]);
+disp(['Rank: ' num2str(rank)]);
+disp(['Total runtime: ' num2str( spgLRTime/3600 ) 'h']);
+disp(['Number of workers: ' num2str( numWorkers ) ]);
+disp(['Train (data fit) error: ' num2str(-20*log10(trainErr),3)  'dB']);
+disp(['Test (recovery) error: ' num2str(-20*log10(testErr),3) 'dB']);
+
+
+% extract slices to display
+toStandardOrder = @(x) pSPOT.utils.distVec2distArray(P* pSPOT.utils.distVectorize(x),[nrecs^2,nsrcs^2]);
+
+bsub = toStandardOrder(bsub);
+bsub_csg = reshape( gather(bsub(:,src_idx)),nrecs,nrecs);
+b = toStandardOrder(b);
+b_csg = reshape( gather(b(:,src_idx)) , nrecs, nrecs );
+
+Xest = toStandardOrder(Xest);
+
+X_csg = reshape( gather(Xest(:,src_idx)) , nrecs, nrecs );
+
+figopts = struct;
+figopts.xlabel = 'receiver x';
+figopts.ylabel = 'receiver y';
+figopts.caxis_ctr = true;
+figopts.cmap = 'seismic_colormap';
+close all;
+multi_imagesc(figopts,b_csg,bsub_csg,X_csg,b_csg-X_csg);
+
+disp(['Slice SNR (data fit + recovery) : ' num2str(SNR(vec(b_csg),vec(X_csg)),3) 'dB']);
+##### SOURCE END #####
+-->
+   </body>
+</html>

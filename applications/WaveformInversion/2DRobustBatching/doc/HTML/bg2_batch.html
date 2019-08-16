@@ -1,0 +1,276 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>bg2_batch</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.6">
+      <meta name="date" content="2016-06-06">
+      <meta name="m-file" content="bg2_batch">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <p>This script implements the Stochastic LBFGS-B method described in</p>
+         <p>'A unified 2D/3D software environment for large scale time-harmonic full waveform inversion' Curt Da Silva and Felix Herrmann</p>
+         <p>applied to a 2D BG Compass example.</p>
+         <p>Each frequency batch should run in under an hour.</p>
+         <p>See the README file for instructions on how to download pre-run results and data.</p>
+         <p>If you want to run in parallel, use 4 workers. It is not recommended to run this program in serial. The results are stored
+            in the path defined in the script setpath.m
+         </p>
+         <p>The results are displayed in <a href="bg2_batch_results.html">bg2_batch_results.m</a></p><pre class="codeinput"><span class="comment">% set parameters for experiment</span>
+label    = <span class="string">'bg2_batch'</span>;   <span class="comment">% name</span>
+vfile    = <span class="string">'bg2v.rsf'</span>;    <span class="comment">% reference velocity model</span>
+v0file   = <span class="string">'bg2v0.rsf'</span>;   <span class="comment">% initial velocity model</span>
+datafile = <span class="string">'bg2data.rsf'</span>; <span class="comment">% input data</span>
+
+<span class="comment">% parameters for modeling</span>
+npml     = 20;
+zsrc     = 20;
+zrec     = 10;
+f0       = 10;
+t0       = 0;
+
+<span class="comment">% indices of frequency bands, total 17 bands of 3 frequencies each.</span>
+nf = 35;
+batch_size = 3;
+overlap = 1;
+If = partition(nf,batch_size,overlap);
+
+<span class="comment">% min and max offset to use.</span>
+hmin     = 100;
+hmax     = 3000;
+
+<span class="comment">% parameters for optimization</span>
+maxiter  = 5; <span class="comment">% max. outer iterations per frequency band</span>
+subprob  = 1; <span class="comment">%scaling factor, so each outer iteration</span>
+              <span class="comment">%is this number times as expensive as a full sweep through the data</span>
+N0       = 10;<span class="comment">% initial batchsize on each worker</span>
+seed     = 1; <span class="comment">% random seed</span>
+
+
+<span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+<span class="comment">%                                                                         %</span>
+<span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+<span class="comment">% Actual script, you should not need to change anything below</span>
+
+setpath;
+expdir = [resultsdir label <span class="string">'/'</span>];
+<span class="keyword">if</span> ~exist(expdir,<span class="string">'dir'</span>)
+    mkdir(expdir);
+<span class="keyword">end</span>
+curdir = pwd;
+
+<span class="comment">% read models</span>
+[v,n,d,o]  = rsf_read_all([datadir vfile]);
+[v0,n,d,o] = rsf_read_all([datadir v0file]);
+mref       = 1e6./v(:).^2;
+m0         = 1e6./v0(:).^2;
+
+<span class="comment">% read data</span>
+[D,nd,dd,od] = rsf_read_all([datadir datafile]);
+D            = reshape(D,nd(1)*nd(2),nd(3));
+
+<span class="comment">% model params</span>
+model.o    = o; model.d = d; model.n = n;
+model.freq = od(3) + (0:nd(3)-1)*dd(3);
+model.zsrc = zsrc;
+model.xsrc = od(2) + (0:nd(2)-1)*dd(2);
+model.zrec = zrec;
+model.xrec = od(1) + (0:nd(1)-1)*dd(1);
+model.f0   = f0;
+model.t0   = t0;
+model.unit = <span class="string">'s2/km2'</span>;
+
+Q = speye(nd(2));
+
+<span class="comment">% offset mask</span>
+hh = model.xrec'*ones(1,nd(2)) - ones(nd(1),1)*model.xsrc;
+params = struct; params.wri = false;
+params.batch_mode = true;
+params = default_fwi_params2d(params);
+C = ones(nd(1),nd(2));
+C(abs(hh)&lt;=hmin) = 0;
+C(abs(hh)&gt;=hmax) = 0;
+params.pdefunopts.offset_mask = C;
+params.pdefunopts.helm_pml_max = npml;
+nsrc = length(model.xsrc); nrec = length(model.xrec); nfreq = length(model.freq);
+
+minv = min(vec(mref)); maxv = max(vec(mref));
+
+<span class="comment">% Inversion</span>
+modelk = model;
+<span class="keyword">for</span> k = 1:length(If)
+    Ifk = If(k,:);
+    disp([<span class="string">'Processing frequencies '</span> num2str(model.freq(Ifk))]);
+    <span class="comment">% select frequency band</span>
+    nf = length(Ifk);
+    Dk = D(:,:,Ifk);
+    Dk = reshape(Dk,nrec,nsrc*nf);
+    <span class="keyword">spmd</span>,
+        Dk = codistributed(Dk);
+        Dk = redistribute(Dk,codistributor1d(2,codistributor1d.unsetPartition,size(Dk)));
+    <span class="keyword">end</span>
+    modelk.freq = model.freq(Ifk);
+
+    <span class="comment">% function handle to misfit</span>
+    fh = misfit_setup(m0,Q,Dk,modelk,params);
+
+    <span class="comment">% run inversion</span>
+    frugal_opts = struct;
+    <span class="keyword">spmd</span>, bmax = size(getLocalPart(Dk),2); <span class="keyword">end</span>
+    frugal_opts.bmax = [bmax{:}];
+    frugal_opts.b0 = N0*ones(size(frugal_opts.bmax));
+    frugal_opts.maxIter = maxiter;
+    frugal_opts.innerit = subprob;
+    mn = minfunc_batch(fh,m0,minv,maxv,frugal_opts);
+
+    <span class="comment">% write results</span>
+    rsf_write_all([expdir <span class="string">'mn_'</span> num2str(k) <span class="string">'.rsf'</span>],{<span class="string">'out=stdout'</span>},reshape(mn,n),d,o);
+
+    m0 = mn;
+<span class="keyword">end</span>
+</pre><p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% 
+% This script implements the Stochastic LBFGS-B method described in 
+%
+% 'A unified 2D/3D software environment for large scale time-harmonic full waveform inversion' Curt Da Silva and Felix Herrmann
+%
+% applied to a 2D BG Compass example.  
+%
+% Each frequency batch should run in under an hour. 
+%
+% See the README file for instructions on how to download pre-run results
+% and data.
+%
+% If you want to run in parallel, use 4 workers. It is not recommended to run this program in serial.
+% The results are stored in the path defined in the script setpath.m
+%
+% The results are displayed in <bg2_batch_results.html bg2_batch_results.m>
+
+
+% set parameters for experiment
+label    = 'bg2_batch';   % name
+vfile    = 'bg2v.rsf';    % reference velocity model 
+v0file   = 'bg2v0.rsf';   % initial velocity model
+datafile = 'bg2data.rsf'; % input data
+
+% parameters for modeling
+npml     = 20;
+zsrc     = 20;
+zrec     = 10;
+f0       = 10;
+t0       = 0;
+
+% indices of frequency bands, total 17 bands of 3 frequencies each.
+nf = 35;
+batch_size = 3;
+overlap = 1;
+If = partition(nf,batch_size,overlap);
+
+% min and max offset to use.
+hmin     = 100;
+hmax     = 3000;
+
+% parameters for optimization
+maxiter  = 5; % max. outer iterations per frequency band
+subprob  = 1; %scaling factor, so each outer iteration 
+              %is this number times as expensive as a full sweep through the data
+N0       = 10;% initial batchsize on each worker
+seed     = 1; % random seed
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                                         %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Actual script, you should not need to change anything below
+
+setpath;
+expdir = [resultsdir label '/'];
+if ~exist(expdir,'dir')
+    mkdir(expdir);
+end
+curdir = pwd;
+
+% read models
+[v,n,d,o]  = rsf_read_all([datadir vfile]);
+[v0,n,d,o] = rsf_read_all([datadir v0file]);
+mref       = 1e6./v(:).^2;
+m0         = 1e6./v0(:).^2;
+
+% read data
+[D,nd,dd,od] = rsf_read_all([datadir datafile]);
+D            = reshape(D,nd(1)*nd(2),nd(3));
+
+% model params
+model.o    = o; model.d = d; model.n = n;
+model.freq = od(3) + (0:nd(3)-1)*dd(3);
+model.zsrc = zsrc;
+model.xsrc = od(2) + (0:nd(2)-1)*dd(2);
+model.zrec = zrec;
+model.xrec = od(1) + (0:nd(1)-1)*dd(1);
+model.f0   = f0;
+model.t0   = t0;
+model.unit = 's2/km2';
+
+Q = speye(nd(2));
+
+% offset mask
+hh = model.xrec'*ones(1,nd(2)) - ones(nd(1),1)*model.xsrc;
+params = struct; params.wri = false;
+params.batch_mode = true;
+params = default_fwi_params2d(params);
+C = ones(nd(1),nd(2));
+C(abs(hh)<=hmin) = 0;
+C(abs(hh)>=hmax) = 0;
+params.pdefunopts.offset_mask = C;
+params.pdefunopts.helm_pml_max = npml;
+nsrc = length(model.xsrc); nrec = length(model.xrec); nfreq = length(model.freq);
+
+minv = min(vec(mref)); maxv = max(vec(mref));
+
+% Inversion
+modelk = model;
+for k = 1:length(If)
+    Ifk = If(k,:);
+    disp(['Processing frequencies ' num2str(model.freq(Ifk))]);
+    % select frequency band
+    nf = length(Ifk);
+    Dk = D(:,:,Ifk); 
+    Dk = reshape(Dk,nrec,nsrc*nf);
+    spmd,
+        Dk = codistributed(Dk);
+        Dk = redistribute(Dk,codistributor1d(2,codistributor1d.unsetPartition,size(Dk)));
+    end    
+    modelk.freq = model.freq(Ifk);
+    
+    % function handle to misfit
+    fh = misfit_setup(m0,Q,Dk,modelk,params);
+       
+    % run inversion
+    frugal_opts = struct;
+    spmd, bmax = size(getLocalPart(Dk),2); end
+    frugal_opts.bmax = [bmax{:}];
+    frugal_opts.b0 = N0*ones(size(frugal_opts.bmax));
+    frugal_opts.maxIter = maxiter;           
+    frugal_opts.innerit = subprob; 
+    mn = minfunc_batch(fh,m0,minv,maxv,frugal_opts);
+    
+    % write results
+    rsf_write_all([expdir 'mn_' num2str(k) '.rsf'],{'out=stdout'},reshape(mn,n),d,o);
+    
+    m0 = mn;
+end
+##### SOURCE END #####
+-->
+   </body>
+</html>

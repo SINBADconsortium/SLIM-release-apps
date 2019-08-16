@@ -1,0 +1,163 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>makedoc</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-02-26"><meta name="DC.source" content="makedoc.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput"><span class="comment">% current directory</span>
+curdir = pwd;
+
+<span class="comment">% initialize empty options struct to delete any previous values</span>
+options = [];
+
+<span class="comment">% output directory</span>
+options.outputDir = curdir;
+
+<span class="comment">% location of stylesheet</span>
+options.stylesheet = [curdir <span class="string">'/slim.xsl'</span>];
+
+<span class="comment">% format</span>
+options.format      = <span class="string">'html'</span>;
+
+<span class="comment">% no thumbnails</span>
+options.createThumbnail = false;
+
+<span class="comment">% whether to show that code</span>
+options.showCode = true;
+
+
+<span class="comment">% publish some files without running the code</span>
+options.evalCode = false;
+
+publish(<span class="string">'index.m'</span>,options);
+publish(<span class="string">'makedoc.m'</span>,options);
+
+<span class="comment">% publish a file and run the code</span>
+options.evalCode = true;
+
+publish(<span class="string">'example.m'</span>,options);
+
+<span class="comment">% close figures</span>
+close <span class="string">all</span>;
+<span class="comment">% open file for viewing</span>
+open(<span class="string">'index.html'</span>)
+</pre><pre class="codeoutput">Error on line 50 column 71 of file:///Volumes/Users/pwitte/SLIM-release-apps/applications/Imaging/TimeDomainLSRTM/doc/slim.xsl:
+  Error reported by XML parser: Attribute name "data-pjax-transient" associated with an element type "meta" must be followed by the ' = ' character.
+</pre><pre class="codeoutput error">Error using xslt&gt;locTransformer (line 171)
+Java exception occurred: 
+javax.xml.transform.TransformerConfigurationException: Failed to parse stylesheet
+	at com.icl.saxon.PreparedStyleSheet.prepare(PreparedStyleSheet.java:117)
+	at com.icl.saxon.TransformerFactoryImpl.newTemplates(TransformerFactoryImpl.java:120)
+	at com.icl.saxon.TransformerFactoryImpl.newTransformer(TransformerFactoryImpl.java:72)
+
+Error in xslt (line 92)
+xProcessor = locTransformer(varargin{2},xSource,xUtil,errorListener,uriResolver);
+
+Error in publish (line 182)
+        xslt(dom,options.stylesheet,outputAbsoluteFilename);
+
+Error in makedoc (line 26)
+publish('index.m',options);
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+% current directory
+curdir = pwd;
+
+% initialize empty options struct to delete any previous values
+options = [];
+
+% output directory
+options.outputDir = curdir;
+
+% location of stylesheet
+options.stylesheet = [curdir '/slim.xsl'];
+
+% format
+options.format      = 'html';
+
+% no thumbnails
+options.createThumbnail = false;
+
+% whether to show that code
+options.showCode = true;
+
+
+% publish some files without running the code
+options.evalCode = false;
+
+publish('index.m',options);
+publish('makedoc.m',options);
+
+% publish a file and run the code
+options.evalCode = true;
+
+publish('example.m',options);
+
+% close figures
+close all;
+% open file for viewing
+open('index.html')
+##### SOURCE END #####
+--></body></html>

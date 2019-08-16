@@ -1,0 +1,19 @@
+BUGS
+----
+[] Investigate and solve Curt's mysterious opMatrix overhead.
+[] oppWindow class inheritance needs to be fixed (or moved).
+
+
+FEATURES
+--------
+[] Organize and condense all operator-specific tests into their respective xtratests function.
+[] Change spottests to grab all available spot operator in the path and run their unit tests (utest).
+[] Do something about the general general tests which dont apply to one specific operator.
+[] Write unit tests for opHaar, and a whole bunch of other testless spot operators.
+
+DOCUMENTATION
+-------------
+
+[] Note that the random operators depend on old-style calls to
+randn('state'). These are not compatible with the latest stream-based
+calls. Need to document this.

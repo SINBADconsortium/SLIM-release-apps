@@ -1,0 +1,55 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>example</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.6">
+      <meta name="date" content="2016-04-26">
+      <meta name="m-file" content="example">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content"><pre class="codeinput"><span class="comment">% Which fwi_exp##.m to display, corresponding to the same model</span>
+<span class="comment">% fwi_exp1 - full data experiment</span>
+<span class="comment">% fwi_exp2 - stochastic data experiment</span>
+fwi_experiments = [1 2];
+
+base_dir = pwd; base_dir = base_dir(1:end-length(<span class="string">'doc'</span>));
+save_dir = [base_dir <span class="string">'results/'</span>];
+model_dir = [base_dir <span class="string">'models/'</span>];
+fig_dir = [];
+
+<span class="comment">% Slices + depths to display</span>
+plots = {<span class="string">'z'</span>,500, <span class="string">'z'</span>,1000,<span class="string">'x'</span>,1500,<span class="string">'y'</span>,1000};
+
+<span class="comment">% Plot figures</span>
+plot_fwi_exp(fwi_experiments,save_dir,model_dir,fig_dir,plots);
+</pre><img vspace="5" hspace="5" src="example_01.png"> <img vspace="5" hspace="5" src="example_02.png"> <img vspace="5" hspace="5" src="example_03.png"> <img vspace="5" hspace="5" src="example_04.png"> <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+% Which fwi_exp##.m to display, corresponding to the same model
+% fwi_exp1 - full data experiment
+% fwi_exp2 - stochastic data experiment
+fwi_experiments = [1 2];
+
+base_dir = pwd; base_dir = base_dir(1:end-length('doc'));
+save_dir = [base_dir 'results/'];
+model_dir = [base_dir 'models/'];
+fig_dir = [];
+
+% Slices + depths to display
+plots = {'z',500, 'z',1000,'x',1500,'y',1000};
+
+% Plot figures
+plot_fwi_exp(fwi_experiments,save_dir,model_dir,fig_dir,plots);
+##### SOURCE END #####
+-->
+   </body>
+</html>

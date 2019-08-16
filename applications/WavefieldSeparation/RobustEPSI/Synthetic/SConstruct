@@ -1,0 +1,177 @@
+# ROBUST PRIMARY ESTIMATION BY SPARSE INVERSION (via L1)
+# ---------------------------------------------------------------------
+#
+# Performs REPSI on a synthetic marine dataset modeled from DELPHI's 'model1'
+# 
+# 
+# Author      : Tim Lin
+#               Seismic Laboratory for Imaging and Modeling
+#               Department of Earth & Ocean Sciences
+#               The University of British Columbia
+#         
+# Date        : Faburary, 2011
+# 
+# You may use this code only under the conditions and terms of the
+# license contained in the file LICENSE provided with this source
+# code. If you do not agree to these terms you may not use this
+# software.
+
+import os
+runs = []
+
+########################################################################
+# INITIALIZATION
+########################################################################
+
+# Debugging solution information will be dumped in there sub-directories as native MAT files
+preview_dir_name  = 'Preview'
+solution_dir_name = 'Results'
+
+# optional: set this to the shell environment variable that names datapath for large seismic files,
+#           the output file from "savesolmat" will be stored in a unique folder here instead
+datapath_environ_variable = 'SCRATCHDIR'
+
+########################################################################
+# EXPERIMENTS
+########################################################################
+
+# Define here keys that DOESN'T get passed to the matlab function
+keys_not_passed = ('matlab_func','name')
+
+# define the main driver function
+default_matfcts = "EPSI_SLIM_main"
+
+# Start experiment file definitions: each dictionary appended to 'runs' will produce a new matlab script 
+# called 'name' that runs the Stabalized EPSI program using the defined parameters
+# (See PARAMETERS_LIST.txt for more details description of the required parameters)
+# ----------------------------------
+
+# define a common set of options
+commonopt={}
+commonopt["matlab_func"] = default_matfcts
+commonopt["input_file"] = "../data/model1_150_by_150_shot_106_255.mat"
+commonopt["maxTotalIter"] = 70
+commonopt["padtime"] = 11
+commonopt["topmuteT"] = 0.15
+commonopt["q_estLength_posT"] = 0.1
+commonopt["q_estLength_negT"] = 0.1
+commonopt["useOblique"] = 1
+commonopt["relError"] = 0.05
+commonopt["window_startT"] = 0.15
+commonopt["window_endT"] = 1
+commonopt["savepreviewmat"] = 1
+commonopt["show_preview"] = 1
+commonopt["verbosity"] = 0
+
+
+# Serial version without using sparsity frames
+expr=commonopt.copy()
+expr["name"] = "Synthetic"
+expr["useSparsity"] = 0
+expr["parallel"] = 0
+expr["output_primary_file"] = expr["name"] + "_primary.mat"
+expr["output_primaryIR_file"] = expr["name"] + "_primaryIR.mat"
+expr["output_wavelet_file"] = expr["name"] + "_wavelet.mat"
+runs.append(expr)
+
+# Uses sparsity frames (wavelet and curvelets)
+expr=commonopt.copy()
+expr["name"] = "Synthetic_sparsity"
+expr["useSparsity"] = 1
+expr["parallel"] = 0
+expr["output_primary_file"] = expr["name"] + "_primary.mat"
+expr["output_primaryIR_file"] = expr["name"] + "_primaryIR.mat"
+expr["output_wavelet_file"] = expr["name"] + "_wavelet.mat"
+runs.append(expr)
+
+# Uses sparsity frames (wavelet and curvelets) under parallel pool environment
+expr=commonopt.copy()
+expr["name"] = "Synthetic_sparsity_parallel"
+expr["useSparsity"] = 1
+expr["parallel"] = 1
+expr["output_primary_file"] = expr["name"] + "_primary.mat"
+expr["output_primaryIR_file"] = expr["name"] + "_primaryIR.mat"
+expr["output_wavelet_file"] = expr["name"] + "_wavelet.mat"
+runs.append(expr)
+
+########################################################################
+# EXECUTION
+########################################################################
+
+plotcmds = []
+currdir_name = os.path.basename(os.getcwd())
+# Determin path to the main Robust EPSI driver
+if os.environ.has_key('SLIM_APPS'):
+    # this is part of the SLIM software release
+    matROOT = os.path.join(os.environ['SLIM_APPS'],'tools','algorithms','REPSI')
+else:
+    # To make the script portable to other parts of your filesystem, modify the following line to a full system path
+    # that contain the main driver 'EPSI_SLIM_main.m'
+    matROOT = '../../matfcts'
+
+if os.environ.has_key(datapath_environ_variable): # dump data to a scratch datadir
+    scratchdir = os.path.join(os.environ[datapath_environ_variable],'RobustEPSI_SLIM')
+    if not os.path.exists(scratchdir):
+        os.makedirs(scratchdir)
+
+if not os.path.exists(preview_dir_name):
+    os.makedirs(preview_dir_name)
+
+if not os.path.exists(solution_dir_name):
+    os.makedirs(solution_dir_name)
+
+
+# define matlab argument parser
+def matlab_argumentlist_2_string(arguments,keys_not_passed):
+    """
+    Turns a argument dict pair into a string form for Matlab functions
+    using process_options.m, but ignores keys listed in keys_not_passed
+    """
+    
+    matlab_func_arguments = []
+    for k,v in arguments.items():
+        if not (k in keys_not_passed):
+            if isinstance(v,str):
+                matlab_func_arguments.append("""'%(k)s','%(v)s'"""%vars())
+            else:
+                matlab_func_arguments.append("""'%(k)s',%(v)g"""%vars())
+    
+    stringform = ",".join(matlab_func_arguments)
+    return stringform
+
+
+# loop over the runs and create executable MATLAB script for each experiment
+for experiment in runs:
+    
+    # Define other arguments to pass, mainly filenames
+    if not experiment.has_key('preview_file'):
+        experiment['preview_file'] = os.path.join(preview_dir_name,'%(name)s_preview.mat'%experiment)
+        
+    if not experiment.has_key('sol_file'):
+        if 'scratchdir' in locals():
+            if not os.path.exists(os.path.join(scratchdir,currdir_name)):
+                os.makedirs(os.path.join(scratchdir,currdir_name))
+            experiment['sol_file'] = os.path.join(scratchdir,currdir_name,'%(name)s_result.mat'%experiment)
+            symlink_file = os.path.join(solution_dir_name,'%(name)s_result_link.mat'%experiment)
+            # If dumping solution to a data directory,touch solution file and create symlink
+            if not os.path.exists(symlink_file):
+                open(experiment['sol_file'],'w').close()
+                os.symlink(experiment['sol_file'],symlink_file)
+        else:
+            experiment['sol_file'] = os.path.join(solution_dir_name,'%(name)s_result.mat'%experiment)
+    
+    
+    
+    
+    # parse the dictionary arguments as Matlab function arguments
+    matlab_func_argument_string = matlab_argumentlist_2_string(experiment,keys_not_passed)
+    
+    # Make a matlab script for the current experiment
+    # Note: Arguments to Matlab are constructed as contigious string of key,value pairs
+    # Matlab functions designed for this script should accept this kind of arguments
+    Command(experiment['name']+'.m',[os.path.join(matROOT,experiment['matlab_func']+'.m')],
+       '''
+       echo "addpath(genpath('%(matROOT)s'));%(matlab_func)s(%(matlab_func_argument_string)s);" >$TARGET
+       '''%dict(experiment.items() + vars().items()))
+    
+

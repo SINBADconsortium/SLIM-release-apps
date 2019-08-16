@@ -1,0 +1,39 @@
+ # Author: Tim T.Y. Lin
+#         Seismic Laboratory for Imaging and Modeling
+#         Department of Earth & Ocean Sciences
+#         The University of British Columbia
+#         
+# Date  : Jan, 10
+import os
+import sys
+import subprocess
+
+def CURLGetFile(target, source, env):
+    retcode = subprocess.call('curl '+env['FTPROOT']+str(target[0])+' -O', shell=True)
+    if retcode != 0 :
+      print "curl %s returned: %s" % (target, retcode)
+      sys.exit()
+    return None
+
+builder_curl = Builder(action = CURLGetFile)
+
+env = Environment(BUILDERS = {'Retrieve' : builder_curl})
+
+########################################################################
+# RETRIEVE DATA
+########################################################################
+# fetch data from FTP server
+
+# all data are pre-processed into split-spread geometry
+
+env_ftpTim = env.Clone();
+env_ftpTim['FTPROOT'] = "ftp://ftp.slim.gatech.edu/data/users/timlin/RobustEPSI/"
+# Synthetic data based on DELPHI's 'model1' salt dome model
+env_ftpTim.Retrieve("model1_150_by_150_shot_106_255.mat",[])
+
+env_ftpCommon = env.Clone();
+env_ftpCommon['FTPROOT'] = 'ftp://ftp.slim.gatech.edu/data/SoftwareRelease/Common/GulfOfSuez/'
+# A small real dataset from the Gulf of Suez 
+env_ftpCommon.Retrieve('GulfOfSuez178.su',[])
+# Larger version of previous dataset
+env_ftpCommon.Retrieve('SuezShots125.355shots.su',[])

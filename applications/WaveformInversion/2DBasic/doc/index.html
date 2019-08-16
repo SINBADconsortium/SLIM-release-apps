@@ -1,0 +1,151 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Basic Waveform inversion</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 7.12">
+      <meta name="date" content="2012-05-04">
+      <meta name="m-file" content="index">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>Basic Waveform inversion</h1>
+         <introduction>
+            <p>This software release includes a demonstration of the parallel waveform inversion framework in Matlab that has been developed
+               at SLIM.
+            </p>
+            <p>Author: Tristan van Leeuwen Date  : May, 2012</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Downloading &amp; Dependencies</a></li>
+               <li><a href="#2">Running &amp; Parallelism</a></li>
+               <li><a href="#3">Functions</a></li>
+               <li><a href="#4">Examples and results</a></li>
+               <li><a href="#5">References</a></li>
+            </ul>
+         </div>
+         <h2>Downloading &amp; Dependencies<a name="1"></a></h2>
+         <p>The code can be found in the <a href="https://slim.gatech.edu/consortiumsoftware">SLIM sofware release</a> under <tt>/applications/WaveformInversion/2DBasic</tt>.
+         </p>
+         <p>The code has been tested with <i>Matlab R2012b</i> and requires the Parallel Computing Toolbox.
+         </p>
+         <p>This code uses the following packages, also found in the <tt>tools</tt> part of the <a href="https://slim.gatech.edu/consortiumsoftware">SLIM software release</a>.
+         </p>
+         <div>
+            <ul>
+               <li><i>utilities/SPOT</i> - object oriented framework for matrix-free linear algebra.
+               </li>
+               <li><i>utilities/pSPOT</i> - parallel extension of SPOT.
+               </li>
+               <li><i>algorithms/2DFreqModeling</i> - 2D constant-density acoustic modeling
+               </li>
+               <li><i>operators/misc</i> - Misc. operators such as interpolation, smoothing and splines
+               </li>
+               <li><i>functions/misc</i> - Misc. functions.
+               </li>
+            </ul>
+         </div>
+         <h2>Running &amp; Parallelism<a name="2"></a></h2>
+         <p>All the examples and results are produced by the scripts found in this software release under <tt>applications/WaveformInversion/2DBasic/</tt>. Start matlab from that directory or run <tt>startup</tt> in that directory to add the appropriate paths.
+         </p>
+         <p>To run the scripts follow the instrictions in the README file enclosed with the code. The scripts can be run in serial mode
+            but parallel mode is advised.
+         </p>
+         <p>Read more about <a href="https://slim.gatech.edu/SoftwareDemos/tools/">SLIM's approach to parallel computing in Matlab</a>.
+         </p>
+         <h2>Functions<a name="3"></a></h2>
+         <p>The functions specific to this package can be found in the <tt>mbin</tt> directory.
+         </p>
+         <div>
+            <ul>
+               <li><tt>twonorms</tt>   - the two-norm and its derivative.
+               </li>
+               <li><tt>Jls</tt>        - least-squares residual and gradient for given model and observed data.
+               </li>
+               <li><tt>mylbfgs</tt>    - standard L-BFGS with Wolfe linesearch
+               </li>
+            </ul>
+         </div>
+         <p><a href="mfiles.html">More detailed descriptions and some basic tests are described here</a>.
+         </p>
+         <h2>Examples and results<a name="4"></a></h2>
+         <p>A script to reproduce the famous Camembert example [1] can be found in the <tt>scripts</tt> directory. <a href="results.html">The results are shown here</a>.
+         </p>
+         <h2>References<a name="5"></a></h2>
+         <p><a href="http://dx.doi.org/10.1190/1.1442188">[1]</a> O. Gauthier, J. Virieux, and A. Tarantola. Two-dimensional nonlinear inversion of seismic waveforms: Numerical results. Geophysics
+            51, 1387-1403 (1986)
+         </p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Basic Waveform inversion
+%
+% This software release includes a demonstration of the parallel waveform
+% inversion framework in Matlab that has been developed at SLIM.
+%
+% Author: Tristan van Leeuwen
+% Date  : May, 2012
+
+
+%% Downloading & Dependencies
+% The code can be found in the <https://slim.gatech.edu/consortiumsoftware SLIM sofware release> under
+% |/applications/WaveformInversion/2DBasic|.
+%
+% The code has been tested with _Matlab R2012b_ and requires the Parallel
+% Computing Toolbox.
+%
+% This code uses the following packages, also found in the |tools| part
+% of the <https://slim.gatech.edu/consortiumsoftware SLIM software release>.
+%
+% * _utilities/SPOT_ - object oriented framework for matrix-free linear algebra.
+% * _utilities/pSPOT_ - parallel extension of SPOT.
+% * _algorithms/2DFreqModeling_ - 2D constant-density acoustic modeling
+% * _operators/misc_ - Misc. operators such as interpolation, smoothing and splines
+% * _functions/misc_ - Misc. functions.
+
+%% Running & Parallelism
+% All the examples and results are produced by the scripts found in
+% this software release under |applications/WaveformInversion/2DBasic/|. 
+% Start matlab from that directory or run |startup| in that directory to add the appropriate paths.
+%
+% To run the scripts follow the instrictions in the README file enclosed
+% with the code.
+% The scripts can be run in serial mode but parallel mode is advised.
+% 
+% Read more about <https://slim.gatech.edu/SoftwareDemos/tools/ SLIM's approach to parallel computing in Matlab>.
+
+%% Functions
+% The functions specific to this package can be found in the |mbin|
+% directory.
+% 
+% * |twonorms|   - the two-norm and its derivative. 
+% * |Jls|        - least-squares residual and gradient for given model and observed data.
+% * |mylbfgs|    - standard L-BFGS with Wolfe linesearch
+%
+% <mfiles.html More detailed descriptions and some basic tests are described here>.
+
+%% Examples and results
+%
+% A script to reproduce the famous Camembert example [1] can be found in the |scripts| directory. 
+% <results.html The results are shown here>.
+
+%% References
+% 
+% <http://dx.doi.org/10.1190/1.1442188 [1]> O. Gauthier, J. Virieux, and A. Tarantola. Two-dimensional nonlinear
+% inversion of seismic waveforms: Numerical results. Geophysics 51, 1387-1403 (1986)
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

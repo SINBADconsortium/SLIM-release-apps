@@ -1,0 +1,107 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>example_edam1</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.5">
+      <meta name="date" content="2015-12-08">
+      <meta name="m-file" content="example_edam1">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1></h1>
+         <introduction>
+            <p>Written by Curt Da Silva (<a href="mailto:curtd@math.ubc.ca">curtd@math.ubc.ca</a>), July 2015.
+            </p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">3D FWI</a></li>
+               <li><a href="#2">Models</a></li>
+            </ul>
+         </div>
+         <h2>3D FWI<a name="1"></a></h2>
+         <p>This script displays the results of a very simple 3D FWI inversion</p>
+         <p>The modeling used in this example is described in <a href="https://slim.gatech.edu/SoftwareDemos/applications/WaveformInversion/">https://slim.gatech.edu/SoftwareDemos/applications/WaveformInversion/</a>.
+         </p>
+         <p><b>System requirements:</b></p>
+         <div>
+            <ul>
+               <li>This script was tested using Matlab 2014b with the parallel computing toolbox.</li>
+            </ul>
+         </div>
+         <p>*</p>
+         <h2>Models<a name="2"></a></h2><pre class="codeinput">cur_dir = pwd;
+base_dir = [cur_dir <span class="string">'/'</span>];
+results_dir = [base_dir <span class="string">'results/'</span>];
+
+load([results_dir <span class="string">'edam_fwi.mat'</span>]);
+
+plot_slices = @(x) slice3D(x,model,1500,1500,[]);
+
+plot_slices(v); ax = caxis;
+title(<span class="string">'true v'</span>);  colorbar;
+
+plot_slices(v0); caxis(ax);
+title(<span class="string">'initial v'</span>);  colorbar;
+
+plot_slices(vest); caxis(ax);
+title(<span class="string">'inverted v'</span>);  colorbar;
+
+figure; imagesc(real(init_res)); title(<span class="string">'Initial data residual'</span>); ax = caxis;
+
+figure; imagesc(real(final_res)); title(<span class="string">'Final data residual'</span>); caxis(ax);
+</pre><img vspace="5" hspace="5" src="example_edam1_01.png"> <img vspace="5" hspace="5" src="example_edam1_02.png"> <img vspace="5" hspace="5" src="example_edam1_03.png"> <img vspace="5" hspace="5" src="example_edam1_04.png"> <img vspace="5" hspace="5" src="example_edam1_05.png"> <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%%
+% Written by Curt Da Silva (curtd@math.ubc.ca), July 2015.
+
+%% 3D FWI 
+%
+% This script displays the results of a very simple 3D FWI inversion
+%
+% The modeling used in this example is described in
+% <https://slim.gatech.edu/SoftwareDemos/applications/WaveformInversion/>.
+%
+% *System requirements:* 
+%
+% * This script was tested using Matlab 2014b with the parallel computing
+% toolbox.
+%
+% * 
+
+%% Models
+cur_dir = pwd; 
+base_dir = [cur_dir '/'];
+results_dir = [base_dir 'results/'];
+
+load([results_dir 'edam_fwi.mat']);
+
+plot_slices = @(x) slice3D(x,model,1500,1500,[]);
+
+plot_slices(v); ax = caxis;
+title('true v');  colorbar;
+
+plot_slices(v0); caxis(ax);
+title('initial v');  colorbar;
+
+plot_slices(vest); caxis(ax);
+title('inverted v');  colorbar;
+
+figure; imagesc(real(init_res)); title('Initial data residual'); ax = caxis;
+
+figure; imagesc(real(final_res)); title('Final data residual'); caxis(ax);
+##### SOURCE END #####
+-->
+   </body>
+</html>

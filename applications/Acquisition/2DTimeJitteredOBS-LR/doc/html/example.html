@@ -1,0 +1,143 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Rank minimization based source-separation in time-jittered 2D ocean-bottom marine acquisition: examples and results</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.1">
+      <meta name="date" content="2015-01-29">
+      <meta name="m-file" content="example">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>Rank minimization based source-separation in time-jittered 2D ocean-bottom marine acquisition: examples and results</h1>
+         <introduction>
+            <p>Author: Rajiv Kumar (<a href="mailto:rakumar@eos.ubc.ca">rakumar@eos.ubc.ca</a>)
+            </p>
+            <p>Date: January, 2015</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Time-jittered acquisition with 1 boat</a></li>
+               <li><a href="#7">index along which data should be display</a></li>
+               <li><a href="#16">Running the code on your own data</a></li>
+            </ul>
+         </div>
+         <h2>Time-jittered acquisition with 1 boat<a name="1"></a></h2>
+         <p>See the scripts under <tt>examples</tt>.
+         </p>
+         <p>Load the parameters file</p><pre class="codeinput">load([resultsdir <span class="string">'/TimeJitAcq_1boat_2array_LR/TimeJitAcq_1boat_2array_LR_params.mat'</span>])
+</pre><p>time-jittered acquisition scenario</p><pre class="codeinput">fig = <span class="string">'yes'</span>;
+jitter_airgunarrays(ns, ds, dt, rndfactor, p, nboats, randseed, boatspeed, tfireint_min, tdelay, delayboat, fig);
+</pre><pre class="codeoutput">Boat 1 - airgun array 1
+Minimum interval between jittered firing times: 10.228 s
+Maximum interval between jittered firing times: 29.772 s
+First jittered shot number: 2
+Last jittered shot number: 127
+
+Boat 1 - airgun array 2
+Minimum interval between jittered firing times: 10.479 s
+Maximum interval between jittered firing times: 29.52 s
+First jittered shot number: 2
+Last jittered shot number: 124
+
+</pre><img vspace="5" hspace="5" src="example_01.png"> <h2>index along which data should be display<a name="7"></a></h2><pre class="codeinput">frame.t = 300;
+frame.r = 60;
+frame.s = 92;
+caxmin = 100;
+caxmax = 100;
+cmap   = <span class="string">'gray'</span>;
+</pre><p>Time-jittered (or blended) data volume: view 30 seconds of the jittered data volume</p><pre class="codeinput">t1 = 130.0;
+t2 = 160.0;
+imageJitteredData([resultsdir <span class="string">'/TimeJitAcq_1boat_2array_LR/TimeJitAcq_1boat_2array_LR_jitdata.rsf'</span>], t1, t2, dt, nr, dr, caxmin, caxmax, cmap);
+</pre><img vspace="5" hspace="5" src="example_02.png"> <p>Recovery by conventional processing: apply the adjoint of the sampling operator</p><pre class="codeinput">image2DTRSframe([resultsdir <span class="string">'/TimeJitAcq_1boat_2array_LR/TimeJitAcq_1boat_2array_LR_adjrecov.rsf'</span>], frame, nt, dt, caxmin, caxmax, cmap);
+</pre><img vspace="5" hspace="5" src="example_03.png"> <img vspace="5" hspace="5" src="example_04.png"> <img vspace="5" hspace="5" src="example_05.png"> <p>NOTE: an empty shot gather image implies that none of the airguns fired at that location.</p>
+         <p>Recovery by rank-minimization</p><pre class="codeinput">image2DTRSframe([resultsdir <span class="string">'/TimeJitAcq_1boat_2array_LR/TimeJitAcq_1boat_2array_LRrecov.rsf'</span>], frame, nt, dt, caxmin, caxmax, cmap);
+</pre><img vspace="5" hspace="5" src="example_06.png"> <img vspace="5" hspace="5" src="example_07.png"> <img vspace="5" hspace="5" src="example_08.png"> <p>Difference</p><pre class="codeinput">image2DTRSframe([resultsdir <span class="string">'/TimeJitAcq_1boat_2array_LR/TimeJitAcq_1boat_2array_LRdiff.rsf'</span>], frame, nt, dt, caxmin, caxmax, cmap);
+</pre><img vspace="5" hspace="5" src="example_09.png"> <img vspace="5" hspace="5" src="example_10.png"> <img vspace="5" hspace="5" src="example_11.png"> <h2>Running the code on your own data<a name="16"></a></h2>
+         <p>Instructions are included in the README.md file under <tt>/applications/Acquisition/2DTimeJitteredOBS-LR/example</tt>.
+         </p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Rank minimization based source-separation in time-jittered 2D ocean-bottom marine acquisition: examples and results
+%
+% Author: Rajiv Kumar (rakumar@eos.ubc.ca)
+%
+% Date: January, 2015
+
+
+%% Time-jittered acquisition with 1 boat
+%  
+% See the scripts under |examples|.
+
+%%
+
+%%
+% Load the parameters file
+load([resultsdir '/TimeJitAcq_1boat_2array_LR/TimeJitAcq_1boat_2array_LR_params.mat']) 
+
+%%
+
+%%
+% time-jittered acquisition scenario
+
+fig = 'yes';
+jitter_airgunarrays(ns, ds, dt, rndfactor, p, nboats, randseed, boatspeed, tfireint_min, tdelay, delayboat, fig);
+
+%%
+
+%% index along which data should be display
+frame.t = 300;
+frame.r = 60;
+frame.s = 92;
+caxmin = 100;
+caxmax = 100;
+cmap   = 'gray';
+
+%%
+
+%%
+% Time-jittered (or blended) data volume:
+% view 30 seconds of the jittered data volume
+t1 = 130.0;
+t2 = 160.0;
+imageJitteredData([resultsdir '/TimeJitAcq_1boat_2array_LR/TimeJitAcq_1boat_2array_LR_jitdata.rsf'], t1, t2, dt, nr, dr, caxmin, caxmax, cmap);
+
+%%
+
+%%
+% Recovery by conventional processing:
+% apply the adjoint of the sampling operator
+image2DTRSframe([resultsdir '/TimeJitAcq_1boat_2array_LR/TimeJitAcq_1boat_2array_LR_adjrecov.rsf'], frame, nt, dt, caxmin, caxmax, cmap);
+
+%%
+% NOTE: an empty shot gather image implies that none of the airguns fired at that location.
+%%
+
+%% 
+% Recovery by rank-minimization
+image2DTRSframe([resultsdir '/TimeJitAcq_1boat_2array_LR/TimeJitAcq_1boat_2array_LRrecov.rsf'], frame, nt, dt, caxmin, caxmax, cmap);
+
+%%
+% Difference
+image2DTRSframe([resultsdir '/TimeJitAcq_1boat_2array_LR/TimeJitAcq_1boat_2array_LRdiff.rsf'], frame, nt, dt, caxmin, caxmax, cmap);
+
+%% Running the code on your own data
+%
+% Instructions are included in the README.md file under
+% |/applications/Acquisition/2DTimeJitteredOBS-LR/example|.
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

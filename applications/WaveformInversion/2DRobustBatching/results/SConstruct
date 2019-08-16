@@ -1,0 +1,15 @@
+import os
+from rsf.proj import *
+
+########################################################################
+# RETRIEVE RESULTS
+########################################################################
+# define SLIM FTP server information
+SConscript('bg2_batch/SConstruct')
+SConscript('camembert/SConstruct')
+SConscript('mbase/SConstruct')
+SConscript('mlsls/SConstruct')
+SConscript('mstls/SConstruct')
+SConscript('mstst/SConstruct')
+
+End()

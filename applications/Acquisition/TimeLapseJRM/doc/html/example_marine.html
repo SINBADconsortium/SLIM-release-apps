@@ -1,0 +1,277 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Joint recovery method: examples and results</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.1">
+      <meta name="date" content="2014-06-25">
+      <meta name="m-file" content="example_marine">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>Joint recovery method: examples and results</h1>
+         <introduction>
+            <p>Author: Haneet Wason (<a href="mailto:hwason@eos.ubc.ca">hwason@eos.ubc.ca</a>)
+            </p>
+            <p>Date: June, 2014</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#3">Conventional vs. jittered (blended) acquisition</a></li>
+               <li><a href="#5">Original data (common receiver gather)</a></li>
+               <li><a href="#7">Apply the adjoint of the sampling operator to blended data</a></li>
+               <li><a href="#9">Recovered data</a></li>
+               <li><a href="#11">Residual : Original - Recovered</a></li>
+            </ul>
+         </div><pre class="codeinput"><span class="comment">% Set paths</span>
+curdir = pwd;
+basedir = curdir(1:end-4);
+datadir = [basedir <span class="string">'/data/TimeJitteredMarineAcq'</span>];
+resultsdir = [basedir <span class="string">'/results/TimeJitteredMarineAcq_OneReceiverGather'</span>];
+
+<span class="comment">% Load previously computed results</span>
+load([resultsdir <span class="string">'/JRM_TimeJitAcq_1boat_params.mat'</span>])
+
+<span class="comment">% Plotting parameters</span>
+caxdata = 0.5;
+cax4Dsignal = 0.05;
+cmap = <span class="string">'gray'</span>;
+
+<span class="comment">% x-axis label for receiver gathers</span>
+xlab = <span class="string">'Source position (m)'</span>;
+xpos = 0 : ds : (ns-1)*ds;
+x = 1:ns;
+axis_gather = 0 : 250 : 1000;
+<span class="keyword">for</span> k = 1:length(axis_gather); xtick(k) = x(xpos == axis_gather(k)); <span class="keyword">end</span>
+xticklabel = axis_gather;
+
+<span class="comment">% y-axis label for receiver gathers</span>
+ylab = <span class="string">'Time (s)'</span>;
+ytick = 125:125:nt;
+yticklabel = ytick*dt;
+</pre><h2>Conventional vs. jittered (blended) acquisition<a name="3"></a></h2><pre class="codeinput"><span class="comment">% Conventional acquisition</span>
+flipflop = <span class="string">'yes'</span>;
+tfireint_min = 10.0;
+boatspeed_conv = ds/tfireint_min;
+fig = <span class="string">'yes'</span>;
+convacq_2arrays(flipflop, tfireint_min, ns, dt, boatspeed_conv, fig, []);
+
+<span class="comment">% Time-jittered acquisition for baseline and monitor surveys</span>
+jitter_airgunarrays4D(ns, ds, dt, rndfactor, p, rseed, boatspeed, tfireint_min, tdelay, delayboat, fig, []);
+</pre><img vspace="5" hspace="5" src="example_marine_01.png"> <img vspace="5" hspace="5" src="example_marine_02.png"> <img vspace="5" hspace="5" src="example_marine_03.png"> <h2>Original data (common receiver gather)<a name="5"></a></h2><pre class="codeinput"><span class="comment">% Load data</span>
+load(<span class="string">'../data/TimeJitteredMarineAcq/data_4D.mat'</span>);
+D_base = D1;
+D_mon = D2;
+
+clear <span class="string">D1</span> <span class="string">D2</span>
+
+<span class="comment">% Select a subset</span>
+subset = ind_start : (ind_start + ns - 1);
+D1 = squeeze(D_base(:,subset,subset));
+D2 = squeeze(D_mon(:,subset,subset));
+
+<span class="comment">% Select a receiver gather (from the subset)</span>
+D1 = squeeze(D1(:,recv_ind,:));
+D2 = squeeze(D2(:,recv_ind,:));
+
+clear <span class="string">D_base</span> <span class="string">D_mon</span>
+
+<span class="comment">% Original 4D signal</span>
+signal_4D = D1 - D2;
+
+<span class="comment">% Baseline</span>
+figure; imagesc(D1, [-1 1]*caxdata); colormap(cmap); xlabel(xlab); ylabel(ylab); title(<span class="string">'True baseline'</span>);
+set(gca, <span class="string">'plotboxaspectratio'</span>, [1.5 2 1.5], <span class="string">'Xtick'</span>, xtick, <span class="string">'XTickLabel'</span>, xticklabel, <span class="string">'Ytick'</span>, ytick, <span class="string">'YTickLabel'</span>, yticklabel)
+
+<span class="comment">% Monitor</span>
+figure; imagesc(D2, [-1 1]*caxdata); colormap(cmap); xlabel(xlab); ylabel(ylab); title(<span class="string">'True monitor'</span>);
+set(gca, <span class="string">'plotboxaspectratio'</span>, [1.5 2 1.5], <span class="string">'Xtick'</span>, xtick, <span class="string">'XTickLabel'</span>, xticklabel, <span class="string">'Ytick'</span>, ytick, <span class="string">'YTickLabel'</span>, yticklabel)
+
+<span class="comment">% 4-D signal</span>
+figure; imagesc(signal_4D, [-1 1]*cax4Dsignal); colormap(cmap); xlabel(xlab); ylabel(ylab); title(<span class="string">'True 4-D signal'</span>);
+set(gca, <span class="string">'plotboxaspectratio'</span>, [1.5 2 1.5], <span class="string">'Xtick'</span>, xtick, <span class="string">'XTickLabel'</span>, xticklabel, <span class="string">'Ytick'</span>, ytick, <span class="string">'YTickLabel'</span>, yticklabel)
+</pre><img vspace="5" hspace="5" src="example_marine_04.png"> <img vspace="5" hspace="5" src="example_marine_05.png"> <img vspace="5" hspace="5" src="example_marine_06.png"> <h2>Apply the adjoint of the sampling operator to blended data<a name="7"></a></h2><pre class="codeinput"><span class="comment">% Baseline</span>
+figure; imagesc(real(rsf_read_all([resultsdir <span class="string">'/'</span> fname_base_adjrecov])), [-1 1]*caxdata); colormap(cmap); xlabel(xlab); ylabel(ylab); title(<span class="string">'Baseline'</span>);
+set(gca, <span class="string">'plotboxaspectratio'</span>, [1.5 2 1.5], <span class="string">'Xtick'</span>, xtick, <span class="string">'XTickLabel'</span>, xticklabel, <span class="string">'Ytick'</span>, ytick, <span class="string">'YTickLabel'</span>, yticklabel)
+
+<span class="comment">% Monitor</span>
+figure; imagesc(real(rsf_read_all([resultsdir <span class="string">'/'</span> fname_mon_adjrecov])), [-1 1]*caxdata); colormap(cmap); xlabel(xlab); ylabel(ylab); title(<span class="string">'Monitor'</span>);
+set(gca, <span class="string">'plotboxaspectratio'</span>, [1.5 2 1.5], <span class="string">'Xtick'</span>, xtick, <span class="string">'XTickLabel'</span>, xticklabel, <span class="string">'Ytick'</span>, ytick, <span class="string">'YTickLabel'</span>, yticklabel)
+
+<span class="comment">% 4-D signal</span>
+figure; imagesc(real(rsf_read_all([resultsdir <span class="string">'/'</span> fname_4Dsignal_adjrecov])), [-1 1]*cax4Dsignal); colormap(cmap); xlabel(xlab); ylabel(ylab); title(<span class="string">'4-D signal'</span>);
+set(gca, <span class="string">'plotboxaspectratio'</span>, [1.5 2 1.5], <span class="string">'Xtick'</span>, xtick, <span class="string">'XTickLabel'</span>, xticklabel, <span class="string">'Ytick'</span>, ytick, <span class="string">'YTickLabel'</span>, yticklabel)
+</pre><img vspace="5" hspace="5" src="example_marine_07.png"> <img vspace="5" hspace="5" src="example_marine_08.png"> <img vspace="5" hspace="5" src="example_marine_09.png"> <h2>Recovered data<a name="9"></a></h2><pre class="codeinput"><span class="comment">% Baseline</span>
+figure; imagesc(real(rsf_read_all([resultsdir <span class="string">'/'</span> fname_base_L1recov])), [-1 1]*caxdata); colormap(cmap); xlabel(xlab); ylabel(ylab); title(<span class="string">'Baseline'</span>);
+set(gca, <span class="string">'plotboxaspectratio'</span>, [1.5 2 1.5], <span class="string">'Xtick'</span>, xtick, <span class="string">'XTickLabel'</span>, xticklabel, <span class="string">'Ytick'</span>, ytick, <span class="string">'YTickLabel'</span>, yticklabel)
+
+<span class="comment">% Monitor</span>
+figure; imagesc(real(rsf_read_all([resultsdir <span class="string">'/'</span> fname_mon_L1recov])), [-1 1]*caxdata); colormap(cmap); xlabel(xlab); ylabel(ylab); title(<span class="string">'Monitor'</span>);
+set(gca, <span class="string">'plotboxaspectratio'</span>, [1.5 2 1.5], <span class="string">'Xtick'</span>, xtick, <span class="string">'XTickLabel'</span>, xticklabel, <span class="string">'Ytick'</span>, ytick, <span class="string">'YTickLabel'</span>, yticklabel)
+
+<span class="comment">% 4-D signal</span>
+figure; imagesc(real(rsf_read_all([resultsdir <span class="string">'/'</span> fname_4Dsignal_L1recov])), [-1 1]*cax4Dsignal); colormap(cmap); xlabel(xlab); ylabel(ylab); title(<span class="string">'4-D signal'</span>);
+set(gca, <span class="string">'plotboxaspectratio'</span>, [1.5 2 1.5], <span class="string">'Xtick'</span>, xtick, <span class="string">'XTickLabel'</span>, xticklabel, <span class="string">'Ytick'</span>, ytick, <span class="string">'YTickLabel'</span>, yticklabel)
+</pre><img vspace="5" hspace="5" src="example_marine_10.png"> <img vspace="5" hspace="5" src="example_marine_11.png"> <img vspace="5" hspace="5" src="example_marine_12.png"> <h2>Residual : Original - Recovered<a name="11"></a></h2><pre class="codeinput"><span class="comment">% Baseline</span>
+figure; imagesc(real(rsf_read_all([resultsdir <span class="string">'/'</span> fname_base_L1diff])), [-1 1]*caxdata); colormap(cmap); xlabel(xlab); ylabel(ylab); title(<span class="string">'Baseline'</span>);
+set(gca, <span class="string">'plotboxaspectratio'</span>, [1.5 2 1.5], <span class="string">'Xtick'</span>, xtick, <span class="string">'XTickLabel'</span>, xticklabel, <span class="string">'Ytick'</span>, ytick, <span class="string">'YTickLabel'</span>, yticklabel)
+
+<span class="comment">% Monitor</span>
+figure; imagesc(real(rsf_read_all([resultsdir <span class="string">'/'</span> fname_mon_L1diff])), [-1 1]*caxdata); colormap(cmap); xlabel(xlab); ylabel(ylab); title(<span class="string">'Monitor'</span>);
+set(gca, <span class="string">'plotboxaspectratio'</span>, [1.5 2 1.5], <span class="string">'Xtick'</span>, xtick, <span class="string">'XTickLabel'</span>, xticklabel, <span class="string">'Ytick'</span>, ytick, <span class="string">'YTickLabel'</span>, yticklabel)
+
+<span class="comment">% 4-D signal</span>
+figure; imagesc(real(rsf_read_all([resultsdir <span class="string">'/'</span> fname_4Dsignal_L1diff])), [-1 1]*cax4Dsignal); colormap(cmap); xlabel(xlab); ylabel(ylab); title(<span class="string">'4-D signal'</span>);
+set(gca, <span class="string">'plotboxaspectratio'</span>, [1.5 2 1.5], <span class="string">'Xtick'</span>, xtick, <span class="string">'XTickLabel'</span>, xticklabel, <span class="string">'Ytick'</span>, ytick, <span class="string">'YTickLabel'</span>, yticklabel)
+</pre><img vspace="5" hspace="5" src="example_marine_13.png"> <img vspace="5" hspace="5" src="example_marine_14.png"> <img vspace="5" hspace="5" src="example_marine_15.png"> <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Joint recovery method: examples and results 
+%
+% Author: Haneet Wason (hwason@eos.ubc.ca)
+%
+% Date: June, 2014
+
+%%
+
+% Set paths
+curdir = pwd;
+basedir = curdir(1:end-4);
+datadir = [basedir '/data/TimeJitteredMarineAcq'];
+resultsdir = [basedir '/results/TimeJitteredMarineAcq_OneReceiverGather'];
+
+% Load previously computed results
+load([resultsdir '/JRM_TimeJitAcq_1boat_params.mat']) 
+
+% Plotting parameters
+caxdata = 0.5;
+cax4Dsignal = 0.05;
+cmap = 'gray';
+
+% x-axis label for receiver gathers
+xlab = 'Source position (m)';
+xpos = 0 : ds : (ns-1)*ds;
+x = 1:ns;
+axis_gather = 0 : 250 : 1000;
+for k = 1:length(axis_gather); xtick(k) = x(xpos == axis_gather(k)); end
+xticklabel = axis_gather;
+
+% y-axis label for receiver gathers
+ylab = 'Time (s)';
+ytick = 125:125:nt;
+yticklabel = ytick*dt;
+
+%%
+
+%% Conventional vs. jittered (blended) acquisition
+
+% Conventional acquisition
+flipflop = 'yes';
+tfireint_min = 10.0;
+boatspeed_conv = ds/tfireint_min;
+fig = 'yes';
+convacq_2arrays(flipflop, tfireint_min, ns, dt, boatspeed_conv, fig, []);
+
+% Time-jittered acquisition for baseline and monitor surveys
+jitter_airgunarrays4D(ns, ds, dt, rndfactor, p, rseed, boatspeed, tfireint_min, tdelay, delayboat, fig, []);
+
+
+%%
+
+%% Original data (common receiver gather)
+
+% Load data
+load('../data/TimeJitteredMarineAcq/data_4D.mat');
+D_base = D1;
+D_mon = D2;
+
+clear D1 D2
+
+% Select a subset
+subset = ind_start : (ind_start + ns - 1);
+D1 = squeeze(D_base(:,subset,subset));
+D2 = squeeze(D_mon(:,subset,subset));
+
+% Select a receiver gather (from the subset)
+D1 = squeeze(D1(:,recv_ind,:));
+D2 = squeeze(D2(:,recv_ind,:));
+
+clear D_base D_mon
+
+% Original 4D signal
+signal_4D = D1 - D2;
+
+% Baseline
+figure; imagesc(D1, [-1 1]*caxdata); colormap(cmap); xlabel(xlab); ylabel(ylab); title('True baseline');
+set(gca, 'plotboxaspectratio', [1.5 2 1.5], 'Xtick', xtick, 'XTickLabel', xticklabel, 'Ytick', ytick, 'YTickLabel', yticklabel)
+
+% Monitor
+figure; imagesc(D2, [-1 1]*caxdata); colormap(cmap); xlabel(xlab); ylabel(ylab); title('True monitor');
+set(gca, 'plotboxaspectratio', [1.5 2 1.5], 'Xtick', xtick, 'XTickLabel', xticklabel, 'Ytick', ytick, 'YTickLabel', yticklabel)
+
+% 4-D signal
+figure; imagesc(signal_4D, [-1 1]*cax4Dsignal); colormap(cmap); xlabel(xlab); ylabel(ylab); title('True 4-D signal');
+set(gca, 'plotboxaspectratio', [1.5 2 1.5], 'Xtick', xtick, 'XTickLabel', xticklabel, 'Ytick', ytick, 'YTickLabel', yticklabel)
+
+%%
+
+%% Apply the adjoint of the sampling operator to blended data
+
+% Baseline
+figure; imagesc(real(rsf_read_all([resultsdir '/' fname_base_adjrecov])), [-1 1]*caxdata); colormap(cmap); xlabel(xlab); ylabel(ylab); title('Baseline');
+set(gca, 'plotboxaspectratio', [1.5 2 1.5], 'Xtick', xtick, 'XTickLabel', xticklabel, 'Ytick', ytick, 'YTickLabel', yticklabel)
+
+% Monitor
+figure; imagesc(real(rsf_read_all([resultsdir '/' fname_mon_adjrecov])), [-1 1]*caxdata); colormap(cmap); xlabel(xlab); ylabel(ylab); title('Monitor');
+set(gca, 'plotboxaspectratio', [1.5 2 1.5], 'Xtick', xtick, 'XTickLabel', xticklabel, 'Ytick', ytick, 'YTickLabel', yticklabel)
+
+% 4-D signal
+figure; imagesc(real(rsf_read_all([resultsdir '/' fname_4Dsignal_adjrecov])), [-1 1]*cax4Dsignal); colormap(cmap); xlabel(xlab); ylabel(ylab); title('4-D signal');
+set(gca, 'plotboxaspectratio', [1.5 2 1.5], 'Xtick', xtick, 'XTickLabel', xticklabel, 'Ytick', ytick, 'YTickLabel', yticklabel)
+
+%%
+
+%% Recovered data
+
+% Baseline
+figure; imagesc(real(rsf_read_all([resultsdir '/' fname_base_L1recov])), [-1 1]*caxdata); colormap(cmap); xlabel(xlab); ylabel(ylab); title('Baseline');
+set(gca, 'plotboxaspectratio', [1.5 2 1.5], 'Xtick', xtick, 'XTickLabel', xticklabel, 'Ytick', ytick, 'YTickLabel', yticklabel)
+
+% Monitor
+figure; imagesc(real(rsf_read_all([resultsdir '/' fname_mon_L1recov])), [-1 1]*caxdata); colormap(cmap); xlabel(xlab); ylabel(ylab); title('Monitor');
+set(gca, 'plotboxaspectratio', [1.5 2 1.5], 'Xtick', xtick, 'XTickLabel', xticklabel, 'Ytick', ytick, 'YTickLabel', yticklabel)
+
+% 4-D signal
+figure; imagesc(real(rsf_read_all([resultsdir '/' fname_4Dsignal_L1recov])), [-1 1]*cax4Dsignal); colormap(cmap); xlabel(xlab); ylabel(ylab); title('4-D signal');
+set(gca, 'plotboxaspectratio', [1.5 2 1.5], 'Xtick', xtick, 'XTickLabel', xticklabel, 'Ytick', ytick, 'YTickLabel', yticklabel)
+
+%%
+
+%% Residual : Original - Recovered
+
+% Baseline
+figure; imagesc(real(rsf_read_all([resultsdir '/' fname_base_L1diff])), [-1 1]*caxdata); colormap(cmap); xlabel(xlab); ylabel(ylab); title('Baseline');
+set(gca, 'plotboxaspectratio', [1.5 2 1.5], 'Xtick', xtick, 'XTickLabel', xticklabel, 'Ytick', ytick, 'YTickLabel', yticklabel)
+
+% Monitor
+figure; imagesc(real(rsf_read_all([resultsdir '/' fname_mon_L1diff])), [-1 1]*caxdata); colormap(cmap); xlabel(xlab); ylabel(ylab); title('Monitor');
+set(gca, 'plotboxaspectratio', [1.5 2 1.5], 'Xtick', xtick, 'XTickLabel', xticklabel, 'Ytick', ytick, 'YTickLabel', yticklabel)
+
+% 4-D signal
+figure; imagesc(real(rsf_read_all([resultsdir '/' fname_4Dsignal_L1diff])), [-1 1]*cax4Dsignal); colormap(cmap); xlabel(xlab); ylabel(ylab); title('4-D signal');
+set(gca, 'plotboxaspectratio', [1.5 2 1.5], 'Xtick', xtick, 'XTickLabel', xticklabel, 'Ytick', ytick, 'YTickLabel', yticklabel)
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

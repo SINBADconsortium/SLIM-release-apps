@@ -1,0 +1,155 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Matlab Interface for iWAVE++</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.4">
+      <meta name="date" content="2016-02-25">
+      <meta name="m-file" content="index">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>Matlab Interface for iWAVE++</h1>
+         <introduction>
+            <p>This software release includes demos to use iWAVE to simultate time domain acoustic data, born modeling data, adjoint modeling,
+               RTM, least-square migration and FWI in Matlab
+            </p>
+            <p>[1] Symes, W.W., Sun, D. and Enriquez, M., 2011. From modelling to inversion: designing a well&#8208;adapted simulator. Geophysical
+               Prospecting, 59(5), pp.814-833.
+            </p>
+            <p>[2] Tschannen,V., Fang, Z., and Herrmann, F. J., 2014. Time domain least squares migration and dimensionality reduction, Technical
+               report, UBC.
+            </p>
+            <p>Author: Zhilong Fang Date  : Feb, 2016</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Downloading &amp; Dependencies</a></li>
+               <li><a href="#2">Running &amp; Parallelism</a></li>
+               <li><a href="#3">Demos</a></li>
+               <li><a href="#4">Results</a></li>
+            </ul>
+         </div>
+         <h2>Downloading &amp; Dependencies<a name="1"></a></h2>
+         <p>The code can be found in the <a href="https://slim.gatech.edu/consortiumsoftware">SLIM sofware release</a> under <tt>/applications/SoftwareDemos/iWAVE</tt>.
+         </p>
+         <p>The code has been tested with <i>Matlab R2014b</i> and requires the iWAVE in the Madagascar version 9520 and installation of extra software from SLIM-release-comp repository.
+         </p>
+         <p>This code uses the following packages, also found in the <tt>tools</tt> part of the <a href="https://slim.gatech.edu/consortiumsoftware">SLIM software release</a>.
+         </p>
+         <div>
+            <ul>
+               <li><i>utilities/SPOT</i> - object oriented framework for matrix-free linear algebra.
+               </li>
+               <li><i>utilities/pSPOT</i> - parallel extension of SPOT.
+               </li>
+               <li><i>utilities/iWAVE</i> - toolbox for using iWAVE
+               </li>
+               <li><i>operators/misc</i> - Misc. operators such as interpolation, smoothing and splines
+               </li>
+               <li><i>functions/misc</i> - Misc. functions.
+               </li>
+            </ul>
+         </div>
+         <h2>Running &amp; Parallelism<a name="2"></a></h2>
+         <p>All the examples and results are produced by the scripts found in this software release under <tt>applications/WaveformInversion/SoftwareDemos/iWAVE/</tt>. Start matlab from that directory.
+         </p>
+         <p>To run the scripts follow the instrictions in the README file enclosed with the code. Most scripts can be run in serial mode
+            and parallel mode. When run the parallel mode, you do not need to open matlab pool
+         </p>
+         <p>Read more about <a href="https://slim.gatech.edu/SoftwareDemos/tools/">SLIM's approach to parallel computing in Matlab</a>.
+         </p>
+         <h2>Demos<a name="3"></a></h2>
+         <p>The demos specific to this package can be found in the <tt>demo</tt> directory.
+         </p>
+         <div>
+            <ul>
+               <li><tt>_ForwardModeling/Forward_Demo</tt>       - Demo script to simulate the acoustic wave data
+               </li>
+               <li><tt>_LinearizedModeling/Linear_Demo</tt>     - Demo script to simulate the linearized data
+               </li>
+               <li><tt>_AdjointModeling/Adjoint_Demo</tt>       - Demo script to perform the adjoint operator of the linearized operator
+               </li>
+               <li><tt>_RTM/RTM_Demo</tt>                       - Demo script to run a simple RTM
+               </li>
+               <li><tt>_LSM/LSM_Demo</tt>                       - Demo script to run a simple least square migration
+               </li>
+               <li><tt>_FWI/FWI_Demo</tt>                       - Demo script to run a simple FWI
+               </li>
+            </ul>
+         </div>
+         <h2>Results<a name="4"></a></h2>
+         <p><a href="./example.html">The results are shown here</a>.
+         </p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Matlab Interface for iWAVE++
+%
+% This software release includes demos to use iWAVE to simultate time domain acoustic data, born modeling data, adjoint modeling,
+% RTM, least-square migration and FWI in Matlab
+%
+% [1] Symes, W.W., Sun, D. and Enriquez, M., 2011. From modelling to inversion: designing a well‐adapted simulator. Geophysical Prospecting, 59(5), pp.814-833.
+%
+% [2] Tschannen,V., Fang, Z., and Herrmann, F. J., 2014. Time domain least squares migration and dimensionality reduction, Technical report, UBC.
+%
+% Author: Zhilong Fang
+% Date  : Feb, 2016
+
+
+%% Downloading & Dependencies
+% The code can be found in the <https://slim.gatech.edu/consortiumsoftware SLIM sofware release> under
+% |/applications/SoftwareDemos/iWAVE|.
+%
+% The code has been tested with _Matlab R2014b_ and requires the iWAVE in the Madagascar version 9520 and installation of extra software from SLIM-release-comp repository.
+%
+% This code uses the following packages, also found in the |tools| part
+% of the <https://slim.gatech.edu/consortiumsoftware SLIM software release>.
+%
+% * _utilities/SPOT_ - object oriented framework for matrix-free linear algebra.
+% * _utilities/pSPOT_ - parallel extension of SPOT.
+% * _utilities/iWAVE_ - toolbox for using iWAVE
+% * _operators/misc_ - Misc. operators such as interpolation, smoothing and splines
+% * _functions/misc_ - Misc. functions.
+
+%% Running & Parallelism
+% All the examples and results are produced by the scripts found in
+% this software release under |applications/WaveformInversion/SoftwareDemos/iWAVE/|. 
+% Start matlab from that directory.
+%
+% To run the scripts follow the instrictions in the README file enclosed
+% with the code.
+% Most scripts can be run in serial mode and parallel mode. When run the parallel mode, you do not need to open matlab pool
+% 
+% Read more about <https://slim.gatech.edu/SoftwareDemos/tools/ SLIM's approach to parallel computing in Matlab>.
+
+%% Demos
+% The demos specific to this package can be found in the |demo| directory.
+% 
+% * |_ForwardModeling/Forward_Demo|       - Demo script to simulate the acoustic wave data 
+% * |_LinearizedModeling/Linear_Demo|     - Demo script to simulate the linearized data
+% * |_AdjointModeling/Adjoint_Demo|       - Demo script to perform the adjoint operator of the linearized operator
+% * |_RTM/RTM_Demo|                       - Demo script to run a simple RTM
+% * |_LSM/LSM_Demo|                       - Demo script to run a simple least square migration
+% * |_FWI/FWI_Demo|                       - Demo script to run a simple FWI
+
+
+
+%% Results 
+% <./example.html The results are shown here>.
+
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

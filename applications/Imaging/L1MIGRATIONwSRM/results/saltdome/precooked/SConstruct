@@ -1,0 +1,18 @@
+import os
+from rsf.proj import *
+
+########################################################################
+# RETRIEVE DATA
+########################################################################
+# define SLIM FTP server information
+FTPserver = {
+        'server': 'ftp.slim.gatech.edu',
+        'login': 'ftp',
+        'password':''}
+
+loc = os.path.join('SoftwareRelease','Imaging','L1MIGRATIONwSRM','results','saltdome')
+files = ['L1Inv_totaldata_2ss15Freq_NoRenewal_305iter_preview.mat','L1Inv_totaldata_2ss15Freq_SourceFreqRenewal_305iter_preview.mat','L1Inv_totaldata_FullAcq_NoRenewal_60iter_preview.mat','RTM_totaldata_FullAcq.mat','RTM_IgnoreMul_FullAcq.mat','L2PInv_totaldata_2ss15Freq_SourceFreqRenewal_305iter_preview.mat','L1Inv_totaldata_10ssAllFreq_NoRenewal_60iter_preview.mat']
+
+# fetch data from FTP server
+for elm in files:
+        Fetch(elm,loc,FTPserver)

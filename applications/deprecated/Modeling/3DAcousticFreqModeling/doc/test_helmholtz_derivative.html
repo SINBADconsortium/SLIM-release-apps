@@ -1,0 +1,368 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>3D constant-density acoustic frequency-domain modeling: Testing Helmholtz derivative</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.4">
+      <meta name="date" content="2015-02-12">
+      <meta name="m-file" content="test_helmholtz_derivative">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>3D constant-density acoustic frequency-domain modeling: Testing Helmholtz derivative</h1>
+         <introduction>
+            <p>In this test we certify that the function helmholtz_3d_derivative in fact computes the numerical derivative of the function
+               helmholtz_3d. Notice that this is crucial for computing the action of the Jacobian (without explicitly forming the Jacobian).
+            </p>
+            <p><b>Author:</b> <a href="mailto:rlago@eos.ubc.ca">Rafael Lago</a></p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Theory</a></li>
+               <li><a href="#2">Computational details</a></li>
+               <li><a href="#3">Test case</a></li>
+               <li><a href="#4">Script</a></li>
+               <li><a href="#5">Results</a></li>
+               <li><a href="#6">References</a></li>
+            </ul>
+         </div>
+         <h2>Theory<a name="1"></a></h2>
+         <p>From Taylor's theorem we know that</p>
+         <p><img vspace="5" hspace="5" src="test_helmholtz_derivative_eq18001123990065263154.png"> </p>
+         <p>That means that the second order perturbation</p>
+         <p><img vspace="5" hspace="5" src="test_helmholtz_derivative_eq00082924006112857240.png">  (1)
+         </p>
+         <p>should be of the same order of magnitude as <img vspace="5" hspace="5" src="test_helmholtz_derivative_eq10912795335580525639.png">  for any model <img vspace="5" hspace="5" src="test_helmholtz_derivative_eq11319871188381094158.png">  and a small enough perturbation <img vspace="5" hspace="5" src="test_helmholtz_derivative_eq10983069249503739233.png"> . If the model is given in slowness squared rather than meters per second, the second derivative should be zero and thus the
+            first order approximation should be exact up to machine precision. In this test we concern the meters per second unit only,
+            but with little modification, this script also shows that helmholtz_3d_derivative also represents the derivative of helmholtz_3d
+            when using slowness squared.
+         </p>
+         <p>In this test, we will consider the simple 3D Camembert velocity model as <img vspace="5" hspace="5" src="test_helmholtz_derivative_eq11319871188381094158.png">  and a random perturbation <img vspace="5" hspace="5" src="test_helmholtz_derivative_eq10983069249503739233.png"> . Instead of measuring <img vspace="5" hspace="5" src="test_helmholtz_derivative_eq05504732755016249028.png">  however, we will sample it with a vector <img vspace="5" hspace="5" src="test_helmholtz_derivative_eq09941021013676836398.png"> , as well chosen at random, and the test we effectively perform is
+         </p>
+         <p><img vspace="5" hspace="5" src="test_helmholtz_derivative_eq15731477770845155206.png">  (2)
+         </p>
+         <p>for varying values of <img vspace="5" hspace="5" src="test_helmholtz_derivative_eq08062630503172331818.png"> , from <img vspace="5" hspace="5" src="test_helmholtz_derivative_eq06906014214405183369.png">  to <img vspace="5" hspace="5" src="test_helmholtz_derivative_eq13518639599403624062.png"> . We also impose that <img vspace="5" hspace="5" src="test_helmholtz_derivative_eq03864130621440408320.png">  where <img vspace="5" hspace="5" src="test_helmholtz_derivative_eq17634041199005092249.png">  denotes the Euclidean norm of the vectorized model <img vspace="5" hspace="5" src="test_helmholtz_derivative_eq11319871188381094158.png"> .
+         </p>
+         <h2>Computational details<a name="2"></a></h2>
+         <p>The actual derivative of helmholtz_3d should be a tensor of dimension <img vspace="5" hspace="5" src="test_helmholtz_derivative_eq12980928126458318455.png">  and therefore the storage of such a structure is considerably expensive. However, it is possible to compute and store the
+            tensor dH/dm using band-storage format. The total storage cost for the tensor <img vspace="5" hspace="5" src="test_helmholtz_derivative_eq02994380264964671482.png">  computed by helmholtz_3d_derivative is exactly the same as that of the matrix H, computed using helmholtz_3d.
+         </p>
+         <p>We refer to the technical report [1] for more details on how to implement the tensor and the tensor-vector product using the
+            band-storage format.
+         </p>
+         <p><b>Remark:</b> This is specifically the tensor for the 27 points stencil. The implementation of the tensor for the simpler 7 points stencil
+            will be provided in a future release.
+         </p>
+         <h2>Test case<a name="3"></a></h2>
+         <p>For this test we use the simple 3D camembert model. It consists of a homogeneous model with a high velocity ellipsoid in the
+            center. The following figure shows a slice of the model.
+         </p><pre class="codeinput">clear
+flog = fopen([<span class="string">'../results/test_helmholtz_derivative_log'</span>],<span class="string">'w'</span>);
+
+
+<span class="comment">% Read velocity model (and plot a slice)</span>
+<span class="comment">%--------------------------------------------------------------------</span>
+vfile      = [ <span class="string">'../data/m_true.rsf'</span> ];
+[model.v model.nv model.dv model.ov]  = rsf_read_all(vfile);
+model.unit = <span class="string">'m/s'</span>;
+plot_slice(model.v,11,<span class="string">'z'</span>);
+</pre><img vspace="5" hspace="5" src="test_helmholtz_derivative_01.png"> <h2>Script<a name="4"></a></h2>
+         <p>Follows the test script. It prints some details of the velocity model being used and the progress of the numerical test for
+            each value of h.
+         </p><pre class="codeinput"><span class="comment">% Obtains a stable computational grid</span>
+<span class="comment">% (does not discretize yet)</span>
+<span class="comment">%--------------------------------------------------------------------</span>
+opts.discretize=false;
+cg = discrete_helmholtz(model,6,opts,flog);
+
+N = prod(cg.nt);
+
+<span class="comment">% Choose the random perturbation dm and a random vector p</span>
+<span class="comment">%---------------------------------------------------------</span>
+h  = 10.^([-1:-1:-10]);
+rng(123456);
+dm = randn(model.nv);
+dm =(dm/norm(dm(:))) *norm(model.v(:));
+m  = cg.pg2cg(model.v);
+dm = cg.pg2cg(dm);
+p  = randn(N,1);
+
+<span class="comment">% Discretize for H(m)</span>
+<span class="comment">%---------------------</span>
+[H0,idx] = helmholtz_3d(m,cg.d,cg.pml,cg.f,model.unit);
+H0p = Hmvp(H0,idx,p);
+
+plog(flog,<span class="string">'Testing the partial derivative of the Helmholtz operator w.r.t. m\n'</span>);
+
+<span class="comment">% Loop over h</span>
+<span class="comment">%-------------</span>
+<span class="keyword">for</span> i=1:length(h)
+   [H, idx] = helmholtz_3d(m + h(i)*dm,cg.d,cg.pml,cg.f,model.unit);
+   Hp   = Hmvp(H,idx,p);
+
+   [dH, ~ ] = helmholtz_3d_derivative(m + h(i)*dm,cg.d,cg.f,model.unit);
+   dH       = H2sparse(dH,idx);
+   dmd      = spdiags(dm(:),0,N,N);
+
+   diff1(i) = norm(Hp - H0p);
+   diff2(i) = norm(Hp - H0p - h(i)*(dH*dmd)*p);
+   plog(flog,<span class="string">'Order of perturbation   - ||h*dm||:                               '</span>,h(i),<span class="string">'\n'</span>);
+   plog(flog,<span class="string">'First order error       - ||H(m) - H(m+h*dm)||:                   '</span>,diff1(i),<span class="string">'\n'</span>);
+   plog(flog,<span class="string">'Second order correction - ||h*dH(m+h*dm)*dm||:                    '</span>,norm(h(i)*(dH*dmd)*p),<span class="string">'\n'</span>);
+   plog(flog,<span class="string">'Second order error      - ||H(m) - H(m+h*dm) - h*dH(m+h*dm)*dm||: '</span>,diff2(i),<span class="string">'\n\n'</span>);
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">
+* Physical domain:
+* ==================
+* vmin: 3.6e+03 
+* vmax: 4.5e+03 
+* Size:    [5e+03     5e+03     2e+03] m&sup3;
+* [ 51        51        21 ] points with grid spacing of [100       100       100]
+
+* Computational grid
+* ==================
+* n:    [ 51        51        21 ]  = 5.46e+04 
+* npml: [ 8         8         8 ], Total: 1.66e+05
+* d:    [ 100       100       100 ]
+* f:    6 Hz 
+* nlam: 6 (effective: 6) 
+
+Testing the partial derivative of the Helmholtz operator w.r.t. m
+Order of perturbation   - ||h*dm||:                               0.1
+First order error       - ||H(m) - H(m+h*dm)||:                   0.00522
+Second order correction - ||h*dH(m+h*dm)*dm||:                    0.00636
+Second order error      - ||H(m) - H(m+h*dm) - h*dH(m+h*dm)*dm||: 0.00174
+
+Order of perturbation   - ||h*dm||:                               0.01
+First order error       - ||H(m) - H(m+h*dm)||:                   0.000478
+Second order correction - ||h*dH(m+h*dm)*dm||:                    0.000479
+Second order error      - ||H(m) - H(m+h*dm) - h*dH(m+h*dm)*dm||: 1.23e-05
+
+Order of perturbation   - ||h*dm||:                               0.001
+First order error       - ||H(m) - H(m+h*dm)||:                   4.78e-05
+Second order correction - ||h*dH(m+h*dm)*dm||:                    4.78e-05
+Second order error      - ||H(m) - H(m+h*dm) - h*dH(m+h*dm)*dm||: 1.23e-07
+
+Order of perturbation   - ||h*dm||:                               0.0001
+First order error       - ||H(m) - H(m+h*dm)||:                   4.78e-06
+Second order correction - ||h*dH(m+h*dm)*dm||:                    4.78e-06
+Second order error      - ||H(m) - H(m+h*dm) - h*dH(m+h*dm)*dm||: 1.23e-09
+
+Order of perturbation   - ||h*dm||:                               1e-05
+First order error       - ||H(m) - H(m+h*dm)||:                   4.78e-07
+Second order correction - ||h*dH(m+h*dm)*dm||:                    4.78e-07
+Second order error      - ||H(m) - H(m+h*dm) - h*dH(m+h*dm)*dm||: 1.23e-11
+
+Order of perturbation   - ||h*dm||:                               1e-06
+First order error       - ||H(m) - H(m+h*dm)||:                   4.78e-08
+Second order correction - ||h*dH(m+h*dm)*dm||:                    4.78e-08
+Second order error      - ||H(m) - H(m+h*dm) - h*dH(m+h*dm)*dm||: 1.23e-13
+
+Order of perturbation   - ||h*dm||:                               1e-07
+First order error       - ||H(m) - H(m+h*dm)||:                   4.78e-09
+Second order correction - ||h*dH(m+h*dm)*dm||:                    4.78e-09
+Second order error      - ||H(m) - H(m+h*dm) - h*dH(m+h*dm)*dm||: 1.23e-15
+
+Order of perturbation   - ||h*dm||:                               1e-08
+First order error       - ||H(m) - H(m+h*dm)||:                   4.78e-10
+Second order correction - ||h*dH(m+h*dm)*dm||:                    4.78e-10
+Second order error      - ||H(m) - H(m+h*dm) - h*dH(m+h*dm)*dm||: 3.56e-17
+
+Order of perturbation   - ||h*dm||:                               1e-09
+First order error       - ||H(m) - H(m+h*dm)||:                   4.78e-11
+Second order correction - ||h*dH(m+h*dm)*dm||:                    4.78e-11
+Second order error      - ||H(m) - H(m+h*dm) - h*dH(m+h*dm)*dm||: 3.26e-17
+
+Order of perturbation   - ||h*dm||:                               1e-10
+First order error       - ||H(m) - H(m+h*dm)||:                   4.78e-12
+Second order correction - ||h*dH(m+h*dm)*dm||:                    4.78e-12
+Second order error      - ||H(m) - H(m+h*dm) - h*dH(m+h*dm)*dm||: 3.08e-17
+
+</pre><h2>Results<a name="5"></a></h2>
+         <p>As previously mentioned, we expect the second order error (1) to behave like <img vspace="5" hspace="5" src="test_helmholtz_derivative_eq01092757964788266048.png"> . The following plot clearly shows that the as h decreases, the second order approximation follows the same behaviour (i.e.
+            the lines are parallel) until reaching machine precision, which is <img vspace="5" hspace="5" src="test_helmholtz_derivative_eq07729512389498264340.png"> . Notice that any further computation is not actually meaningful, and we observe that the second order error turns into a
+            flat line after that point. This behaviour is expected.
+         </p>
+         <p>Likewise, we show the first order error as well. As expected, it behaves like <img vspace="5" hspace="5" src="test_helmholtz_derivative_eq08062630503172331818.png">  (i.e. the lines are parallel).
+         </p><pre class="codeinput">figure;
+loglog(h,diff1,h,h,<span class="string">'k--'</span>);
+xlabel(<span class="string">'h'</span>);ylabel(<span class="string">'error'</span>);
+hold <span class="string">on</span>;
+loglog(h,h.^2,<span class="string">'g--'</span>);
+hold <span class="string">on</span>;
+loglog(h,diff2,<span class="string">'r'</span>);
+xlim([h(end) h(1)]);
+legend(<span class="string">'First order error'</span>,<span class="string">'h'</span>,<span class="string">'h^2'</span>,<span class="string">'Second order error'</span>,<span class="string">'Location'</span>,<span class="string">'NorthWest'</span>);
+
+fclose(flog);
+</pre><img vspace="5" hspace="5" src="test_helmholtz_derivative_02.png"> <h2>References<a name="6"></a></h2>
+         <p><a href="2014-Lago-Efficient_computation.pdf">[1]</a> Lago, R. 2014 - Efficient computation of dH/dm tensor for a 27-points stencil with mass lumping
+         </p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% 3D constant-density acoustic frequency-domain modeling: Testing Helmholtz derivative
+%
+% In this test we certify that the function helmholtz_3d_derivative in fact 
+% computes the numerical derivative of the function helmholtz_3d. Notice that 
+% this is crucial for computing the action of the Jacobian (without explicitly 
+% forming the Jacobian).
+%
+% *Author:* <mailto:rlago@eos.ubc.ca Rafael Lago>
+
+%% Theory
+% From Taylor's theorem we know that
+% 
+% $H(m) = H(m+h\delta m) + h\partial H(m+h\delta m)\delta m + \mathcal O(h^2)$
+% 
+% That means that the second order perturbation
+% 
+% $H(m) - H(m+h\delta m) - h\partial H(m+h\delta m)\delta m$ (1)
+% 
+% should be of the same order of magnitude as $\mathcal O(h^2)$ for any model 
+% $m$ and a small enough perturbation $\delta m$. If the model is given in 
+% slowness squared rather than meters per second, the second derivative should
+% be zero and thus the first order approximation should be exact up to machine
+% precision. In this test we concern the meters per second unit only, but with
+% little modification, this script also shows that helmholtz_3d_derivative
+% also represents the derivative of helmholtz_3d when using slowness squared.
+% 
+% In this test, we will consider the simple 3D Camembert velocity model as $m$
+% and a random perturbation $\delta m$. Instead of measuring $H(m)-H(m+ \delta m)$ 
+% however, we will sample it with a vector $p$, as well chosen at random, and 
+% the test we effectively perform is
+% 
+% $H(m)p - H(m+h\delta m)p - h(\partial H(m+h\delta m)\delta m)p$ (2)
+% 
+% for varying values of $h$, from $10^{-1}$ to $10^{-10}$. We also impose that 
+% $||\delta m||=||m||$ where $||.||$ denotes the Euclidean norm of the 
+% vectorized model $m$.
+% 
+%
+
+%% Computational details
+% 
+% The actual derivative of helmholtz_3d should be a tensor of dimension 
+% $(n_x\times n_y\times n_z)^3$ and therefore the storage of such a
+% structure is considerably expensive. However, it is possible to compute and
+% store the tensor dH/dm using band-storage format. The total storage cost for
+% the tensor $\partial H/\partial m$ computed by helmholtz_3d_derivative is 
+% exactly the same as that of the matrix H, computed using helmholtz_3d.
+% 
+% We refer to the technical report [1] for more details on how to implement the
+% tensor and the tensor-vector product using the band-storage format.
+% 
+% *Remark:* This is specifically the tensor for the 27 points stencil. The 
+% implementation of the tensor for the simpler 7 points stencil will be provided
+% in a future release.
+%
+
+
+%% Test case
+% For this test we use the simple 3D camembert model. It consists of
+% a homogeneous model with a high velocity ellipsoid in the center.
+% The following figure shows a slice of the model.
+
+clear
+flog = fopen(['../results/test_helmholtz_derivative_log'],'w');
+
+
+% Read velocity model (and plot a slice)
+%REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH
+vfile      = [ '../data/m_true.rsf' ];
+[model.v model.nv model.dv model.ov]  = rsf_read_all(vfile);
+model.unit = 'm/s';
+plot_slice(model.v,11,'z');
+
+
+%% Script
+% Follows the test script. It prints some details of the velocity model being
+% used and the progress of the numerical test for each value of h.
+
+% Obtains a stable computational grid 
+% (does not discretize yet)
+%REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH
+opts.discretize=false;
+cg = discrete_helmholtz(model,6,opts,flog);
+
+N = prod(cg.nt);
+
+% Choose the random perturbation dm and a random vector p
+%REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+h  = 10.^([-1:-1:-10]);
+rng(123456);
+dm = randn(model.nv);
+dm =(dm/norm(dm(:))) *norm(model.v(:));
+m  = cg.pg2cg(model.v);
+dm = cg.pg2cg(dm);
+p  = randn(N,1);
+
+% Discretize for H(m)
+%REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+[H0,idx] = helmholtz_3d(m,cg.d,cg.pml,cg.f,model.unit);
+H0p = Hmvp(H0,idx,p);
+
+plog(flog,'Testing the partial derivative of the Helmholtz operator w.r.t. m\n');
+
+% Loop over h
+%REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+for i=1:length(h)
+   [H, idx] = helmholtz_3d(m + h(i)*dm,cg.d,cg.pml,cg.f,model.unit);
+   Hp   = Hmvp(H,idx,p);
+   
+   [dH, ~ ] = helmholtz_3d_derivative(m + h(i)*dm,cg.d,cg.f,model.unit);
+   dH       = H2sparse(dH,idx);
+   dmd      = spdiags(dm(:),0,N,N);
+
+   diff1(i) = norm(Hp - H0p);
+   diff2(i) = norm(Hp - H0p - h(i)*(dH*dmd)*p);
+   plog(flog,'Order of perturbation   - ||h*dm||:                               ',h(i),'\n');
+   plog(flog,'First order error       - ||H(m) - H(m+h*dm)||:                   ',diff1(i),'\n');
+   plog(flog,'Second order correction - ||h*dH(m+h*dm)*dm||:                    ',norm(h(i)*(dH*dmd)*p),'\n');
+   plog(flog,'Second order error      - ||H(m) - H(m+h*dm) - h*dH(m+h*dm)*dm||: ',diff2(i),'\n\n');
+end
+
+
+%% Results
+% As previously mentioned, we expect the second order error (1) to 
+% behave like $h^2$. The following plot clearly shows that the as h decreases,
+% the second order approximation follows the same behaviour (i.e. the lines are
+% parallel) until reaching machine precision, which is $2.2\times 10^{-16}$.
+% Notice that any further computation is not actually meaningful, and we observe
+% that the second order error turns into a flat line after that point. This 
+% behaviour is expected.
+% 
+% Likewise, we show the first order error as well. As expected, it behaves like 
+% $h$ (i.e. the lines are parallel).
+% 
+
+figure;
+loglog(h,diff1,h,h,'kREPLACE_WITH_DASH_DASH');
+xlabel('h');ylabel('error');
+hold on;
+loglog(h,h.^2,'gREPLACE_WITH_DASH_DASH');
+hold on;
+loglog(h,diff2,'r');
+xlim([h(end) h(1)]);
+legend('First order error','h','h^2','Second order error','Location','NorthWest');
+
+fclose(flog);
+
+%% References
+% <2014-Lago-Efficient_computation.pdf [1]> Lago, R. 2014 - Efficient 
+% computation of dH/dm tensor for a 27-points stencil with mass lumping
+%
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

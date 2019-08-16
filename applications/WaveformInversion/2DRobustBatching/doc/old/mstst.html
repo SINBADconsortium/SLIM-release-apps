@@ -1,0 +1,227 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>mstst</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 7.12">
+      <meta name="date" content="2012-03-12">
+      <meta name="m-file" content="mstst">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <p>The <tt>mbase</tt>, <tt>mlsls</tt>, <tt>mstls</tt> and <tt>mstst</tt> scripts reproduce the results from A.Y. Aravkin, T. van Leeuwen and F.J. Herrmann - Source estimation for frequency-domain
+            FWI with robust penalties, EAGE Expanded abstracts 2012, submitted.
+         </p>
+         <p>It is not advisable to run these in serial and/or interactive mode since it will take several hours to run.</p>
+         <p>See the README file for intstructions on how to download pre-run results and data.</p>
+         <p>If you want to run in parallel, use a divisor of 12 workers. The results are stored in the path defined in the script setpath.m</p><pre class="codeinput"><span class="comment">% set parameters for experiment</span>
+label    = <span class="string">'mstst'</span>;        <span class="comment">% name</span>
+vfile    = <span class="string">'marmv.rsf'</span>;    <span class="comment">% reference model</span>
+v0file   = <span class="string">'marmv0.rsf'</span>;   <span class="comment">% initial model</span>
+datafile = <span class="string">'marmdata.rsf'</span>; <span class="comment">% input data</span>
+
+<span class="comment">% modeling parameters</span>
+nb       = 50;
+zsrc     = 10;
+zrec     = 10;
+f0       = 0;
+t0       = 0;
+
+<span class="comment">% parameters for generating outliers in the data</span>
+p        = .2;   <span class="comment">% percentage of data to contaminate</span>
+a        = 1e6;  <span class="comment">% amplitude of noise</span>
+seed     = 1;    <span class="comment">% random see</span>
+
+<span class="comment">% function handles to misfits used for residual and source estimation</span>
+fh1      = @(x)students(x);
+fh2      = @(x)students(x);
+
+<span class="comment">% number of iterations for L-BFGS</span>
+maxiter  = 50;
+
+<span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+<span class="comment">%                                                                         %</span>
+<span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+<span class="comment">% Actual script, you should not need to change anything below</span>
+
+<span class="comment">% directoy stuff</span>
+setpath;
+expdir = [resultsdir <span class="string">'/'</span> label];
+<span class="keyword">if</span> ~exist(expdir,<span class="string">'dir'</span>)
+    mkdir(expdir);
+<span class="keyword">end</span>
+curdir = pwd;
+cd(expdir);
+
+<span class="comment">% model</span>
+[v,n,d,o]  = rsf_read_all([datadir <span class="string">'/'</span> vfile]);
+[v0,n,d,o] = rsf_read_all([datadir <span class="string">'/'</span> v0file]);
+mref       = 1e6./v(:).^2;
+m0         = 1e6./v0(:).^2;
+
+<span class="comment">% read data</span>
+[D,nd,dd,od] = rsf_read_all([datadir <span class="string">'/'</span> datafile]);
+D            = reshape(D,nd(1)*nd(2),nd(3));
+
+<span class="comment">% model params</span>
+model.o    = o; model.d = d; model.n = n;
+model.nb   = nb.*[1 1];
+model.freq = od(3) + [0:nd(3)-1]*dd(3);
+model.zsrc = zsrc;
+model.xsrc = od(2) + [0:nd(2)-1]*dd(2);
+model.zrec = zrec;
+model.xrec = od(1) + [0:nd(1)-1]*dd(1);
+model.f0   = f0;
+model.t0   = t0;
+
+Q = speye(nd(2));
+
+<span class="comment">% generate outliers by replacing a fraction p of the data with</span>
+<span class="comment">% random normal (0, a)</span>
+s = RandStream.create(<span class="string">'mt19937ar'</span>,<span class="string">'seed'</span>,seed);
+I = randi(s,prod(nd),floor(p*prod(nd)),1);
+D(I) = a*randn(s,size(I));
+
+D = distributed(vec(D));
+
+<span class="comment">% inversion</span>
+params.misfit  = fh1;
+params.src_est = fh2;
+
+fh = @(x)JI_src(x,Q,D,[1:nd(2)],model,params);
+
+options.itermax = maxiter;
+options.fid     = fopen(<span class="string">'iter.log'</span>,<span class="string">'w'</span>);
+
+mn = mylbfgs(fh,m0,options);
+
+<span class="comment">% final evaluation</span>
+[fn,gn,wn] = fh(mn);
+
+<span class="comment">% write results</span>
+rsf_write_all(<span class="string">'wn.rsf'</span>,{},wn,[dd(3) 0],[od(3) 0]);
+rsf_write_all(<span class="string">'mn.rsf'</span>,{},reshape(mn,n),d,o);
+
+<span class="comment">% end</span>
+cd(curdir);
+</pre><p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%%
+% The |mbase|, |mlsls|, |mstls| and |mstst| scripts reproduce the results
+% from A.Y. Aravkin, T. van Leeuwen and F.J. Herrmann - Source estimation
+% for frequency-domain FWI with robust penalties, EAGE Expanded abstracts
+% 2012, submitted.
+%
+% It is not advisable to run these in serial and/or interactive mode since
+% it will take several hours to run. 
+%
+% See the README file for intstructions on how to download pre-run results
+% and data.
+%
+% If you want to run in parallel, use a divisor of 12 workers. 
+% The results are stored in the path defined in the script setpath.m
+
+
+% set parameters for experiment
+label    = 'mstst';        % name
+vfile    = 'marmv.rsf';    % reference model
+v0file   = 'marmv0.rsf';   % initial model
+datafile = 'marmdata.rsf'; % input data
+
+% modeling parameters
+nb       = 50;
+zsrc     = 10;
+zrec     = 10;
+f0       = 0;
+t0       = 0;
+
+% parameters for generating outliers in the data 
+p        = .2;   % percentage of data to contaminate
+a        = 1e6;  % amplitude of noise
+seed     = 1;    % random see
+
+% function handles to misfits used for residual and source estimation
+fh1      = @(x)students(x);
+fh2      = @(x)students(x);
+
+% number of iterations for L-BFGS
+maxiter  = 50;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                                         %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Actual script, you should not need to change anything below
+
+% directoy stuff
+setpath;
+expdir = [resultsdir '/' label];
+if ~exist(expdir,'dir')
+    mkdir(expdir);
+end
+curdir = pwd;
+cd(expdir);
+
+% model
+[v,n,d,o]  = rsf_read_all([datadir '/' vfile]);
+[v0,n,d,o] = rsf_read_all([datadir '/' v0file]);
+mref       = 1e6./v(:).^2;
+m0         = 1e6./v0(:).^2;
+
+% read data
+[D,nd,dd,od] = rsf_read_all([datadir '/' datafile]);
+D            = reshape(D,nd(1)*nd(2),nd(3));
+
+% model params
+model.o    = o; model.d = d; model.n = n;
+model.nb   = nb.*[1 1];
+model.freq = od(3) + [0:nd(3)-1]*dd(3);
+model.zsrc = zsrc;
+model.xsrc = od(2) + [0:nd(2)-1]*dd(2);
+model.zrec = zrec;
+model.xrec = od(1) + [0:nd(1)-1]*dd(1);
+model.f0   = f0;
+model.t0   = t0;
+
+Q = speye(nd(2));
+
+% generate outliers by replacing a fraction p of the data with
+% random normal (0, a)
+s = RandStream.create('mt19937ar','seed',seed);
+I = randi(s,prod(nd),floor(p*prod(nd)),1);
+D(I) = a*randn(s,size(I));
+
+D = distributed(vec(D));
+
+% inversion
+params.misfit  = fh1;
+params.src_est = fh2;
+
+fh = @(x)JI_src(x,Q,D,[1:nd(2)],model,params);
+
+options.itermax = maxiter;
+options.fid     = fopen('iter.log','w');
+
+mn = mylbfgs(fh,m0,options);
+
+% final evaluation
+[fn,gn,wn] = fh(mn);
+
+% write results
+rsf_write_all('wn.rsf',{},wn,[dd(3) 0],[od(3) 0]);
+rsf_write_all('mn.rsf',{},reshape(mn,n),d,o);
+
+% end
+cd(curdir);
+##### SOURCE END #####
+-->
+   </body>
+</html>

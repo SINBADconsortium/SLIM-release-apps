@@ -1,0 +1,317 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>3D constant-density acoustic frequency-domain modeling: Basic use of helmholtz_3d</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.4">
+      <meta name="date" content="2015-02-12">
+      <meta name="m-file" content="demo_helmholtz_3d">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>3D constant-density acoustic frequency-domain modeling: Basic use of helmholtz_3d</h1>
+         <introduction>
+            <p>This illustrates the basic use of helmholtz_3d. It discretizes the helmholtz operator using the new discretization routine.</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Setting up the model</a></li>
+               <li><a href="#2">Calling helmholtz_3d</a></li>
+               <li><a href="#3">Computing wavefield</a></li>
+            </ul>
+         </div>
+         <h2>Setting up the model<a name="1"></a></h2>
+         <p>Notice that we need to be careful when choosing PML size and number of points per wavelength. We also need to resize the model
+            (if desired and/or needed) and create the artificial PML layer.
+         </p><pre class="codeinput">clear
+par.outdir  = <span class="string">'../results/'</span>;
+par.label   = <span class="string">'demo_helmholtz_3d'</span>;
+flog = fopen([par.outdir par.label <span class="string">'_log'</span>],<span class="string">'w'</span>);
+np = parpool_size();
+
+<span class="comment">% Define the velocity model</span>
+<span class="comment">%--------------------------------------</span>
+n    = [51,51,21];
+o    = [0 0 0];
+d    = [50 50 50];
+v    = ones(n)*4500;
+unit = <span class="string">'m/s'</span>;
+
+vmin = min(v(:));
+vmax = max(v(:));
+nlam = 6;
+f = 15;
+
+<span class="comment">% Computes now the pml width based on max wavelength.</span>
+npml = vmax/(f*max(d));
+npml = [1 1 1]*ceil(npml);
+nt   = n + 2*npml; <span class="comment">% Total number of points, with pml included</span>
+N    = prod(n);
+Nt   = prod(nt);
+
+plog(flog,<span class="string">'* Extending physical domain - creating PML... \n'</span>);
+Px = opKron(opExtension(n(3),npml(3)),opExtension(n(2),npml(2)),opExtension(n(1),npml(1)));
+v = Px*v(:);
+v = reshape(v,nt);
+
+plog(flog,<span class="string">'* vmin: '</span>, vmin, <span class="string">' \n'</span>);
+plog(flog,<span class="string">'* vmax: '</span>, vmax, <span class="string">' \n'</span>);
+plog(flog,<span class="string">'* n:    [ '</span>, n, <span class="string">' ]  = '</span>, N, <span class="string">' \n'</span>);
+plog(flog,<span class="string">'* npml: [ '</span>, npml, <span class="string">' ], Total: '</span>, Nt, <span class="string">'\n'</span>);
+plog(flog,<span class="string">'* d:    [ '</span>, d, <span class="string">' ]\n'</span>);
+plog(flog,<span class="string">'* f:    '</span>, f, <span class="string">' Hz \n'</span>);
+plog(flog,<span class="string">'* nlam: '</span>, nlam, <span class="string">' \n'</span>);
+
+pml.x   = npml(1);
+pml.y   = npml(2);
+pml.top = npml(3);
+pml.bottom = npml(3);
+</pre><pre class="codeoutput">
+* Extending physical domain - creating PML... 
+* vmin: 4.5e+03 
+* vmax: 4.5e+03 
+* n:    [ 51        51        21 ]  = 5.46e+04 
+* npml: [ 6         6         6 ], Total: 1.31e+05
+* d:    [ 50        50        50 ]
+* f:    15 Hz 
+* nlam: 6 
+</pre><h2>Calling helmholtz_3d<a name="2"></a></h2>
+         <p>Please, check <tt>help helmholtz_3d</tt> for more details on the input parameters
+         </p><pre class="codeinput">plog(flog,<span class="string">'* Discretizing Helmholtz operator with Operto et al. 27points stencil...'</span>);
+tic; [H,idx] = helmholtz_3d(v,d,pml,f,unit); T = toc;
+plog(flog,<span class="string">' done in '</span>, T , <span class="string">' seconds \n'</span>);
+</pre><pre class="codeoutput">* Discretizing Helmholtz operator with Operto et al. 27points stencil... done in 0.136 seconds 
+</pre><h2>Computing wavefield<a name="3"></a></h2>
+         <p>We already have the discrete Helmholtz operator; now we just need to define the right hand side and then call a solver.</p>
+         <p>Since the operator is stored in band-storage format, we will use CARPCG to solve the wave-equation. If you wish to use another
+            solver instead, you will need to convert the operator from band-storage format to Matlab's sparse matrix format. This is achieved
+            with
+         </p>
+         <p><tt>A = H2sparse(helm.coef,helm.idx);</tt></p><pre class="codeinput"><span class="comment">% Normalize rows of the matrix - This is needed only because we will use CARPCG</span>
+<span class="comment">% to solve the linear system; Otherwise this can/should be skipped</span>
+DScale = 1./sqrt(sum(abs(H).^2,1));
+DScale = spdiags(transpose(DScale),0,Nt,Nt);
+H = H*DScale; <span class="comment">% This is actually a multiplication from the LEFT!</span>
+
+<span class="comment">% Create right-hand side (point source)</span>
+<span class="comment">%---------------------------------------</span>
+x0 = zeros(Nt,1);
+Q  = zeros(Nt,1);
+Q(sub2ind(nt, ceil(nt(1)/2) + 1,<span class="keyword">...</span>
+                   ceil(nt(2)/2) + 1,<span class="keyword">...</span>
+                   ceil(nt(3)/2) + 1)) = 1/prod(d);
+Q = DScale*Q;
+
+<span class="comment">% Distribute Everything</span>
+<span class="comment">%-------------------------------------</span>
+<span class="keyword">if</span> np &gt; 1
+   plog(flog,<span class="string">'\n* Distributing operator over '</span>, np, <span class="string">' workers...'</span>);
+   H  = transpose(H);
+   x0 = distributed.zeros(nt);x0 = x0(:);
+   Q  = distributed(Q);
+   Hi  = distributed(imag(H));
+   H   = distributed(real(H));
+   H   = H + 1i*Hi;
+   <span class="keyword">spmd</span>,
+      dist1 = getCodistributor(x0);
+      dist2 = codistributor1d(1,dist1.Partition,[Nt,length(idx)]);
+      Q     = redistribute(Q,dist1);
+      H     = redistribute(H,dist2);
+   <span class="keyword">end</span>
+   H = transpose(H);
+   clear <span class="string">Hi</span>;
+<span class="keyword">else</span>
+    x0 = zeros(Nt,1);
+<span class="keyword">end</span>
+
+<span class="comment">% Compute Wavefield</span>
+<span class="comment">%------------------------------</span>
+par.maxit = 2000;
+par.tol   = 1e-6;
+par.size  = nt;
+plog(flog,<span class="string">'\n* Starting Krylov solver\n\n'</span>);
+<span class="keyword">if</span> np&gt;1
+   tic ; [u,res] = CARPCG(H,idx,Q,x0,par); T = toc;
+<span class="keyword">else</span>
+   tic ; [u,res] = CGMN(H,idx,Q,x0,par); T = toc;
+<span class="keyword">end</span>
+plog(flog,<span class="string">'* Krylov stopped after '</span>, T , <span class="string">' seconds \n'</span>);
+
+<span class="comment">% Write Results</span>
+<span class="comment">%------------------------------</span>
+outfile1 = [par.outdir par.label <span class="string">'_out.mat'</span>];
+
+<span class="keyword">if</span> np&gt;1
+    u = gather(u);
+    Q = gather(Q);
+<span class="keyword">end</span>
+
+plog(flog,<span class="string">'* All done... saving results... \n'</span>);
+plog(flog,<span class="string">'* Writing '</span>, outfile1, <span class="string">'... \n'</span>);
+save(outfile1,<span class="string">'res'</span>,<span class="string">'Q'</span>,<span class="string">'u'</span>);
+
+fclose(flog);
+</pre><pre class="codeoutput">
+* Starting Krylov solver
+
+* Krylov stopped after 8.78 seconds 
+* All done... saving results... 
+* Writing ../results/demo_helmholtz_3d_out.mat... 
+</pre><p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% 3D constant-density acoustic frequency-domain modeling: Basic use of helmholtz_3d
+%
+% This illustrates the basic use of helmholtz_3d. It discretizes the helmholtz 
+% operator using the new discretization routine.
+% 
+
+%% Setting up the model
+% Notice that we need to be careful when choosing PML size and number of points 
+% per wavelength. We also need to resize the model (if desired and/or needed) 
+% and create the artificial PML layer.
+% 
+% 
+clear
+par.outdir  = '../results/';
+par.label   = 'demo_helmholtz_3d';
+flog = fopen([par.outdir par.label '_log'],'w');
+np = parpool_size();
+
+% Define the velocity model
+%REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH
+n    = [51,51,21];
+o    = [0 0 0];
+d    = [50 50 50];
+v    = ones(n)*4500;
+unit = 'm/s';
+
+vmin = min(v(:));
+vmax = max(v(:));
+nlam = 6;
+f = 15;
+
+% Computes now the pml width based on max wavelength.
+npml = vmax/(f*max(d));
+npml = [1 1 1]*ceil(npml);
+nt   = n + 2*npml; % Total number of points, with pml included
+N    = prod(n);
+Nt   = prod(nt);
+
+plog(flog,'* Extending physical domain - creating PML... \n');
+Px = opKron(opExtension(n(3),npml(3)),opExtension(n(2),npml(2)),opExtension(n(1),npml(1)));
+v = Px*v(:);
+v = reshape(v,nt);
+
+plog(flog,'* vmin: ', vmin, ' \n');
+plog(flog,'* vmax: ', vmax, ' \n');
+plog(flog,'* n:    [ ', n, ' ]  = ', N, ' \n');
+plog(flog,'* npml: [ ', npml, ' ], Total: ', Nt, '\n');
+plog(flog,'* d:    [ ', d, ' ]\n');
+plog(flog,'* f:    ', f, ' Hz \n');
+plog(flog,'* nlam: ', nlam, ' \n');
+
+pml.x   = npml(1);
+pml.y   = npml(2);
+pml.top = npml(3);
+pml.bottom = npml(3);
+
+%% Calling helmholtz_3d
+% 
+% Please, check |help helmholtz_3d| for more details on the input parameters
+% 
+plog(flog,'* Discretizing Helmholtz operator with Operto et al. 27points stencil...');
+tic; [H,idx] = helmholtz_3d(v,d,pml,f,unit); T = toc;
+plog(flog,' done in ', T , ' seconds \n');
+
+%% Computing wavefield
+% We already have the discrete Helmholtz operator; now we just need to define
+% the right hand side and then call a solver.
+% 
+% Since the operator is stored in band-storage format, we will use CARPCG to
+% solve the wave-equation. If you wish to use another solver instead, you will
+% need to convert the operator from band-storage format to Matlab's sparse 
+% matrix format. This is achieved with
+% 
+% |A = H2sparse(helm.coef,helm.idx);|
+% 
+
+% Normalize rows of the matrix - This is needed only because we will use CARPCG
+% to solve the linear system; Otherwise this can/should be skipped
+DScale = 1./sqrt(sum(abs(H).^2,1));
+DScale = spdiags(transpose(DScale),0,Nt,Nt);
+H = H*DScale; % This is actually a multiplication from the LEFT!
+
+% Create right-hand side (point source)
+%REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+x0 = zeros(Nt,1);
+Q  = zeros(Nt,1);
+Q(sub2ind(nt, ceil(nt(1)/2) + 1,...
+                   ceil(nt(2)/2) + 1,...
+                   ceil(nt(3)/2) + 1)) = 1/prod(d);
+Q = DScale*Q;
+
+% Distribute Everything
+%REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+if np > 1
+   plog(flog,'\n* Distributing operator over ', np, ' workers...');
+   H  = transpose(H);
+   x0 = distributed.zeros(nt);x0 = x0(:);
+   Q  = distributed(Q);
+   Hi  = distributed(imag(H));
+   H   = distributed(real(H));
+   H   = H + 1i*Hi;
+   spmd,
+      dist1 = getCodistributor(x0);
+      dist2 = codistributor1d(1,dist1.Partition,[Nt,length(idx)]);
+      Q     = redistribute(Q,dist1);
+      H     = redistribute(H,dist2);
+   end
+   H = transpose(H);
+   clear Hi;
+else
+    x0 = zeros(Nt,1);
+end
+
+% Compute Wavefield
+%REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH
+par.maxit = 2000;
+par.tol   = 1e-6;
+par.size  = nt;
+plog(flog,'\n* Starting Krylov solver\n\n');
+if np>1
+   tic ; [u,res] = CARPCG(H,idx,Q,x0,par); T = toc;
+else
+   tic ; [u,res] = CGMN(H,idx,Q,x0,par); T = toc;
+end
+plog(flog,'* Krylov stopped after ', T , ' seconds \n');
+
+% Write Results
+%REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH
+outfile1 = [par.outdir par.label '_out.mat'];
+
+if np>1
+    u = gather(u);
+    Q = gather(Q);
+end
+
+plog(flog,'* All done... saving results... \n');
+plog(flog,'* Writing ', outfile1, '... \n');
+save(outfile1,'res','Q','u');
+
+fclose(flog);
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

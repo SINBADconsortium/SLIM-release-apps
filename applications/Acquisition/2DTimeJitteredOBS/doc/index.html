@@ -1,0 +1,153 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>2D ocean-bottom marine acquisition via jittered sampling</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 7.13">
+      <meta name="date" content="2013-04-30">
+      <meta name="m-file" content="index">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>2D ocean-bottom marine acquisition via jittered sampling</h1>
+         <introduction>
+            <p>This application is available only in the software release for members of SINBAD consortium.</p>
+            <p>This software release includes a demonstration of the 2D time-jittered (or blended) marine acquisition scheme, and a deblending
+               framework based on sparse inversion via L1 minimization.
+            </p>
+            <p>Author: Haneet Wason (<a href="mailto:hwason@eos.ubc.ca">hwason@eos.ubc.ca</a>)
+            </p>
+            <p>Date: April, 2013</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Downloading &amp; Dependencies</a></li>
+               <li><a href="#2">Running &amp; Parallelism</a></li>
+               <li><a href="#3">Functions</a></li>
+               <li><a href="#4">Examples and results</a></li>
+               <li><a href="#5">References</a></li>
+            </ul>
+         </div>
+         <h2>Downloading &amp; Dependencies<a name="1"></a></h2>
+         <p>The code can be found in the <a href="https://slim.gatech.edu/consortiumsoftware">SLIM sofware release</a> under <tt>/applications/Acquisition/2DTimeJitteredOBS</tt>.
+         </p>
+         <p>The code has been tested with <i>Matlab R2012b</i> and requires the Parallel Computing Toolbox.
+         </p>
+         <p>This code uses the following packages, also found in the <tt>tools</tt> part of the <a href="https://slim.gatech.edu/consortiumsoftware">SLIM software release</a>.
+         </p>
+         <div>
+            <ul>
+               <li><i>utilities/SPOT</i> - object oriented framework for matrix-free linear algebra.
+               </li>
+               <li><i>utilities/pSPOT</i> - parallel extension of SPOT.
+               </li>
+               <li><i>utilities/SegyMAT</i> - Matlab/Octave toolbox for reading and writing SEG-Y formatted files.
+               </li>
+               <li><i>transforms/CurveLab-2.1.2-SLIM</i> - CurveLab with SLIMs FFT Functions + other.
+               </li>
+               <li><i>solvers/SPGL1-SLIM</i> - SLIM version of SPGl1
+               </li>
+            </ul>
+         </div>
+         <h2>Running &amp; Parallelism<a name="2"></a></h2>
+         <p>All the examples and results are produced by the scripts found in this software release under <tt>applications/Acquisition/2DTimeJitteredOBS/examples/</tt>. Start matlab from <tt>applications/Acquisition/2DTimeJitteredOBS</tt> to add the appropriate paths.
+         </p>
+         <p>To run the scripts follow the instructions in the README file enclosed with the code. The scripts can be run in serial mode
+            but parallel mode is advised.
+         </p>
+         <p>Read more about <a href="https://slim.gatech.edu/SoftwareDemos/tools/">SLIM's approach to parallel computing in Matlab</a>.
+         </p>
+         <h2>Functions<a name="3"></a></h2>
+         <p>The functions specific to this package can be found in the <tt>acq_funcs</tt> directory.
+         </p>
+         <h2>Examples and results<a name="4"></a></h2>
+         <p><a href="examples.html">Examples and results are shown here.</a> Scripts to reproduce the results can be found under <tt>/applications/Acquisition/2DTimeJitteredOBS/examples</tt>.
+         </p>
+         <h2>References<a name="5"></a></h2>
+         <p><a href="https://slim.gatech.edu/content/time-jittered-ocean-bottom-seismic-acquisition">[1]</a> Haneet Wason, and F.J. Herrmann [2013] Time-jittered ocean bottom seismic acquisition, SEG Expanded Abstracts.
+         </p>
+         <p><a href="https://slim.gatech.edu/content/ocean-bottom-seismic-acquisition-jittered-sampling-0">[2]</a> Haneet Wason, and F.J. Herrmann [2013] Ocean bottom seismic acquisition via jittered sampling, EAGE Expanded Abstracts.
+         </p>
+         <p><a href="https://slim.gatech.edu/content/randomized-marine-acquisition-compressive-sampling-matrices">[3]</a> Hassan Mansour, Haneet Wason, Tim T.Y. Lin, and Felix J. Herrmann [2012] Randomized marine acquisition with compressive sampling
+            matrices, Geophysical Prospecting, vol. 60, 648-662.
+         </p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% 2D ocean-bottom marine acquisition via jittered sampling
+%
+% This application is available only in the software release for members of SINBAD consortium.
+%
+% This software release includes a demonstration of the 2D time-jittered (or blended) marine 
+% acquisition scheme, and a deblending framework based on sparse inversion via L1 minimization.
+%
+% Author: Haneet Wason (hwason@eos.ubc.ca)
+%
+% Date: April, 2013
+
+
+%% Downloading & Dependencies
+%
+% The code can be found in the <https://slim.gatech.edu/consortiumsoftware SLIM sofware release> under
+% |/applications/Acquisition/2DTimeJitteredOBS|.
+%
+% The code has been tested with _Matlab R2012b_ and requires the Parallel
+% Computing Toolbox.
+%
+% This code uses the following packages, also found in the |tools| part
+% of the <https://slim.gatech.edu/consortiumsoftware SLIM software release>.
+%
+% * _utilities/SPOT_ - object oriented framework for matrix-free linear algebra.
+% * _utilities/pSPOT_ - parallel extension of SPOT.
+% * _utilities/SegyMAT_ - Matlab/Octave toolbox for reading and writing SEG-Y formatted files.
+% * _transforms/CurveLab-2.1.2-SLIM_ - CurveLab with SLIMs FFT Functions + other.
+% * _solvers/SPGL1-SLIM_ - SLIM version of SPGl1
+
+
+%% Running & Parallelism
+%
+% All the examples and results are produced by the scripts found in
+% this software release under |applications/Acquisition/2DTimeJitteredOBS/examples/|. 
+% Start matlab from |applications/Acquisition/2DTimeJitteredOBS| to add the appropriate paths.
+%
+% To run the scripts follow the instructions in the README file enclosed
+% with the code.
+% The scripts can be run in serial mode but parallel mode is advised.
+% 
+% Read more about <https://slim.gatech.edu/SoftwareDemos/tools/ SLIM's approach to parallel computing in Matlab>.
+
+
+%% Functions
+%
+% The functions specific to this package can be found in the |acq_funcs| directory.
+
+
+%% Examples and results
+%
+% <examples.html Examples and results are shown here.>
+% Scripts to reproduce the results can be found under
+% |/applications/Acquisition/2DTimeJitteredOBS/examples|.
+
+
+%% References
+%
+% <https://slim.gatech.edu/content/time-jittered-ocean-bottom-seismic-acquisition [1]> Haneet Wason, and F.J. Herrmann [2013] Time-jittered ocean bottom seismic acquisition, SEG Expanded Abstracts.
+%
+% <https://slim.gatech.edu/content/ocean-bottom-seismic-acquisition-jittered-sampling-0 [2]> Haneet Wason, and F.J. Herrmann [2013] Ocean bottom seismic acquisition via jittered sampling, EAGE Expanded Abstracts.
+%
+% <https://slim.gatech.edu/content/randomized-marine-acquisition-compressive-sampling-matrices [3]> Hassan Mansour, Haneet Wason, Tim T.Y. Lin, and Felix J. Herrmann [2012] Randomized marine acquisition with compressive sampling matrices, Geophysical Prospecting, vol. 60, 648-662.
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

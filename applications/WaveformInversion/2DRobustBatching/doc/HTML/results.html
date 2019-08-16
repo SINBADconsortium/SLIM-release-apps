@@ -1,0 +1,297 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Fast Robust Waveform inversion:  Examples and results</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.6">
+      <meta name="date" content="2016-05-19">
+      <meta name="m-file" content="results">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>Fast Robust Waveform inversion:  Examples and results</h1>
+         <introduction>
+            <p>Scripts to reproduce the famous Camembert example,  as well as results from sevaral papers are included.</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Camembert example</a></li>
+               <li><a href="#4">Fast Waveform inversion without source-encoding</a></li>
+               <li><a href="#9">Robust waveform inversion with source estimation</a></li>
+               <li><a href="#13">Running the code on your own data</a></li>
+               <li><a href="#14">References</a></li>
+               <li><a href="#15">Acknowledgements</a></li>
+            </ul>
+         </div>
+         <h2>Camembert example<a name="1"></a></h2>
+         <p>The basic functionality of the waveform inversion code is demonstrated on an example based on the famous `Camembert' model
+            [1]. See the script <a href="camembert.html">camembert.m</a>.
+         </p><pre class="codeinput"><span class="comment">% true model</span>
+[v ,n,d,o] = rsf_read_all([resultsdir <span class="string">'/camembert/vtrue.rsf'</span>]);
+
+v  = 1e-3*v;
+[z,x] = odn2grid(o,d,n);
+z = z*1e-3; x = x*1e-3;
+
+figure;imagesc(x,z,v,[2.25 2.75]);colorbar;
+xlabel(<span class="string">'x [km]'</span>);ylabel(<span class="string">'z [km]'</span>); title(<span class="string">'true model'</span>);
+</pre><pre class="codeoutput">FATAL ERROR: file /home/slim/curtd/code/SLIM-release-apps/applications/WaveformInversion/2DRobustBatching/results//camembert/vtrue.rsf does not exist
+</pre><pre class="codeoutput">One or more output arguments not assigned during call to "rsf_read_all".
+
+Error in results (line 15)
+[v ,n,d,o] = rsf_read_all([resultsdir '/camembert/vtrue.rsf']);
+</pre><pre class="codeinput"><span class="comment">% reconstructions</span>
+vnr = rsf_read_all([resultsdir <span class="string">'/camembert/vn_r.rsf'</span>]);
+vnt = rsf_read_all([resultsdir <span class="string">'/camembert/vn_t.rsf'</span>]);
+vnr = 1e-3*vnr;
+vnt = 1e-3*vnt;
+
+figure;imagesc(x,z,vnr,[2.25 2.75]);colorbar;
+xlabel(<span class="string">'x [km]'</span>);ylabel(<span class="string">'z [km]'</span>); title(<span class="string">'reconstruction form reflection data'</span>);
+
+figure;imagesc(x,z,vnt,[2.25 2.75]);colorbar;
+xlabel(<span class="string">'x [km]'</span>);ylabel(<span class="string">'z [km]'</span>); title(<span class="string">'reconstruction form tranmission data'</span>);
+</pre><h2>Fast Waveform inversion without source-encoding<a name="4"></a></h2>
+         <p>Waveform inversion using `batching' optimization scheme and source estimation [2]. See the script <a href="bg2_batch.html">bg2_batch.m</a>.
+         </p><pre class="codeinput">[v ,n,d,o] = rsf_read_all([datadir <span class="string">'/bg2v.rsf'</span>]);
+[v0,n,d,o] = rsf_read_all([datadir <span class="string">'/bg2v0.rsf'</span>]);
+
+v  = 1e-3*v;
+v0 = 1e-3*v0;
+[z,x] = odn2grid(o,d,n);
+z = z*1e-3; x = x*1e-3;
+</pre><pre class="codeinput">scnsize = get(0,<span class="string">'ScreenSize'</span>);
+
+<span class="comment">% The true and initial model</span>
+<span class="comment">%</span>
+
+figure(<span class="string">'Position'</span>,scnsize./[1 1 2 2]);imagesc(x,z,v,[1.5 4.5]);colorbar;set(gca,<span class="string">'plotboxaspectratio'</span>,[3 1 1]);
+xlabel(<span class="string">'x [km]'</span>);ylabel(<span class="string">'z [km]'</span>); title(<span class="string">'true model'</span>);
+</pre><pre class="codeinput">figure(<span class="string">'Position'</span>,scnsize./[1 1 2 2]);imagesc(x,z,v0,[1.5 4.5]);colorbar;set(gca,<span class="string">'plotboxaspectratio'</span>,[3 1 1]);
+xlabel(<span class="string">'x [km]'</span>);ylabel(<span class="string">'z [km]'</span>); title(<span class="string">'initial model'</span>);
+</pre><p>reconstruction with batching after 17th. frequency band.</p><pre class="codeinput">[mn,n,d,o] = rsf_read_all([resultsdir <span class="string">'/bg2_batch/mn_17.rsf'</span>]);
+vn = real(1./sqrt(1e-6*mn));
+
+figure(<span class="string">'Position'</span>,scnsize./[1 1 2 2]);imagesc(x,z,vn,[1.5 4.5]);colorbar;set(gca,<span class="string">'plotboxaspectratio'</span>,[3 1 1]);
+xlabel(<span class="string">'x [km]'</span>);ylabel(<span class="string">'z [km]'</span>); title(<span class="string">'final model'</span>);
+</pre><pre class="codeinput">figure;plot(v(:,x==3),z,<span class="string">'k'</span>,v0(:,x==3),z,<span class="string">'k--'</span>,vn(:,x==3),z,<span class="string">'r'</span>);axis <span class="string">ij</span>; ylim([0 2]);set(gca,<span class="string">'plotboxaspectratio'</span>,[1 2 1]);
+xlabel(<span class="string">'v [km/s]'</span>);ylabel(<span class="string">'z [km/s]'</span>);title(<span class="string">'x = 3 km'</span>);legend(<span class="string">'true'</span>,<span class="string">'initial'</span>,<span class="string">'final'</span>);
+
+figure;plot(v(:,x==8),z,<span class="string">'k'</span>,v0(:,x==8),z,<span class="string">'k--'</span>,vn(:,x==8),z,<span class="string">'r'</span>);axis <span class="string">ij</span>; ylim([0 2]);set(gca,<span class="string">'plotboxaspectratio'</span>,[1 2 1]);
+xlabel(<span class="string">'v [km/s]'</span>);ylabel(<span class="string">'z [km/s]'</span>);title(<span class="string">'x = 8 km'</span>);legend(<span class="string">'true'</span>,<span class="string">'initial'</span>,<span class="string">'final'</span>);
+
+figure;plot(v(:,x==13),z,<span class="string">'k'</span>,v0(:,x==13),z,<span class="string">'k--'</span>,vn(:,x==13),z,<span class="string">'r'</span>);axis <span class="string">ij</span>; ylim([0 2]);set(gca,<span class="string">'plotboxaspectratio'</span>,[1 2 1]);
+xlabel(<span class="string">'v [km/s]'</span>);ylabel(<span class="string">'z [km/s]'</span>);title(<span class="string">'x = 13 km'</span>);legend(<span class="string">'true'</span>,<span class="string">'initial'</span>,<span class="string">'final'</span>);
+</pre><h2>Robust waveform inversion with source estimation<a name="9"></a></h2>
+         <p>Robust waveform inversion with robust source estimation [3].</p><pre class="codeinput">[v, n,d,o] = rsf_read_all([datadir <span class="string">'/marmv.rsf'</span>]);
+[v0,n,d,o] = rsf_read_all([datadir <span class="string">'/marmv0.rsf'</span>]);
+
+[z,x] = odn2grid(o,d,n);
+
+m  = 1e6./v.^2;
+m0 = 1e6./v0.^2;
+</pre><p>The true perturbation is shown here</p><pre class="codeinput">figure;imagesc(x,z,m-m0,[-1 1]*5e-2);axis <span class="string">equal</span> <span class="string">tight</span>;colormap(gray);
+xlabel(<span class="string">'x [km]'</span>);ylabel(<span class="string">'z [km]'</span>); title(<span class="string">'true perturbation'</span>);
+</pre><p>A LS-LS reconstruction without outliers looks like this. See <a href="mbase.html">mbase.m</a>.
+         </p><pre class="codeinput">[mbase] = rsf_read_all([resultsdir <span class="string">'/mbase/mn.rsf'</span>]);
+
+figure;imagesc(x,z,mbase-m0,[-1 1]*5e-2);axis <span class="string">equal</span> <span class="string">tight</span>;colormap(gray);
+xlabel(<span class="string">'x [km]'</span>);ylabel(<span class="string">'z [km]'</span>); title(<span class="string">'LS-LS reconstruction w/o noise'</span>);
+</pre><p>Reconstructions with outliers using LS-LS, ST-LS or ST-ST, see <a href="mlsls.html">mlsls.m</a>, <a href="mstls.html">mstls.m</a> and <a href="mstst.html">mstst.m</a>.
+         </p><pre class="codeinput">[mlsls] = rsf_read_all([resultsdir <span class="string">'/mlsls/mn.rsf'</span>]);
+[mstls] = rsf_read_all([resultsdir <span class="string">'/mstls/mn.rsf'</span>]);
+[mstst] = rsf_read_all([resultsdir <span class="string">'/mstst/mn.rsf'</span>]);
+
+
+figure;imagesc(x,z,mlsls-m0,[-1 1]*5e-2);axis <span class="string">equal</span> <span class="string">tight</span>;colormap(gray);
+xlabel(<span class="string">'x [km]'</span>);ylabel(<span class="string">'z [km]'</span>); title(<span class="string">'LS-LS reconstruction w noise'</span>);
+
+figure;imagesc(x,z,mstls-m0,[-1 1]*5e-2);axis <span class="string">equal</span> <span class="string">tight</span>;colormap(gray);
+xlabel(<span class="string">'x [km]'</span>);ylabel(<span class="string">'z [km]'</span>); title(<span class="string">'ST-LS reconstruction w noise'</span>);
+
+figure;imagesc(x,z,mstst-m0,[-1 1]*5e-2);axis <span class="string">equal</span> <span class="string">tight</span>;colormap(gray);
+xlabel(<span class="string">'x [km]'</span>);ylabel(<span class="string">'z [km]'</span>); title(<span class="string">'ST-ST reconstruction w noise'</span>);
+</pre><h2>Running the code on your own data<a name="13"></a></h2>
+         <p>An template script is included that can be adapted to run the code on your own data. See <a href="fwitemplate.html">fwitemplate.m</a></p>
+         <h2>References<a name="14"></a></h2>
+         <p><a href="http://dx.doi.org/10.1190/1.1442188">[1]</a> O. Gauthier, J. Virieux, and A. Tarantola. Two-dimensional nonlinear inversion of seismic waveforms: Numerical results. Geophysics
+            51, 1387-1403 (1986)
+         </p>
+         <p><a href="https://slim.gatech.edu/node/6620">[2]</a> T. van Leeuwen and F.J. Herrmann - Fast Waveform inversion without source-encoding, Geophysical Prospecting, submitted
+         </p>
+         <p><a href="https://slim.gatech.edu/node/6610">[3]</a> A.Y. Aravkin, T. van Leeuwen and F.J. Herrmann - Source estimation for frequency-domain FWI with robust penalties, EAGE Expanded
+            abstracts 2012.
+         </p>
+         <h2>Acknowledgements<a name="15"></a></h2>
+         <p>The synthetic Compass model was provided by the BG-GROUP, see also the <a href="BG_DISCLAIMER.txt">disclaimer</a>.
+         </p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Fast Robust Waveform inversion:  Examples and results
+%
+% Scripts to reproduce the famous Camembert example,  as well as
+% results from sevaral papers are included.
+
+%% Camembert example
+%
+% The basic functionality of the waveform inversion code is demonstrated on
+% an example based on the famous `Camembert' model [1]. 
+% See the script <camembert.html camembert.m>.
+
+%%
+
+% true model
+[v ,n,d,o] = rsf_read_all([resultsdir '/camembert/vtrue.rsf']);
+
+v  = 1e-3*v;
+[z,x] = odn2grid(o,d,n);
+z = z*1e-3; x = x*1e-3;
+
+figure;imagesc(x,z,v,[2.25 2.75]);colorbar;
+xlabel('x [km]');ylabel('z [km]'); title('true model');
+
+%%
+
+% reconstructions
+vnr = rsf_read_all([resultsdir '/camembert/vn_r.rsf']);
+vnt = rsf_read_all([resultsdir '/camembert/vn_t.rsf']);
+vnr = 1e-3*vnr;
+vnt = 1e-3*vnt;
+
+figure;imagesc(x,z,vnr,[2.25 2.75]);colorbar;
+xlabel('x [km]');ylabel('z [km]'); title('reconstruction form reflection data');
+
+figure;imagesc(x,z,vnt,[2.25 2.75]);colorbar;
+xlabel('x [km]');ylabel('z [km]'); title('reconstruction form tranmission data');
+
+
+%% Fast Waveform inversion without source-encoding
+%
+% Waveform inversion using `batching' optimization scheme and source estimation [2].
+% See the script <bg2_batch.html bg2_batch.m>.
+
+[v ,n,d,o] = rsf_read_all([datadir '/bg2v.rsf']);
+[v0,n,d,o] = rsf_read_all([datadir '/bg2v0.rsf']);
+
+v  = 1e-3*v;
+v0 = 1e-3*v0;
+[z,x] = odn2grid(o,d,n);
+z = z*1e-3; x = x*1e-3;
+
+%%
+scnsize = get(0,'ScreenSize');
+
+% The true and initial model
+%
+
+figure('Position',scnsize./[1 1 2 2]);imagesc(x,z,v,[1.5 4.5]);colorbar;set(gca,'plotboxaspectratio',[3 1 1]);
+xlabel('x [km]');ylabel('z [km]'); title('true model');
+
+%%
+%
+
+figure('Position',scnsize./[1 1 2 2]);imagesc(x,z,v0,[1.5 4.5]);colorbar;set(gca,'plotboxaspectratio',[3 1 1]);
+xlabel('x [km]');ylabel('z [km]'); title('initial model');
+
+%%
+% reconstruction with batching after 17th. frequency band. 
+
+[mn,n,d,o] = rsf_read_all([resultsdir '/bg2_batch/mn_17.rsf']);
+vn = real(1./sqrt(1e-6*mn));
+
+figure('Position',scnsize./[1 1 2 2]);imagesc(x,z,vn,[1.5 4.5]);colorbar;set(gca,'plotboxaspectratio',[3 1 1]);
+xlabel('x [km]');ylabel('z [km]'); title('final model');
+
+%%
+% 
+
+figure;plot(v(:,x==3),z,'k',v0(:,x==3),z,'kREPLACE_WITH_DASH_DASH',vn(:,x==3),z,'r');axis ij; ylim([0 2]);set(gca,'plotboxaspectratio',[1 2 1]);
+xlabel('v [km/s]');ylabel('z [km/s]');title('x = 3 km');legend('true','initial','final');
+
+figure;plot(v(:,x==8),z,'k',v0(:,x==8),z,'kREPLACE_WITH_DASH_DASH',vn(:,x==8),z,'r');axis ij; ylim([0 2]);set(gca,'plotboxaspectratio',[1 2 1]);
+xlabel('v [km/s]');ylabel('z [km/s]');title('x = 8 km');legend('true','initial','final');
+
+figure;plot(v(:,x==13),z,'k',v0(:,x==13),z,'kREPLACE_WITH_DASH_DASH',vn(:,x==13),z,'r');axis ij; ylim([0 2]);set(gca,'plotboxaspectratio',[1 2 1]);
+xlabel('v [km/s]');ylabel('z [km/s]');title('x = 13 km');legend('true','initial','final');
+
+
+%% Robust waveform inversion with source estimation
+%
+% Robust waveform inversion with robust source estimation [3].
+%
+
+[v, n,d,o] = rsf_read_all([datadir '/marmv.rsf']);
+[v0,n,d,o] = rsf_read_all([datadir '/marmv0.rsf']);
+
+[z,x] = odn2grid(o,d,n);
+
+m  = 1e6./v.^2;
+m0 = 1e6./v0.^2;
+
+%%
+% The true perturbation is shown here
+%
+
+figure;imagesc(x,z,m-m0,[-1 1]*5e-2);axis equal tight;colormap(gray);
+xlabel('x [km]');ylabel('z [km]'); title('true perturbation');
+
+
+%%
+% A LS-LS reconstruction without outliers looks like this. See <mbase.html mbase.m>.
+
+[mbase] = rsf_read_all([resultsdir '/mbase/mn.rsf']);
+
+figure;imagesc(x,z,mbase-m0,[-1 1]*5e-2);axis equal tight;colormap(gray);
+xlabel('x [km]');ylabel('z [km]'); title('LS-LS reconstruction w/o noise');
+
+%%
+% Reconstructions with outliers using LS-LS, ST-LS or ST-ST, see
+% <mlsls.html mlsls.m>, <mstls.html mstls.m> and <mstst.html mstst.m>.
+
+[mlsls] = rsf_read_all([resultsdir '/mlsls/mn.rsf']);
+[mstls] = rsf_read_all([resultsdir '/mstls/mn.rsf']);
+[mstst] = rsf_read_all([resultsdir '/mstst/mn.rsf']);
+
+
+figure;imagesc(x,z,mlsls-m0,[-1 1]*5e-2);axis equal tight;colormap(gray);
+xlabel('x [km]');ylabel('z [km]'); title('LS-LS reconstruction w noise');
+
+figure;imagesc(x,z,mstls-m0,[-1 1]*5e-2);axis equal tight;colormap(gray);
+xlabel('x [km]');ylabel('z [km]'); title('ST-LS reconstruction w noise');
+
+figure;imagesc(x,z,mstst-m0,[-1 1]*5e-2);axis equal tight;colormap(gray);
+xlabel('x [km]');ylabel('z [km]'); title('ST-ST reconstruction w noise');
+
+%% Running the code on your own data
+%
+% An template script is included that can be adapted to run the code on
+% your own data. See <fwitemplate.html fwitemplate.m>
+
+%% References
+% <http://dx.doi.org/10.1190/1.1442188 [1]> O. Gauthier, J. Virieux, and A. Tarantola. Two-dimensional nonlinear
+% inversion of seismic waveforms: Numerical results. Geophysics 51, 1387-1403 (1986)
+%
+% <https://slim.gatech.edu/node/6620 [2]> T. van Leeuwen and F.J. Herrmann - Fast Waveform inversion without
+% source-encoding, Geophysical Prospecting, submitted
+%
+% <https://slim.gatech.edu/node/6610 [3]> A.Y. Aravkin, T. van Leeuwen and F.J. Herrmann - Source estimation
+% for frequency-domain FWI with robust penalties, EAGE Expanded abstracts
+% 2012.
+
+%% Acknowledgements
+% The synthetic Compass model was provided by the BG-GROUP, see also the
+% <BG_DISCLAIMER.txt disclaimer>.
+##### SOURCE END #####
+-->
+   </body>
+</html>

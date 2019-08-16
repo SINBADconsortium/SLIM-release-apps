@@ -1,0 +1,11 @@
+# Author: Tim T.Y. Lin
+#         Seismic Laboratory for Imaging and Modeling
+#         Department of Earth & Ocean Sciences
+#         The University of British Columbia
+#         
+# Date  : May, 2010
+
+SLIM version of SPGl1 (based off v1.7)
+
+    This package is derived from SPGl1 (http://www.cs.ubc.ca/labs/scl/sparco/) and is meant for internal use ONLY, not for public software or commercial release.
+

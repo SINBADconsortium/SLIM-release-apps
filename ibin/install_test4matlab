@@ -1,0 +1,25 @@
+#!/bin/bash
+function fail()
+{
+echo FATALL ERRROR: no $1 executable
+exit 1
+}
+
+if [ -n "$SLIM_APPS" ]; then
+	echo Running MATLAB tests in $SLIM_APPS
+else
+	echo FATAL ERROR: undefined environment SLIM_APPS
+	exit 1
+fi
+
+PS4="\n%%%%% "
+which matlab 1>/dev/null 2>&1 || fail "matlab"
+matlab="matlab -nodesktop -nodisplay -nosplash"
+set -x
+
+cd $SLIM_APPS/tools/matlab_test/ || exit 1
+cp -vf $SLIM_APPS/skel/matlab_path.m ./startup.m || exit 1
+$matlab -r slim_matlab_tests_serial
+$matlab -r slim_matlab_tests_parallel
+rm -v startup.m
+$matlab -r slim_matlab_tests_version

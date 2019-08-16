@@ -1,0 +1,109 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>students</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 7.12">
+      <meta name="date" content="2012-03-07">
+      <meta name="m-file" content="students">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content"><pre class="codeinput"><span class="keyword">function</span> [f,g,h] = students(x, df)
+<span class="comment">% students T misfit: .5*(1+df)*log(1+x.^2/df)</span>
+<span class="comment">%</span>
+<span class="comment">% use:</span>
+<span class="comment">%   [f,g,h] = students(x, {df})</span>
+<span class="comment">%</span>
+<span class="comment">% input:</span>
+<span class="comment">%   x   - vector</span>
+<span class="comment">%   df  - degrees of freedom, default = 2</span>
+<span class="comment">%</span>
+<span class="comment">% output:</span>
+<span class="comment">%   f   - student's T misfit</span>
+<span class="comment">%   g   - gradient as vector with same size as x</span>
+<span class="comment">%   h   - positive approximation of Hessian as vector with same size as x</span>
+
+<span class="comment">% Author: Tristan van Leeuwen, Aleksandr Aravkin</span>
+<span class="comment">%         Seismic Laboratory for Imaging and Modeling</span>
+<span class="comment">%         Department of Earch &amp; Ocean Sciences</span>
+<span class="comment">%         The University of British Columbia</span>
+<span class="comment">%</span>
+<span class="comment">% Date: February, 2012</span>
+<span class="comment">%</span>
+<span class="comment">% You may use this code only under the conditions and terms of the</span>
+<span class="comment">% license contained in the file LICENSE provided with this source</span>
+<span class="comment">% code. If you do not agree to these terms you may not use this</span>
+<span class="comment">% software.</span>
+
+<span class="comment">% input checking</span>
+<span class="keyword">if</span>(nargin &lt; 3)
+ df = 2;
+<span class="keyword">end</span>
+
+<span class="comment">% calculate student's T gradient and positive definite Hessian</span>
+<span class="comment">% approximation</span>
+f = 0.5 * sum((df + 1).*log(1+(conj(x(:)).*x(:))./df));
+g = (x(:).*(df + 1))./(df + conj(x(:)).*x(:));
+h = (df + 1)./(df + conj(x(:)).*x(:));
+
+<span class="comment">%</span>
+<span class="keyword">if</span> isdistributed(f)
+    f = gather(f);
+<span class="keyword">end</span>
+</pre><p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+function [f,g,h] = students(x, df)
+% students T misfit: .5*(1+df)*log(1+x.^2/df)
+%
+% use:
+%   [f,g,h] = students(x, {df})
+%
+% input:
+%   x   - vector
+%   df  - degrees of freedom, default = 2
+%
+% output:
+%   f   - student's T misfit
+%   g   - gradient as vector with same size as x
+%   h   - positive approximation of Hessian as vector with same size as x
+
+% Author: Tristan van Leeuwen, Aleksandr Aravkin
+%         Seismic Laboratory for Imaging and Modeling
+%         Department of Earch & Ocean Sciences
+%         The University of British Columbia
+%
+% Date: February, 2012
+%
+% You may use this code only under the conditions and terms of the
+% license contained in the file LICENSE provided with this source
+% code. If you do not agree to these terms you may not use this
+% software.
+
+% input checking
+if(nargin < 3) 
+ df = 2;
+end
+
+% calculate student's T gradient and positive definite Hessian
+% approximation
+f = 0.5 * sum((df + 1).*log(1+(conj(x(:)).*x(:))./df));
+g = (x(:).*(df + 1))./(df + conj(x(:)).*x(:));
+h = (df + 1)./(df + conj(x(:)).*x(:));
+
+%
+if isdistributed(f)
+    f = gather(f);
+end
+##### SOURCE END #####
+-->
+   </body>
+</html>

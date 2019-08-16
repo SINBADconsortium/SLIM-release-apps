@@ -1,0 +1,18 @@
+import os
+from rsf.proj import *
+
+########################################################################
+# RETRIEVE DATA
+########################################################################
+# define SLIM FTP server information
+FTPserver = {
+        'server': 'ftp.slim.gatech.edu',
+        'login': 'ftp',
+        'password':''}
+
+
+loc   = os.path.join('SoftwareRelease','WaveformInversion','BasicTimeStepping','Results')
+files = ['gradient_iso.mat','gradient_tti.mat','m_iso_final.mat','m_iso_update.mat','m_tti_final.mat','m_tti_update.mat','params_iso.mat','params_tti.mat']
+# fetch data from FTP server
+for elm in files:
+        Fetch(elm,loc,FTPserver)

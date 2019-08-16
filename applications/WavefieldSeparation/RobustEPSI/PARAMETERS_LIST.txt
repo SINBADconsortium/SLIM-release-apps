@@ -1,0 +1,154 @@
+The following is a list of parameters required by the Robust EPSI driver program 'EPSI_SLIM_main.m'
+When calling the driver, options must be specified in option-value pairs like so:
+    
+    EPSI_SLIM_main('OPTION_NAME1', VALUE, 'OPTION_NAME2', VALUE, ...)
+
+Where OPTION_NAME identifies the individual options listed below (must be in single quotes):
+    
+
+  Option Name            Default value ([] = empty)
+---------------------------------------------------------------------------------------------------
+
+REQUIRED OPTIONS:
+
+  === Input data (see README in the 'data' directory regarding requirements on input data)
+  'input_file',           '../data/Synthetic_long.mat'      name of seismic datafile to process, 
+                                                            can be .mat, .su (native), or .bin 
+                                                            (presume axis1=time, axis2=reciever,
+                                                            axis3=shot) path can be relative or 
+                                                            absolute
+      
+      (the following options are only required for troubleshooting the input file)
+  'input_ns',             []            number of time samples per trace, NOTE: this is required 
+                                        to read from a pure binary datafile
+                                        
+  'input_endian',         []            can specify the endianess of binary/su datasets if
+                                        different from native, 'b' for big, 'l' for little
+                                        
+  'dt',                   []            expected time-sample rate of data in seconds (overrides
+                                        dt read from the data file)
+                                        
+  'test_readData',        0             if set to 1, launch into tesing mode to read data and 
+                                        display example gathers, then quit
+
+  === Required data-dependent information
+  'topmuteT',             0.10          global muting time before first reflected arrival, setting
+                                        this close to the first arrival prevents trivial solution
+                                        
+  'q_estLength_posT',     0.08          expected length of source signature wavelet in seconds (in 
+                                        positive time direction)
+                                        
+  'q_estLength_negT',     0.08          expected length of source signature wavelet in seconds (in
+                                        negative time direction)
+
+  === Operation mode
+  'useSparsity',          0             set to 1 if the solution should be obtained in a sparsi-
+                                        fying representation (hybrid Wavelet and Curvelet domain), 
+                                        requires a lot of local memory unless 'parallel' is used
+                                        
+  'parallel',             0             set to 1 if MATLAB parallel toolbox workers are available 
+                                        and 'parallel pool' is active. Will execute in multi-process
+                                        mode.
+      
+  === Output files, if empty then no files will be output
+  'output_primary_file',  []            result estimated primary wavefield, can be .mat, .su 
+                                        (native, does not output XDR), or .bin (binary cube)
+                                        
+  'output_primaryIR_file',[]            result estimated primary impulse response (unconvolved with
+                                        src sig), can be .mat, .su (native), or .bin
+                                        
+  'output_wavelet_file',  []            result estimated global source signature wavelet, can be 
+                                        .mat, .su (native), or .bin
+
+OPTIONAL PARAMS:
+
+  === Tweaks and inversion parameters that alter result quality and algorithm operation
+  'relError',             0.05          relative 2-norm tolerance level of residual (relative to 
+                                        2-norm of the data), used for 'sigma'
+                                        
+  'maxTotalIter',         70            maximum number of total L1 gradient iterations to use (each
+                                        gradient step costs 1 SRME-type multidimensional
+                                        convolution)
+                                        
+  'maxInitialIter',       5             maximum number of initial L1 gradient iterations before
+                                        initial spike-picking
+                                        
+  'initialSpikeAmp',      1.1           affects how aggressively anti-causal wavefields are ignored
+                                        Values >1 is better at multiple removal but may result in 
+                                        non-causal artifacts. Normal range is 0.5~1.5
+                                        
+  'useOblique',           0             if =1, turn on obliquity factor (same role as in traditional
+                                        SRME processing, to account for de-ghosted data)
+                                        
+  'invertQ',              1             turns on/off source signature estimation, if =0 then please 
+                                        make sure 'wavelet_file' is specified
+                                        
+  'wavelet_file',         []            optional estimation of a source signature file (currently
+                                        only supports a mat file that stores this in a variable 'q')
+                                        
+                                        
+  'wavelet_reg_lambda',   1             if >0, defines a damping parameter lambda on the 2-norm of 
+                                        the source signature when performing least-squares matching
+                                        
+  'wavelet_taperperc',    0.2           fraction of q_estLength_posT to taper-edge the estimated
+                                        source by, if >0 then a cosine taper is used instead of 
+                                        hard threshold
+                                        
+  'window_startT',        0             if >0, indicate a time window where the initial L1 gradient
+                                        iterations before initial spike-picking is done, in seconds                                        
+  'window_endT',          0             (ideally 'window_startT' and 'window_endT', if specified, 
+                                        should roughly window the first strongly reflected ocean 
+                                        bottom event)
+                                        
+  'polishWavelet',        1             if 1, match for the source signature one final time right
+                                        before out-putting results
+                                        
+  'minL1iters',           5             impose minimum number of L1 iterations within each alter-
+                                        nating optimization loop
+                                        
+  'maxOuterIter',       inf             if <inf, puts limit on number of alternating optimization
+                                        (block coordinate descent) loops
+                                        
+  'subspaceMin',          0             1 enables the use of subspace minimization step in SPGL1
+                                        
+  'curvType',          'WRAP'             Curvelet type (when useSparsity=1), can be 'WRAP' 
+                                        (wrapping) or 'ME' (mirror-extended)
+                                        
+  'singlePrecision',      0             set to 1 to process everything in single precision (and
+                                        output in single prec)       
+      
+      
+  === Optional preprocessing on the input data
+  'downshift',            0             number of zero time sample padded to the top of the data
+  
+  'padtime',              0             number of zero time sample padded to the bottom of data
+  
+  'timeweightgamma',      0             if >0, time-weights data with exp( t * timeweightgamma )
+                                        during processing
+                                        
+  'renormData',           0             renormalize data such that maximum value is 1
+                                        
+  'num_traces_missing',   0             used to experiment with in-filling missing near offsets,
+                                        not yet fully implemented
+      
+      
+  === Debug and developmental use
+  'show_preview',         0             if =1, displays a graphical summary of results once 
+                                        processing is done
+      
+      
+  'savepreviewmat',       0                         if ~=0, save preview files in mat format  
+  'preview_file',         'testmodel_preview.mat'   target .mat filename name of a single-shot 
+                                                    preview of the solution
+  'preview_diagonal',     0                         0 for zero-offset gathers, >0 for offset in dx
+  
+  'savesolmat',           0                         if ~=0, saves all internal solution in mat 
+                                                    format in sol_file
+  'sol_file',             'testmodel_sol.mat'       
+  
+  'savecoefmat',          0                         if ~=0, saves solution coefficients in mat 
+                                                    format in coef_file
+  'coef_file',            'testmodel_coef.mat'      
+  
+  'verbosity',            1                         toggles internal solver verbosity
+  

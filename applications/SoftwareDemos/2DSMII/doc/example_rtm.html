@@ -1,0 +1,167 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>example_rtm</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 7.12">
+      <meta name="date" content="2013-01-15">
+      <meta name="m-file" content="example_rtm">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content"><pre class="codeinput"><span class="comment">% This script runs the RTM example. For parallel runs, use 3, 6 or 12</span>
+<span class="comment">% workers. The script may take up to 2 hours to run.</span>
+<span class="comment">%</span>
+
+setpaths;
+curdir = pwd;
+expdir = [resultsdir <span class="string">'/rtm'</span>];
+<span class="keyword">if</span> ~exist(expdir,<span class="string">'dir'</span>)
+    mkdir(expdir);
+<span class="keyword">end</span>
+
+<span class="comment">% read models</span>
+[v,o,d,n]  = odnread([datadir <span class="string">'/marm_vp.odn'</span>]);
+
+v = reshape(v,n);
+v = [1500*ones(60,501); v(1:301,500 + [1:501])];
+n = size(v);
+
+[z,x] = odn2grid(o,d,n);
+
+<span class="comment">% model grid</span>
+model.o = o;
+model.d = d;
+model.n = n;
+
+<span class="comment">% absorbing boundary</span>
+model.nb = [50 50];
+
+<span class="comment">% source/receiver grid</span>
+model.zsrc = 25;
+model.xsrc = 0:100:5000;
+model.zrec = 15;
+model.xrec = 0:50:5000;
+
+<span class="comment">% frequencies</span>
+model.freq = [2.5:.5:20];
+
+<span class="comment">% wavelet</span>
+model.f0 = 10;
+model.t0 = 0;
+
+<span class="comment">% source matrix</span>
+Q = speye(length(model.xsrc));
+
+<span class="comment">% smoothing operators</span>
+S = opKron(opSmooth(n(2),200),opSmooth(n(1),200));
+
+<span class="comment">% smooth model</span>
+m  = 1e6./v(:).^2;
+m0 = S*m;
+dm = m - m0;
+
+<span class="comment">% make data</span>
+D       = F(m,Q,model);
+[D0,J0] = F(m0,Q,model);
+dD      = D - D0;
+[od,dd,nd] = grid2odn(model.xrec,model.xsrc,model.freq);
+
+<span class="comment">% frequency weighting</span>
+Wf = oppKron2Lo(opDiag(1./model.freq),opDirac(nd(1)*nd(2)));
+
+<span class="comment">% depth weighting</span>
+Wz = opKron(opDirac(n(2)),opDiag(sqrt(z)));
+
+<span class="comment">% images</span>
+
+dmt = Wz*J0'*(Wf*dD);
+
+odnwrite([expdir <span class="string">'/dmt.odn'</span>],dmt,o,d,n);
+</pre><p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+% This script runs the RTM example. For parallel runs, use 3, 6 or 12
+% workers. The script may take up to 2 hours to run.
+%
+
+setpaths;
+curdir = pwd;
+expdir = [resultsdir '/rtm'];
+if ~exist(expdir,'dir')
+    mkdir(expdir);
+end
+
+% read models
+[v,o,d,n]  = odnread([datadir '/marm_vp.odn']);
+
+v = reshape(v,n);
+v = [1500*ones(60,501); v(1:301,500 + [1:501])];
+n = size(v);
+
+[z,x] = odn2grid(o,d,n);
+
+% model grid
+model.o = o;
+model.d = d;
+model.n = n;
+
+% absorbing boundary
+model.nb = [50 50];
+
+% source/receiver grid
+model.zsrc = 25;
+model.xsrc = 0:100:5000;
+model.zrec = 15;
+model.xrec = 0:50:5000;
+
+% frequencies
+model.freq = [2.5:.5:20];
+
+% wavelet
+model.f0 = 10;
+model.t0 = 0;
+
+% source matrix
+Q = speye(length(model.xsrc));
+
+% smoothing operators
+S = opKron(opSmooth(n(2),200),opSmooth(n(1),200));
+
+% smooth model
+m  = 1e6./v(:).^2;
+m0 = S*m;
+dm = m - m0;
+
+% make data
+D       = F(m,Q,model);
+[D0,J0] = F(m0,Q,model);
+dD      = D - D0;
+[od,dd,nd] = grid2odn(model.xrec,model.xsrc,model.freq);
+
+% frequency weighting
+Wf = oppKron2Lo(opDiag(1./model.freq),opDirac(nd(1)*nd(2)));
+
+% depth weighting
+Wz = opKron(opDirac(n(2)),opDiag(sqrt(z)));
+
+% images
+
+dmt = Wz*J0'*(Wf*dD);
+
+odnwrite([expdir '/dmt.odn'],dmt,o,d,n);
+
+
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

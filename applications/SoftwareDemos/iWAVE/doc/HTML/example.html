@@ -1,0 +1,176 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Matlab interface for iWAVE++</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.4">
+      <meta name="date" content="2016-02-25">
+      <meta name="m-file" content="example">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>Matlab interface for iWAVE++</h1>
+         <introduction></introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Forward modeling</a></li>
+               <li><a href="#2">Linearize modeling</a></li>
+               <li><a href="#3">Adjoint</a></li>
+               <li><a href="#4">RTM</a></li>
+               <li><a href="#5">LSM</a></li>
+               <li><a href="#6">FWI</a></li>
+            </ul>
+         </div>
+         <h2>Forward modeling<a name="1"></a></h2><pre class="codeinput">curdir = pwd;
+
+mtfile = <span class="string">'../demo_model/cambulkt.rsf'</span>; <span class="comment">% model file</span>
+dfile  = <span class="string">'../result/D_fwd.mat'</span>;       <span class="comment">% data file</span>
+[m n d o] = ReadAllData(mtfile);
+t = 0:.004:2;
+xrec = 0:10:1000;
+load(dfile);
+[z x] = odn2grid(o,d,n);
+figure;imagesc(x,z,m);colorbar;xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'bulk modulus model'</span>)
+figure;imagesc(xrec,t,Dfwd);colorbar;xlabel(<span class="string">'receiver [m]'</span>);ylabel(<span class="string">'time [m]'</span>);title(<span class="string">'Data'</span>);colormap <span class="string">redblue</span>;
+colorbar;caxis([-1,1]*1e2);
+</pre><img vspace="5" hspace="5" src="example_01.png"> <img vspace="5" hspace="5" src="example_02.png"> <h2>Linearize modeling<a name="2"></a></h2><pre class="codeinput">fname_dbulk = [curdir <span class="string">'/../demo_model/camdbulk.rsf'</span>];
+fname_bulkt = [curdir <span class="string">'/../demo_model/cambulkt.rsf'</span>];
+fname_bulkh = [curdir <span class="string">'/../demo_model/cambulkh.rsf'</span>];
+dfile1      = [<span class="string">'../result/D_lin.mat'</span>];
+dfile2      = [<span class="string">'../result/D_nlin.mat'</span>];
+
+[mt n d o] = ReadAllData(fname_bulkt);
+[mh n d o] = ReadAllData(fname_bulkh);
+[dm n d o] = ReadAllData(fname_dbulk);
+
+load(dfile1);
+load(dfile2);
+[z x] = odn2grid(o,d,n);
+figure;imagesc(x,z,mt);colorbar;xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'true bulk modulus model'</span>);
+figure;imagesc(x,z,mh);colorbar;xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'background bulk modulus model'</span>);
+figure;imagesc(x,z,dm);colorbar;xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'bulk modulus difference'</span>);
+figure;imagesc(xrec,t,Dnlin);colorbar;xlabel(<span class="string">'receiver [m]'</span>);ylabel(<span class="string">'time [m]'</span>);title(<span class="string">'nonlinear data difference'</span>);colormap <span class="string">redblue</span>;caxis([-15 15])
+figure;imagesc(xrec,t,Dlin);colorbar;xlabel(<span class="string">'receiver [m]'</span>);ylabel(<span class="string">'time [m]'</span>);title(<span class="string">'linear data difference'</span>);colormap <span class="string">redblue</span>;caxis([-15 15]);
+</pre><img vspace="5" hspace="5" src="example_03.png"> <img vspace="5" hspace="5" src="example_04.png"> <img vspace="5" hspace="5" src="example_05.png"> <img vspace="5" hspace="5" src="example_06.png"> <img vspace="5" hspace="5" src="example_07.png"> <h2>Adjoint<a name="3"></a></h2><pre class="codeinput">dfile = [<span class="string">'../result/D_adj.mat'</span>];
+load(dfile);
+figure;imagesc(x,z,Dadj);colorbar;xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'adjoint operator result'</span>);colormap <span class="string">redblue</span>;caxis([-300 300]);
+</pre><img vspace="5" hspace="5" src="example_08.png"> <h2>RTM<a name="4"></a></h2><pre class="codeinput">fname_bulks = [curdir <span class="string">'/../demo_model/layerbulks.rsf'</span>];
+fname_bulkt = [curdir <span class="string">'/../demo_model/layerbulkt.rsf'</span>];
+dfile = [<span class="string">'../result/D_RTM.mat'</span>];
+[mt n d o] = ReadAllData(fname_bulkt);
+[ms n d o] = ReadAllData(fname_bulks);
+load(dfile);
+[z x] = odn2grid(o,d,n);
+figure;imagesc(x,z,mt);colorbar;xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'true bulk modulus model'</span>);
+figure;imagesc(x,z,ms);colorbar;xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'background bulk modulus model'</span>);
+figure;imagesc(x,z,mt-ms);colorbar;xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'model difference'</span>);colormap <span class="string">redblue</span>
+figure;imagesc(x,z,DRTM);colorbar;xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'RTM result'</span>);colormap <span class="string">redblue</span>;caxis([-1,1]*1e4);
+</pre><img vspace="5" hspace="5" src="example_09.png"> <img vspace="5" hspace="5" src="example_10.png"> <img vspace="5" hspace="5" src="example_11.png"> <img vspace="5" hspace="5" src="example_12.png"> <h2>LSM<a name="5"></a></h2><pre class="codeinput">dfile = [<span class="string">'../result/D_LSM.mat'</span>];
+load(dfile);
+figure;imagesc(x,z,DLSM);colorbar;xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'Least square migration result'</span>);colormap <span class="string">redblue</span>;caxis([-1,1]*1e-1);
+</pre><img vspace="5" hspace="5" src="example_13.png"> <h2>FWI<a name="6"></a></h2><pre class="codeinput">dfile = [<span class="string">'../result/D_FWI.mat'</span>];
+fname_bulkt = [curdir <span class="string">'/../demo_model/cambulkt.rsf'</span>];
+fname_bulks = [curdir <span class="string">'/../demo_model/cambulkh.rsf'</span>];
+[mt n d o] = ReadAllData(fname_bulkt);
+[ms n d o] = ReadAllData(fname_bulks);
+load(dfile);
+figure;imagesc(x,z,mt);colorbar;xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'true bulk modulus model'</span>);a=caxis;
+figure;imagesc(x,z,ms);colorbar;xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'initial bulk modulus model'</span>);caxis(a);
+figure;imagesc(x,z,DFWI);colorbar;xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'FWI result'</span>);caxis(a);
+</pre><img vspace="5" hspace="5" src="example_14.png"> <img vspace="5" hspace="5" src="example_15.png"> <img vspace="5" hspace="5" src="example_16.png"> <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Matlab interface for iWAVE++
+%
+%% Forward modeling
+
+curdir = pwd;
+
+mtfile = '../demo_model/cambulkt.rsf'; % model file
+dfile  = '../result/D_fwd.mat';       % data file
+[m n d o] = ReadAllData(mtfile);
+t = 0:.004:2;
+xrec = 0:10:1000;
+load(dfile);
+[z x] = odn2grid(o,d,n);
+figure;imagesc(x,z,m);colorbar;xlabel('x [m]');ylabel('z [m]');title('bulk modulus model')
+figure;imagesc(xrec,t,Dfwd);colorbar;xlabel('receiver [m]');ylabel('time [m]');title('Data');colormap redblue;
+colorbar;caxis([-1,1]*1e2);
+
+%% Linearize modeling
+
+fname_dbulk = [curdir '/../demo_model/camdbulk.rsf'];
+fname_bulkt = [curdir '/../demo_model/cambulkt.rsf'];
+fname_bulkh = [curdir '/../demo_model/cambulkh.rsf'];
+dfile1      = ['../result/D_lin.mat'];
+dfile2      = ['../result/D_nlin.mat'];
+
+[mt n d o] = ReadAllData(fname_bulkt);
+[mh n d o] = ReadAllData(fname_bulkh);
+[dm n d o] = ReadAllData(fname_dbulk);
+
+load(dfile1);
+load(dfile2);
+[z x] = odn2grid(o,d,n);
+figure;imagesc(x,z,mt);colorbar;xlabel('x [m]');ylabel('z [m]');title('true bulk modulus model');
+figure;imagesc(x,z,mh);colorbar;xlabel('x [m]');ylabel('z [m]');title('background bulk modulus model');
+figure;imagesc(x,z,dm);colorbar;xlabel('x [m]');ylabel('z [m]');title('bulk modulus difference');
+figure;imagesc(xrec,t,Dnlin);colorbar;xlabel('receiver [m]');ylabel('time [m]');title('nonlinear data difference');colormap redblue;caxis([-15 15])
+figure;imagesc(xrec,t,Dlin);colorbar;xlabel('receiver [m]');ylabel('time [m]');title('linear data difference');colormap redblue;caxis([-15 15]);
+
+%% Adjoint
+dfile = ['../result/D_adj.mat'];
+load(dfile);
+figure;imagesc(x,z,Dadj);colorbar;xlabel('x [m]');ylabel('z [m]');title('adjoint operator result');colormap redblue;caxis([-300 300]);
+
+%% RTM
+fname_bulks = [curdir '/../demo_model/layerbulks.rsf'];
+fname_bulkt = [curdir '/../demo_model/layerbulkt.rsf'];
+dfile = ['../result/D_RTM.mat'];
+[mt n d o] = ReadAllData(fname_bulkt);
+[ms n d o] = ReadAllData(fname_bulks);
+load(dfile);
+[z x] = odn2grid(o,d,n);
+figure;imagesc(x,z,mt);colorbar;xlabel('x [m]');ylabel('z [m]');title('true bulk modulus model');
+figure;imagesc(x,z,ms);colorbar;xlabel('x [m]');ylabel('z [m]');title('background bulk modulus model');
+figure;imagesc(x,z,mt-ms);colorbar;xlabel('x [m]');ylabel('z [m]');title('model difference');colormap redblue
+figure;imagesc(x,z,DRTM);colorbar;xlabel('x [m]');ylabel('z [m]');title('RTM result');colormap redblue;caxis([-1,1]*1e4);
+
+
+%% LSM
+dfile = ['../result/D_LSM.mat'];
+load(dfile);
+figure;imagesc(x,z,DLSM);colorbar;xlabel('x [m]');ylabel('z [m]');title('Least square migration result');colormap redblue;caxis([-1,1]*1e-1);
+
+%% FWI
+dfile = ['../result/D_FWI.mat'];
+fname_bulkt = [curdir '/../demo_model/cambulkt.rsf'];
+fname_bulks = [curdir '/../demo_model/cambulkh.rsf'];
+[mt n d o] = ReadAllData(fname_bulkt);
+[ms n d o] = ReadAllData(fname_bulks);
+load(dfile);
+figure;imagesc(x,z,mt);colorbar;xlabel('x [m]');ylabel('z [m]');title('true bulk modulus model');a=caxis;
+figure;imagesc(x,z,ms);colorbar;xlabel('x [m]');ylabel('z [m]');title('initial bulk modulus model');caxis(a);
+figure;imagesc(x,z,DFWI);colorbar;xlabel('x [m]');ylabel('z [m]');title('FWI result');caxis(a);
+
+
+
+
+
+
+
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

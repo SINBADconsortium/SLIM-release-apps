@@ -1,0 +1,7 @@
+nl1=1;
+nl2=1;
+nr1=1;
+nr2=1;
+partask=1;
+mpi_np1=1;
+mpi_np2=1;

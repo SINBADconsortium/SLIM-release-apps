@@ -1,0 +1,92 @@
+% Three level Multigrid Preconditioner
+%
+%  
+%
+% Usage:  
+%  T = ML_GMRES(H,v,comp_grid,model,freq,opts)
+%            
+% 
+% INPUT:
+%   H          - discretized Helmholtz operator (SPOT operator or matrix)
+%   v          - current model corresponding to H
+%   comp_grid  - computational grid structure (output of discretize_helmholtz)
+%   model      - the same structure you passed to discrete_helmholtz routine
+%                in order to obtain a discrete operator.
+%   freq       - frequency (Hz)
+%   opts       - opts struct, passed in by discrete_helmholtz
+%
+%
+% OUTPUT:
+%   T          - ML GMRES preconditioner in a SPOT operator (T corresponds to H, T' corresponds to H')
+%
+% AUTHOR: Curt Da Silva, 2015
+%         Seismic Laboratory for Imaging and Modeling
+%         Department of Earch & Ocean Sciences
+%         The University of British Columbia
+%         
+%
+% You may use this code only under the conditions and terms of the
+% license contained in the file LICENSE provided with this source
+% code. If you do not agree to these terms you may not use this
+% software.
+% 
+%------------------------------------------------------------------------------
+function T = ML_GMRES(H,v,comp_grid,model,freq,opts)
+    if freq >= 2 && freq < 5
+        ks_outer = 1;
+        ks_inner = 3; 
+        kc_outer = 2;
+        kc_inner = 3;
+        coarsetol = 5e-1;
+    elseif freq >= 5 && freq <= 6
+        ks_outer = 1;
+        ks_inner = 5;
+        kc_outer = 2;
+        kc_inner = 3;
+        coarsetol = 5e-1;
+    elseif freq > 6 && freq <= 8
+        ks_outer = 1;
+        ks_inner = 5;
+        kc_outer = 2;
+        kc_inner = 3;    
+        coarsetol = 5e-1;
+    elseif freq > 8 && freq < 10
+        ks_outer = 2;
+        ks_inner = 5;
+        kc_outer = 2;
+        kc_inner = 3;
+        coarsetol = 5e-1;
+    elseif freq >= 10 && freq <= 12
+        ks_outer = 2;
+        ks_inner = 5;
+        kc_outer = 2;
+        kc_inner = 5;
+        coarsetol = 5e-1;
+    elseif freq > 12
+        ks_outer = 3;
+        ks_inner = 5;
+        kc_outer = 3;
+        kc_inner = 5;
+        coarsetol = 5e-1;    
+    end
+    nlevels = 3;
+    T = opMultigrid(nlevels);
+    smoother = LinSolveOpts();
+    smoother.solver = LinSolveOpts.SOLVE_FGMRES;
+    smoother.precond = LinSolveOpts.PREC_IDENTITY;
+    smoother.maxit = ks_outer; smoother.maxinnerit = ks_inner;
+    smoother.tol = 1e-6;
+    
+    coarse_solver = LinSolveOpts();
+    coarse_solver.solver = LinSolveOpts.SOLVE_FGMRES;
+    coarse_solver.precond = LinSolveOpts.PREC_IDENTITY;
+    coarse_solver.maxit = kc_outer; 
+    coarse_solver.maxinnerit = kc_inner;
+    coarse_solver.tol = coarsetol;
+    
+    set_smoother(T,smoother);
+    set_coarse_solver(T,coarse_solver);
+    recursive_v_cycle = true;
+    construct(T,H,v,comp_grid,model,freq,opts,recursive_v_cycle);
+   
+end

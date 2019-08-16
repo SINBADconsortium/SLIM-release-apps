@@ -1,0 +1,260 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>testing_analytic</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 7.12">
+      <meta name="date" content="2013-01-15">
+      <meta name="m-file" content="testing_analytic">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content"><pre class="codeinput"><span class="comment">% This script tests the modeling operator against the analytic solution</span>
+<span class="comment">% for a constant velocity. It should take a couple of minutes to run.</span>
+
+setpaths;
+curdir = pwd;
+expdir = [resultsdir <span class="string">'/testing'</span>];
+<span class="keyword">if</span> ~exist(expdir,<span class="string">'dir'</span>)
+    mkdir(expdir);
+<span class="keyword">end</span>
+cd(expdir);
+
+<span class="comment">% Analytic solution for constant velocity</span>
+<span class="comment">% velocity [m/s]</span>
+v0 = 2000;
+
+<span class="comment">% size of domain LxL m</span>
+L = 1000;
+
+<span class="comment">% sponge boundary size B m</span>
+B = 250;
+
+<span class="comment">% frequency [1/s]</span>
+f  = 10;
+
+<span class="comment">% gridspacings</span>
+h = [20:-2:2];
+e = 0*h;
+<span class="comment">% loop</span>
+<span class="keyword">for</span> k = 1:length(h)
+    <span class="comment">% grid paramets</span>
+    model.o = [0 0];
+    model.d = [h(k) h(k)];
+    model.n = [floor(L/h(k)) + 1 floor(L/h(k)) + 1];
+
+    <span class="comment">% source and receiver setup</span>
+    model.zsrc = 500;
+    model.xsrc = 500;
+    model.zrec = 0:h(k):L;
+    model.xrec = 0:h(k):L;
+
+    <span class="comment">% absorbing boundary</span>
+    model.nb = [floor(B/h(k)) + 1 floor(B/h(k))];
+
+    <span class="comment">% frequency</span>
+    model.freq = f;
+
+    <span class="comment">% ricker wavelet</span>
+    model.f0 = 0;
+    model.t0 = 0;
+
+    <span class="comment">% source matrix</span>
+    Q = 1;
+
+    <span class="comment">% slowness-squares model [km^2/s^2]</span>
+    m  = 1e6*ones(prod(model.n),1)./v0.^2;
+
+    <span class="comment">% analytic solution</span>
+    D1 = G([v0;0],Q,model);
+
+    <span class="comment">% numerical solution</span>
+    D2 = F(m,Q,model);
+
+    <span class="comment">% error</span>
+    e(k) = norm(D1 - D2);
+<span class="keyword">end</span>
+
+<span class="comment">% save</span>
+dlmwrite(<span class="string">'error_mod.dat'</span>,[h(:) e(:)]);
+[o,d,n] = grid2odn(model.zrec,model.xrec);
+odnwrite(<span class="string">'D1.odn'</span>,D1(:),o,d,n);
+odnwrite(<span class="string">'D2.odn'</span>,gather(D2(:)),o,d,n);
+
+
+<span class="comment">% Analytic solution for linear profile</span>
+<span class="comment">% velocity profile</span>
+v0 = 2000;
+alpha = 0.7;
+
+<span class="comment">% grid</span>
+z = 0:10:1000;
+x = 0:10:5000;
+[o,d,n] = grid2odn(z,x);
+
+<span class="comment">% gridded slowness-squared</span>
+m = vec((1e6./(v0+alpha*z').^2)*ones(size(x)));
+
+<span class="comment">% frequency</span>
+f = 10;
+
+<span class="comment">% modeling parameters</span>
+model.o = o;
+model.d = d;
+model.n = n;
+model.nb = [50 50];
+model.freq = f;
+model.f0 = 0;
+model.t0 = 0;
+model.zsrc = 10;
+model.xsrc = mean(x);
+model.zrec = z;
+model.xrec = x;
+
+<span class="comment">% source</span>
+Q = 1;
+
+<span class="comment">% analytic solution</span>
+G1 = G([v0;alpha],Q,model);
+
+<span class="comment">% numerical solution</span>
+G2 = F(m,Q,model);
+
+<span class="comment">% save</span>
+[o,d,n] = grid2odn(model.zrec,model.xrec);
+odnwrite(<span class="string">'G1.odn'</span>,G1(:),o,d,n);
+odnwrite(<span class="string">'G2.odn'</span>,gather(G2(:)),o,d,n);
+
+cd(curdir)
+</pre><p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+% This script tests the modeling operator against the analytic solution
+% for a constant velocity. It should take a couple of minutes to run.
+
+setpaths;
+curdir = pwd;
+expdir = [resultsdir '/testing'];
+if ~exist(expdir,'dir')
+    mkdir(expdir);
+end
+cd(expdir);
+
+% Analytic solution for constant velocity
+% velocity [m/s]
+v0 = 2000;
+
+% size of domain LxL m
+L = 1000;
+
+% sponge boundary size B m
+B = 250;
+
+% frequency [1/s]
+f  = 10;
+
+% gridspacings
+h = [20:-2:2];
+e = 0*h;
+% loop
+for k = 1:length(h)
+    % grid paramets
+    model.o = [0 0];
+    model.d = [h(k) h(k)];
+    model.n = [floor(L/h(k)) + 1 floor(L/h(k)) + 1];
+
+    % source and receiver setup
+    model.zsrc = 500;
+    model.xsrc = 500;
+    model.zrec = 0:h(k):L;
+    model.xrec = 0:h(k):L;
+
+    % absorbing boundary
+    model.nb = [floor(B/h(k)) + 1 floor(B/h(k))];
+
+    % frequency
+    model.freq = f;
+
+    % ricker wavelet
+    model.f0 = 0;
+    model.t0 = 0;
+
+    % source matrix
+    Q = 1;
+
+    % slowness-squares model [km^2/s^2]
+    m  = 1e6*ones(prod(model.n),1)./v0.^2;
+
+    % analytic solution
+    D1 = G([v0;0],Q,model);
+
+    % numerical solution
+    D2 = F(m,Q,model);
+
+    % error
+    e(k) = norm(D1 - D2);
+end
+
+% save
+dlmwrite('error_mod.dat',[h(:) e(:)]);
+[o,d,n] = grid2odn(model.zrec,model.xrec);
+odnwrite('D1.odn',D1(:),o,d,n);
+odnwrite('D2.odn',gather(D2(:)),o,d,n);
+
+
+% Analytic solution for linear profile
+% velocity profile
+v0 = 2000;
+alpha = 0.7;
+
+% grid
+z = 0:10:1000;
+x = 0:10:5000;
+[o,d,n] = grid2odn(z,x);
+
+% gridded slowness-squared
+m = vec((1e6./(v0+alpha*z').^2)*ones(size(x)));
+
+% frequency
+f = 10;
+
+% modeling parameters
+model.o = o;
+model.d = d;
+model.n = n;
+model.nb = [50 50];
+model.freq = f;
+model.f0 = 0;
+model.t0 = 0;
+model.zsrc = 10;
+model.xsrc = mean(x);
+model.zrec = z;
+model.xrec = x;
+
+% source
+Q = 1;
+
+% analytic solution
+G1 = G([v0;alpha],Q,model);
+
+% numerical solution
+G2 = F(m,Q,model);
+
+% save
+[o,d,n] = grid2odn(model.zrec,model.xrec);
+odnwrite('G1.odn',G1(:),o,d,n);
+odnwrite('G2.odn',gather(G2(:)),o,d,n);
+
+cd(curdir)
+
+##### SOURCE END #####
+-->
+   </body>
+</html>
