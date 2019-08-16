@@ -1,0 +1,20 @@
+# run 'Scons' with help you fetch some data from our FTP sever.
+
+from rsf.proj import *
+
+########################################################################
+# RETRIEVE DATA
+########################################################################
+# define SLIM FTP server information
+FTPserver = {
+    # 'server': os.environ.get('SLIM_SERVER'),
+    'server': 'ftp.slim.gatech.edu',
+    'login': 'ftp',
+    'password':''}
+
+loc = os.path.join('users','lixiang','LSM')
+
+# fetch data from FTP server
+Fetch('LSM_Toy_model_L1_WRSeqOffset3Shots3FsIvc.mat',loc,FTPserver)
+Fetch('LSM_BGcompass_model2d_L1_WRSim3Shots10FsIvc.mat',loc,FTPserver)
+Fetch('LSM_BGcompass_model2d_L1_WRSim3Shots10Fs.mat',loc,FTPserver)

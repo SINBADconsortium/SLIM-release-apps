@@ -1,0 +1,139 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>testing_jacobian</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 7.12">
+      <meta name="date" content="2013-01-15">
+      <meta name="m-file" content="testing_jacobian">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content"><pre class="codeinput"><span class="comment">% This script runs a Jacobian test on a small model.</span>
+<span class="comment">% It should take only a couple of minutes to run.</span>
+<span class="comment">%</span>
+
+setpaths;
+curdir = pwd;
+expdir = [resultsdir <span class="string">'/testing'</span>];
+<span class="keyword">if</span> ~exist(expdir,<span class="string">'dir'</span>)
+    mkdir(expdir);
+<span class="keyword">end</span>
+cd(expdir);
+
+<span class="comment">% setup model parameters</span>
+model.o = [0 0];
+model.d = [10 10];
+model.n = [101 101];
+model.nb = [20 20];
+model.freq = [10 15];
+model.f0 = 10;
+model.t0 = 0.01;
+model.zsrc = 15;
+model.xsrc = 0:100:1000;
+model.zrec = 10;
+model.xrec = 0:5:1000;
+
+<span class="comment">% source matrix</span>
+Q = speye(length(model.xsrc));
+
+<span class="comment">% constant velocicty</span>
+v0 = 2000;
+m  = 1e6/v0.^2*ones(prod(model.n),1);
+
+<span class="comment">% random perturbation, set values close to the edge to zero.</span>
+dm = randn(model.n);
+dm([1:20 end-20:end],:) = 0;
+dm(:,[1:20 end-20:end]) = 0;
+dm = dm(:);
+
+<span class="comment">% data and Jacobian</span>
+[D0,J0] = F(m,Q,model);
+
+<span class="comment">% linearized data</span>
+dD = J0*dm;
+
+<span class="comment">% stepsizes</span>
+h = 10.^[0:-1:-6];
+e = 0*h;
+<span class="keyword">for</span> k = 1:length(h)
+    D1   = F(m+h(k)*dm,Q,model);
+    e(k) = norm(D1 - D0 - h(k)*dD)/norm(dm);
+<span class="keyword">end</span>
+
+<span class="comment">% save</span>
+dlmwrite(<span class="string">'error_jac.dat'</span>,[h(:) e(:)]);
+
+
+cd(curdir)
+</pre><p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+% This script runs a Jacobian test on a small model.
+% It should take only a couple of minutes to run.
+%
+
+setpaths;
+curdir = pwd;
+expdir = [resultsdir '/testing'];
+if ~exist(expdir,'dir')
+    mkdir(expdir);
+end
+cd(expdir);
+
+% setup model parameters
+model.o = [0 0];
+model.d = [10 10];
+model.n = [101 101];
+model.nb = [20 20];
+model.freq = [10 15];
+model.f0 = 10;
+model.t0 = 0.01;
+model.zsrc = 15;
+model.xsrc = 0:100:1000;
+model.zrec = 10;
+model.xrec = 0:5:1000;
+
+% source matrix
+Q = speye(length(model.xsrc));
+
+% constant velocicty
+v0 = 2000;
+m  = 1e6/v0.^2*ones(prod(model.n),1);
+
+% random perturbation, set values close to the edge to zero.
+dm = randn(model.n);
+dm([1:20 end-20:end],:) = 0;
+dm(:,[1:20 end-20:end]) = 0;
+dm = dm(:);
+
+% data and Jacobian
+[D0,J0] = F(m,Q,model);
+
+% linearized data
+dD = J0*dm;
+
+% stepsizes
+h = 10.^[0:-1:-6];
+e = 0*h;
+for k = 1:length(h)
+    D1   = F(m+h(k)*dm,Q,model);
+    e(k) = norm(D1 - D0 - h(k)*dD)/norm(dm);
+end
+
+% save
+dlmwrite('error_jac.dat',[h(:) e(:)]);
+
+
+cd(curdir)
+##### SOURCE END #####
+-->
+   </body>
+</html>

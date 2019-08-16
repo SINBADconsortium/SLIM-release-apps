@@ -1,0 +1,227 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>2D ocean-bottom marine acquisition via jittered sampling: examples and results</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.1">
+      <meta name="date" content="2015-07-29">
+      <meta name="m-file" content="examples">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>2D ocean-bottom marine acquisition via jittered sampling: examples and results</h1>
+         <introduction>
+            <p>Author: Haneet Wason (<a href="mailto:hwason@eos.ubc.ca">hwason@eos.ubc.ca</a>)
+            </p>
+            <p>Date: April, 2013</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Time-jittered acquisition with 1 boat</a></li>
+               <li><a href="#16">Time-jittered acquisition with 2 boats</a></li>
+               <li><a href="#31">Running the code on your own data</a></li>
+            </ul>
+         </div>
+         <h2>Time-jittered acquisition with 1 boat<a name="1"></a></h2>
+         <p>See the scripts under <tt>examples/TimeJitAcq_1boat/</tt>.
+         </p>
+         <p>Load the parameters file</p><pre class="codeinput">load([resultsdir <span class="string">'/TimeJitAcq_1boat/TimeJitAcq_1boat_params.mat'</span>])
+</pre><pre class="codeoutput">Undefined function or variable 'resultsdir'.
+
+Error in examples (line 16)
+load([resultsdir '/TimeJitAcq_1boat/TimeJitAcq_1boat_params.mat']) 
+</pre><p>Conventional vs. time-jittered acquisition scenario</p><pre class="codeinput">flipflop = <span class="string">'no'</span>;
+fig = <span class="string">'yes'</span>;
+convacq_2arrays(flipflop, tfireint_min, ns, dt, boatspeed, fig);
+jitter_airgunarrays(ns, ds, dt, p, nboats, randseed, boatspeed, tfireint_min, tdelay, delayboat, fig);
+</pre><p>Original data</p><pre class="codeinput">frame.t = 300;
+frame.r = 60;
+frame.s = 92;
+caxmin = 100;
+caxmax = 100;
+cmap   = <span class="string">'gray'</span>;
+image2DTRSframe([resultsdir <span class="string">'/TimeJitAcq_1boat/Suez_ds25m.rsf'</span>], frame, nt, dt, caxmin, caxmax, cmap);
+</pre><p>Time-jittered (or blended) data volume: view 30 seconds of the jittered data volume</p><pre class="codeinput">t1 = 130.0;
+t2 = 160.0;
+imageJitteredData([resultsdir <span class="string">'/TimeJitAcq_1boat/TimeJitAcq_1boat_jitdata.rsf'</span>], t1, t2, dt, nr, dr, caxmin, caxmax, cmap);
+</pre><p>Recovery by conventional processing: apply the adjoint of the sampling operator</p><pre class="codeinput">image2DTRSframe([resultsdir <span class="string">'/TimeJitAcq_1boat/TimeJitAcq_1boat_adjrecov.rsf'</span>], frame, nt, dt, caxmin, caxmax, cmap);
+</pre><p>NOTE: an empty shot gather image implies that none of the airguns fired at that location.</p>
+         <p>This step is usually followed by some kind of median filtering on common receiver or CMP gathers. We address the challenge
+            of deblending by a (curvelet-based) sparsity-promoting recovery technique.
+         </p>
+         <p>Recovery by sparse inversion (via L1 minimization)</p><pre class="codeinput">image2DTRSframe([resultsdir <span class="string">'/TimeJitAcq_1boat/TimeJitAcq_1boat_L1recov.rsf'</span>], frame, nt, dt, caxmin, caxmax, cmap);
+</pre><p>Difference</p><pre class="codeinput">image2DTRSframe([resultsdir <span class="string">'/TimeJitAcq_1boat/TimeJitAcq_1boat_L1diff.rsf'</span>], frame, nt, dt, caxmin, caxmax, cmap);
+</pre><h2>Time-jittered acquisition with 2 boats<a name="16"></a></h2>
+         <p>See the scripts under <tt>examples/TimeJitAcq_2boats/</tt>.
+         </p>
+         <p>Load the parameters file</p><pre class="codeinput">load([resultsdir <span class="string">'/TimeJitAcq_2boats/TimeJitAcq_2boats_params.mat'</span>])
+</pre><p>Time-jittered acquisition scenario</p><pre class="codeinput">fig = <span class="string">'yes'</span>;
+jitter_airgunarrays(ns, ds, dt, p, nboats, randseed, boatspeed, tfireint_min, tdelay, delayboat, fig);
+</pre><p>Original data</p><pre class="codeinput">frame.t = 300;
+frame.r = 70;
+frame.s = 30;
+image2DTRSframe([resultsdir <span class="string">'/TimeJitAcq_2boats/Suez_ds12pt5m.rsf'</span>], frame, nt, dt, caxmin, caxmax, cmap);
+</pre><p>Time-jittered (or blended) data volume: view 30 seconds of the jittered data volume</p><pre class="codeinput">t1 = 330.0;
+t2 = 360.0;
+imageJitteredData([resultsdir <span class="string">'/TimeJitAcq_2boats/TimeJitAcq_2boats_jitdata.rsf'</span>], t1, t2, dt, nr, dr, caxmin, caxmax, cmap);
+</pre><p>Recovery by conventional processing: apply the adjoint of the sampling operator</p><pre class="codeinput">image2DTRSframe([resultsdir <span class="string">'/TimeJitAcq_2boats/TimeJitAcq_2boats_adjrecov.rsf'</span>], frame, nt, dt, caxmin, caxmax, cmap);
+</pre><p>This step is usually followed by some kind of median filtering on common receiver or CMP gathers. We address the challenge
+            of deblending by a (curvelet-based) sparsity-promoting recovery technique.
+         </p>
+         <p>Recovery by sparse inversion (via L1 minimization)</p><pre class="codeinput">image2DTRSframe([resultsdir <span class="string">'/TimeJitAcq_2boats/TimeJitAcq_2boats_L1recov.rsf'</span>], frame, nt, dt, caxmin, caxmax, cmap);
+</pre><p>Difference</p><pre class="codeinput">image2DTRSframe([resultsdir <span class="string">'/TimeJitAcq_2boats/TimeJitAcq_2boats_L1diff.rsf'</span>], frame, nt, dt, caxmin, caxmax, cmap);
+</pre><h2>Running the code on your own data<a name="31"></a></h2>
+         <p>Template scripts are included that can be adapted to run the code on your own data. See the <tt>scripts</tt> directory.
+         </p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% 2D ocean-bottom marine acquisition via jittered sampling: examples and results
+%
+% Author: Haneet Wason (hwason@eos.ubc.ca)
+%
+% Date: April, 2013
+
+
+%% Time-jittered acquisition with 1 boat
+%  
+% See the scripts under |examples/TimeJitAcq_1boat/|.
+
+%%
+
+%%
+% Load the parameters file
+load([resultsdir '/TimeJitAcq_1boat/TimeJitAcq_1boat_params.mat']) 
+
+%%
+
+%%
+% Conventional vs. time-jittered acquisition scenario
+flipflop = 'no';
+fig = 'yes';
+convacq_2arrays(flipflop, tfireint_min, ns, dt, boatspeed, fig);
+jitter_airgunarrays(ns, ds, dt, p, nboats, randseed, boatspeed, tfireint_min, tdelay, delayboat, fig);
+
+%%
+
+%%
+% Original data
+frame.t = 300;
+frame.r = 60;
+frame.s = 92;
+caxmin = 100;
+caxmax = 100;
+cmap   = 'gray';
+image2DTRSframe([resultsdir '/TimeJitAcq_1boat/Suez_ds25m.rsf'], frame, nt, dt, caxmin, caxmax, cmap);
+
+%%
+
+%%
+% Time-jittered (or blended) data volume:
+% view 30 seconds of the jittered data volume
+t1 = 130.0;
+t2 = 160.0;
+imageJitteredData([resultsdir '/TimeJitAcq_1boat/TimeJitAcq_1boat_jitdata.rsf'], t1, t2, dt, nr, dr, caxmin, caxmax, cmap);
+
+%%
+
+%%
+% Recovery by conventional processing:
+% apply the adjoint of the sampling operator
+image2DTRSframe([resultsdir '/TimeJitAcq_1boat/TimeJitAcq_1boat_adjrecov.rsf'], frame, nt, dt, caxmin, caxmax, cmap);
+
+%%
+% NOTE: an empty shot gather image implies that none of the airguns fired at that location.
+%
+% This step is usually followed by some kind of median filtering on common receiver or CMP gathers.
+% We address the challenge of deblending by a (curvelet-based) sparsity-promoting recovery technique.
+
+%%
+
+%% 
+% Recovery by sparse inversion (via L1 minimization)
+image2DTRSframe([resultsdir '/TimeJitAcq_1boat/TimeJitAcq_1boat_L1recov.rsf'], frame, nt, dt, caxmin, caxmax, cmap);
+
+%%
+% Difference
+image2DTRSframe([resultsdir '/TimeJitAcq_1boat/TimeJitAcq_1boat_L1diff.rsf'], frame, nt, dt, caxmin, caxmax, cmap);
+
+
+
+%% Time-jittered acquisition with 2 boats 
+%
+% See the scripts under |examples/TimeJitAcq_2boats/|.
+
+%%
+
+%%
+% Load the parameters file
+load([resultsdir '/TimeJitAcq_2boats/TimeJitAcq_2boats_params.mat']) 
+
+%%
+
+%%
+% Time-jittered acquisition scenario
+fig = 'yes';
+jitter_airgunarrays(ns, ds, dt, p, nboats, randseed, boatspeed, tfireint_min, tdelay, delayboat, fig);
+
+%%
+
+%%
+% Original data
+frame.t = 300;
+frame.r = 70;
+frame.s = 30;
+image2DTRSframe([resultsdir '/TimeJitAcq_2boats/Suez_ds12pt5m.rsf'], frame, nt, dt, caxmin, caxmax, cmap);
+
+%%
+
+%%
+% Time-jittered (or blended) data volume:
+% view 30 seconds of the jittered data volume
+t1 = 330.0;
+t2 = 360.0;
+imageJitteredData([resultsdir '/TimeJitAcq_2boats/TimeJitAcq_2boats_jitdata.rsf'], t1, t2, dt, nr, dr, caxmin, caxmax, cmap);
+
+%%
+
+%%
+% Recovery by conventional processing:
+% apply the adjoint of the sampling operator
+image2DTRSframe([resultsdir '/TimeJitAcq_2boats/TimeJitAcq_2boats_adjrecov.rsf'], frame, nt, dt, caxmin, caxmax, cmap);
+
+%%
+% This step is usually followed by some kind of median filtering on common receiver or CMP gathers.
+% We address the challenge of deblending by a (curvelet-based) sparsity-promoting recovery technique.
+
+%%
+
+%% 
+% Recovery by sparse inversion (via L1 minimization)
+image2DTRSframe([resultsdir '/TimeJitAcq_2boats/TimeJitAcq_2boats_L1recov.rsf'], frame, nt, dt, caxmin, caxmax, cmap);
+
+%%
+% Difference
+image2DTRSframe([resultsdir '/TimeJitAcq_2boats/TimeJitAcq_2boats_L1diff.rsf'], frame, nt, dt, caxmin, caxmax, cmap);
+
+
+
+%% Running the code on your own data
+%
+% Template scripts are included that can be adapted to run the code on
+% your own data. See the |scripts| directory.
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

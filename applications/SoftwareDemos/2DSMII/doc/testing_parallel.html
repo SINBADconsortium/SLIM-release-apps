@@ -1,0 +1,135 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>testing_parallel</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 7.12">
+      <meta name="date" content="2013-01-15">
+      <meta name="m-file" content="testing_parallel">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content"><pre class="codeinput"><span class="comment">% This script computes data for a 1204x404 model for 10 sources and 64</span>
+<span class="comment">% frequencies and writes the total CPU time to a file.</span>
+<span class="comment">% Run with different number of workers to obtain a scalability table.</span>
+
+setpaths;
+curdir = pwd;
+expdir = [resultsdir <span class="string">'/testing'</span>];
+<span class="keyword">if</span> ~exist(expdir,<span class="string">'dir'</span>)
+    mkdir(expdir);
+<span class="keyword">end</span>
+
+<span class="comment">% read model</span>
+[v,o,d,n]  = odnread([datadir <span class="string">'/marm_vp.odn'</span>]);
+
+<span class="comment">% model grid</span>
+model.o = o;
+model.d = d;
+model.n = n;
+
+<span class="comment">% absorbing boundary</span>
+model.nb = [50 50];
+
+<span class="comment">% source/receiver grid</span>
+model.zsrc = 25;
+model.xsrc = linspace(0,11000,10);
+model.zrec = 15;
+model.xrec = 0:100:11000;
+
+<span class="comment">% frequencies</span>
+model.freq = 4.25:.25:20;
+
+<span class="comment">% wavelet</span>
+model.f0 = 10;
+model.t0 = 0;
+
+<span class="comment">% source matrix</span>
+Q = speye(length(model.xsrc));
+
+<span class="keyword">spmd</span>,
+    np = numlabs;
+<span class="keyword">end</span>
+np = np{1};
+
+<span class="keyword">for</span> k = 1:5
+    tic;
+    D = F(1e6./v.^2,Q,model);
+    T(k)=toc;
+<span class="keyword">end</span>
+
+
+fid = fopen([resultsdir <span class="string">'/testing/time.dat'</span>],<span class="string">'a'</span>);
+
+fprintf(fid,<span class="string">'%2d,%1.1f\n'</span>,conf,np,mean(T));
+
+fclose(fid);
+</pre><p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+% This script computes data for a 1204x404 model for 10 sources and 64
+% frequencies and writes the total CPU time to a file. 
+% Run with different number of workers to obtain a scalability table.
+
+setpaths;
+curdir = pwd;
+expdir = [resultsdir '/testing'];
+if ~exist(expdir,'dir')
+    mkdir(expdir);
+end
+
+% read model
+[v,o,d,n]  = odnread([datadir '/marm_vp.odn']);
+
+% model grid
+model.o = o;
+model.d = d;
+model.n = n;
+
+% absorbing boundary
+model.nb = [50 50];
+
+% source/receiver grid
+model.zsrc = 25;
+model.xsrc = linspace(0,11000,10);
+model.zrec = 15;
+model.xrec = 0:100:11000;
+
+% frequencies
+model.freq = 4.25:.25:20;
+
+% wavelet
+model.f0 = 10;
+model.t0 = 0;
+
+% source matrix
+Q = speye(length(model.xsrc));
+
+spmd,
+    np = numlabs;
+end
+np = np{1};
+
+for k = 1:5
+    tic;
+    D = F(1e6./v.^2,Q,model);
+    T(k)=toc;    
+end
+
+
+fid = fopen([resultsdir '/testing/time.dat'],'a');
+
+fprintf(fid,'%2d,%1.1f\n',conf,np,mean(T));
+
+fclose(fid);
+##### SOURCE END #####
+-->
+   </body>
+</html>

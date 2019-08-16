@@ -1,0 +1,331 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Fast Robust Waveform inversion: functions</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 7.12">
+      <meta name="date" content="2012-03-12">
+      <meta name="m-file" content="mfiles">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>Fast Robust Waveform inversion: functions</h1>
+         <introduction>
+            <p>The functions specific to this package can be found in the <tt>mbin</tt> directory.
+            </p>
+            <div>
+               <ul>
+                  <li><tt>twonorms</tt>   - the two-norm and its derivative.
+                  </li>
+                  <li><tt>hubers</tt>     - the Huber misfit and its derivative.
+                  </li>
+                  <li><tt>hybrid</tt>     - the hybrid misfit and its derivative.
+                  </li>
+                  <li><tt>students</tt>   - the Students t misfit and its derivative.
+                  </li>
+                  <li><tt>Jls</tt>        - least-squares residual and gradient for given model and observed data.
+                  </li>
+                  <li><tt>JW</tt>         - sim. source misfit and gradient for given model and observed data.
+                  </li>
+                  <li><tt>JI_src</tt>     - misfit and gradient for subset of sources
+                  </li>
+                  <li><tt>mylbfgs</tt>    - standard L-BFGS with Wolfe linesearch
+                  </li>
+                  <li><tt>lbfgsbatch</tt> - L-BFGS that works on a different subset of the sources at each iteration.
+                  </li>
+               </ul>
+            </div>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Penalty functions</a></li>
+               <li><a href="#2">Misfit functions for FWI</a></li>
+               <li><a href="#4">Optimization</a></li>
+               <li><a href="#5">References</a></li>
+            </ul>
+         </div>
+         <h2>Penalty functions<a name="1"></a></h2>
+         <p>The penalty functions are of the form</p>
+         <p>\(f(\mathbf{r}) = \sum_i p(r_i)\),</p>
+         <p>where</p>
+         <p>\(p(r) = \frac{1}{2}r^2\)</p>
+         <p>for least-squares,</p>
+         <p>\(p(r) = \frac{1}{2\epsilon}r^2 \quad \mathrm{for} \quad | r |\leq \epsilon \quad \mathrm{and} \quad | r |-\epsilon/2 \quad
+            \mathrm{otherwise}\)
+         </p>
+         <p>for the Huber,</p>
+         <p>\(p(r) = \sqrt{1 + | r |^2/\epsilon} - 1\)</p>
+         <p>for the hybrid [1], and</p>
+         <p>\(p(r) = \log(1 + | r |^2/k)\)</p>
+         <p>for Students t.</p>
+         <p>The functions <tt>twonorms</tt>, <tt>hubers</tt>, <tt>hybrid</tt> and <tt>students</tt> calculate the misfit and its gradient for a given residual vector. The penalties look like this.
+         </p><pre class="codeinput"><span class="comment">% residual vector</span>
+r = [-5:.01:5];
+
+<span class="comment">% evaluate on scalar residual</span>
+<span class="keyword">for</span> k = 1:length(r)
+    ls(k) = .5*twonorms(r(k));
+    hb(k) = hubers(r(k));
+    st(k) = students(r(k));
+<span class="keyword">end</span>
+
+<span class="comment">% plot</span>
+figure;
+plot(r,ls,r,hb,r,st);
+xlabel(<span class="string">'residual'</span>);ylabel(<span class="string">'msifit'</span>);legend(<span class="string">'two-norm'</span>,<span class="string">'Huber'</span>,<span class="string">'Students t'</span>);
+</pre><img vspace="5" hspace="5" src="mfiles_01.png"> <h2>Misfit functions for FWI<a name="2"></a></h2>
+         <p>Based on the above penalty functions, we can calculate the misfit for FWI, given a model \(\mathbf{m}\) and observed data
+            \(\mathbf{d}_i\):
+         </p>
+         <p>\(J(\mathbf{m}) = \sum_i f(F(\mathbf{m})\mathbf{q}_i - \mathbf{d}_i)\),</p>
+         <p>where \(F(\mathbf{m})\mathbf{q}_i\) is the modeled data for the \(i\)-th source.</p>
+         <div>
+            <ul>
+               <li><tt>Jls.m</tt> computes the least-squares misfit and gradient
+               </li>
+               <li><tt>JW.m</tt> computes the misfit and gradient for a given penalty using simultaneous sources.
+               </li>
+               <li><tt>JI_src.m</tt> computes the misfit and gradient for a given penalty using a subset of the sources. It also estimates complex source weights.
+               </li>
+            </ul>
+         </div>
+         <p>We can test the accuracy of the gradient based on the Taylor series:</p>
+         <p>\(J(\mathbf{x} + h\Delta \mathbf{x}) = J(\mathbf{x}) + h\nabla J(\mathbf{x})^T\Delta\mathbf{x} + \mathcal(O)(h^2)\)</p>
+         <p>We can plot the error</p>
+         <p>\( | J(\mathbf{x}+h\Delta\mathbf{x}) - J(\mathbf{x}) - h\nabla J(\mathbf{x}+h\Delta\mathbf{x})^T\Delta\mathbf{x} | \)</p>
+         <p>as a function of \(h\) and verify that it decreases as \(h^2\):</p><pre class="codeinput"><span class="comment">% setup some model parameters</span>
+model.o = [0 0];
+model.d = [10 10];
+model.n = [51 51];
+model.nb = [50 50];
+model.freq = [10];
+model.f0 = 10;
+model.t0 = 0.01;
+model.zsrc = 15;
+model.xsrc = 0:100:1000;
+model.zrec = 10;
+model.xrec = 0:20:1000;
+
+<span class="comment">% constant velocity 2000 m/s</span>
+v0 = 2000;
+m  = 1e6/v0.^2*ones(prod(model.n),1);
+
+<span class="comment">% random perturbation</span>
+dm = randn(prod(model.n),1);
+
+<span class="comment">% define point sources and make data</span>
+Q = speye(length(model.xsrc));
+D = F(m,Q,model);
+
+<span class="comment">% define function-handle for misfit</span>
+fh = @(x)Jls(x,Q,D,model);
+
+<span class="comment">% test for range of h</span>
+h = 10.^[-2:-1:-8];
+f0 = fh(m);
+<span class="keyword">for</span> k = 1:length(h)
+    [f1, g1] = fh(m + h(k)*dm);
+    e(k) = abs(f1 + h(k)*g1'*dm - f0);
+<span class="keyword">end</span>
+
+<span class="comment">% plot error</span>
+figure;
+loglog(h,e,h,h.^2,<span class="string">'k--'</span>);
+xlabel(<span class="string">'h'</span>);ylabel(<span class="string">'error'</span>);
+legend(<span class="string">'error'</span>,<span class="string">'h^2'</span>);
+</pre><img vspace="5" hspace="5" src="mfiles_02.png"> <p>Alternatively, we can check whether</p>
+         <p>\(\frac{1}{2}(\nabla J(\mathbf{x}_1 + \nabla J(\mathbf{x}_2))^T(\mathbf{x}_2 - \mathbf{x}_1) = J(\mathbf{x}_2) - J(\mathbf{x_1})\)</p>
+         <p>for small \( | \mathbf{x}_2 - \mathbf{x}_1 |\).</p><pre class="codeinput">m1 = m + 1e-3*randn(prod(model.n),1);
+m2 = m + 1e-3*randn(prod(model.n),1);
+
+[f1,g1] = fh(m1);
+[f2,g2] = fh(m2);
+
+.5*(g1 + g2)'*(m2 - m1)/(f2 - f1)
+</pre><pre class="codeoutput">
+ans =
+
+    1.0019
+
+</pre><h2>Optimization<a name="4"></a></h2>
+         <p>Included are a standard L-BFGS with a Wolfe linesearch, <tt>mylbfgs.m</tt> (cf. [2]) and a modified L-BFGS that works on a different subset of the sources at each iteration, <tt>lbfgsbatch.m</tt>, see [3]
+         </p>
+         <h2>References<a name="5"></a></h2>
+         <p><a href="http://dx.doi.org/10.1190/1.1444219">[1]</a> K.P. Bube  and R.T. Langan, 1997. Hybrid l1/l2 minimization with applications to tomography. Geophysics, 62, 1183&#8211;1195
+         </p>
+         <p>[2] J. Nocedal and S.J. Wright, 1999. Numerical Optimization. Springer.</p>
+         <p><a href="http://arxiv.org/abs/1104.2373">[3]</a> M.P. Friedlander, M.Schmidt, 2011. Hybrid Deterministic-Stochastic Methods for Data Fitting. arXiv:1104.2373.
+         </p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Fast Robust Waveform inversion: functions
+%
+% The functions specific to this package can be found in the |mbin|
+% directory.
+% 
+% * |twonorms|   - the two-norm and its derivative. 
+% * |hubers|     - the Huber misfit and its derivative. 
+% * |hybrid|     - the hybrid misfit and its derivative.
+% * |students|   - the Students t misfit and its derivative.
+% * |Jls|        - least-squares residual and gradient for given model and observed data.
+% * |JW|         - sim. source misfit and gradient for given model and observed data.
+% * |JI_src|     - misfit and gradient for subset of sources
+% * |mylbfgs|    - standard L-BFGS with Wolfe linesearch
+% * |lbfgsbatch| - L-BFGS that works on a different subset of the sources at each iteration.
+%
+
+%% Penalty functions
+%
+% The penalty functions are of the form
+%
+% \(f(\mathbf{r}) = \sum_i p(r_i)\),
+%
+% where 
+%
+% \(p(r) = \frac{1}{2}r^2\)
+%
+% for least-squares,
+%
+% \(p(r) = \frac{1}{2\epsilon}r^2 \quad \mathrm{for} \quad | r |\leq \epsilon \quad
+% \mathrm{and} \quad | r |-\epsilon/2 \quad \mathrm{otherwise}\)
+%
+% for the Huber,
+%
+% \(p(r) = \sqrt{1 + | r |^2/\epsilon} - 1\)
+%
+% for the hybrid [1], and
+%
+% \(p(r) = \log(1 + | r |^2/k)\)
+%
+% for Students t.
+%
+% The functions |twonorms|, |hubers|, |hybrid| and |students| calculate the misfit and its gradient for a given
+% residual vector. The penalties look like this.
+
+% residual vector
+r = [-5:.01:5];
+
+% evaluate on scalar residual
+for k = 1:length(r)
+    ls(k) = .5*twonorms(r(k));
+    hb(k) = hubers(r(k));
+    st(k) = students(r(k));
+end
+
+% plot
+figure;
+plot(r,ls,r,hb,r,st);
+xlabel('residual');ylabel('msifit');legend('two-norm','Huber','Students t');
+
+%% Misfit functions for FWI
+% 
+% Based on the above penalty functions, we can calculate the misfit for
+% FWI, given a model \(\mathbf{m}\) and observed data \(\mathbf{d}_i\):
+%
+% \(J(\mathbf{m}) = \sum_i f(F(\mathbf{m})\mathbf{q}_i - \mathbf{d}_i)\),
+%
+% where \(F(\mathbf{m})\mathbf{q}_i\) is the modeled data for the \(i\)-th source.
+%
+% * |Jls.m| computes the least-squares misfit and gradient 
+% * |JW.m| computes the misfit and gradient for a given penalty using simultaneous sources.
+% * |JI_src.m| computes the misfit and gradient for a given
+% penalty using a subset of the sources. It also estimates complex source
+% weights.
+% 
+% We can test the accuracy of the gradient based on the Taylor series:
+%
+% \(J(\mathbf{x} + h\Delta \mathbf{x}) = J(\mathbf{x}) + h\nabla
+% J(\mathbf{x})^T\Delta\mathbf{x} + \mathcal(O)(h^2)\)
+% 
+% We can plot the error
+%
+% \( | J(\mathbf{x}+h\Delta\mathbf{x}) - J(\mathbf{x}) - h\nabla J(\mathbf{x}+h\Delta\mathbf{x})^T\Delta\mathbf{x} | \)
+%
+% as a function of \(h\) and verify that it decreases as \(h^2\):
+
+% setup some model parameters
+model.o = [0 0];
+model.d = [10 10];
+model.n = [51 51];
+model.nb = [50 50];
+model.freq = [10];
+model.f0 = 10;
+model.t0 = 0.01;
+model.zsrc = 15;
+model.xsrc = 0:100:1000;
+model.zrec = 10;
+model.xrec = 0:20:1000;
+
+% constant velocity 2000 m/s
+v0 = 2000;
+m  = 1e6/v0.^2*ones(prod(model.n),1);
+
+% random perturbation
+dm = randn(prod(model.n),1); 
+
+% define point sources and make data
+Q = speye(length(model.xsrc));
+D = F(m,Q,model);
+
+% define function-handle for misfit
+fh = @(x)Jls(x,Q,D,model);
+
+% test for range of h
+h = 10.^[-2:-1:-8];
+f0 = fh(m);
+for k = 1:length(h)
+    [f1, g1] = fh(m + h(k)*dm);
+    e(k) = abs(f1 + h(k)*g1'*dm - f0);
+end
+
+% plot error
+figure;
+loglog(h,e,h,h.^2,'kREPLACE_WITH_DASH_DASH');
+xlabel('h');ylabel('error');
+legend('error','h^2');
+
+
+%% 
+% Alternatively, we can check whether
+%
+% \(\frac{1}{2}(\nabla J(\mathbf{x}_1 + \nabla J(\mathbf{x}_2))^T(\mathbf{x}_2 - \mathbf{x}_1) = J(\mathbf{x}_2) - J(\mathbf{x_1})\)
+%
+% for small \( | \mathbf{x}_2 - \mathbf{x}_1 |\).
+
+m1 = m + 1e-3*randn(prod(model.n),1); 
+m2 = m + 1e-3*randn(prod(model.n),1); 
+
+[f1,g1] = fh(m1);
+[f2,g2] = fh(m2);
+
+.5*(g1 + g2)'*(m2 - m1)/(f2 - f1)
+
+
+%% Optimization
+% Included are a standard L-BFGS with a Wolfe linesearch, |mylbfgs.m| (cf. [2]) and a modified
+% L-BFGS that works on a different subset of the sources at each iteration, |lbfgsbatch.m|, see [3]
+% 
+
+%% References
+% <http://dx.doi.org/10.1190/1.1444219 [1]> K.P. Bube  and R.T. Langan, 1997. Hybrid l1/l2 minimization with applications to tomography. Geophysics, 62, 1183–1195
+%
+% [2] J. Nocedal and S.J. Wright, 1999. Numerical Optimization. Springer.
+%
+% <http://arxiv.org/abs/1104.2373 [3]> M.P. Friedlander, M.Schmidt, 2011. Hybrid Deterministic-Stochastic Methods for Data Fitting. arXiv:1104.2373.
+
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

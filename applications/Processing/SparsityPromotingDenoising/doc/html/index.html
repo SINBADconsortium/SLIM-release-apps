@@ -1,0 +1,128 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Sparsity-promoting denoising of seismic data</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.4">
+      <meta name="date" content="2015-12-15">
+      <meta name="m-file" content="index">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>Sparsity-promoting denoising of seismic data</h1>
+         <introduction>
+            <p>This application is available only in the software release for members of SINBAD consortium.</p>
+            <p>This package contains a MATLAB implementation of sparsity-promoting denoising of seismic data in the curvelet domain using
+               one-norm minimization. For details, please see Reference [1].
+            </p>
+            <p>Author: Haneet Wason (<a href="mailto:hwason@eos.ubc.ca">hwason@eos.ubc.ca</a>)
+            </p>
+            <p>Date: December, 2015</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Downloading &amp; Dependencies</a></li>
+               <li><a href="#2">Running</a></li>
+               <li><a href="#3">Examples and results</a></li>
+               <li><a href="#4">References</a></li>
+               <li><a href="#5">Acknowledgements</a></li>
+            </ul>
+         </div>
+         <h2>Downloading &amp; Dependencies<a name="1"></a></h2>
+         <p>The code can be found in the <a href="https://slim.gatech.edu/consortiumsoftware">SLIM sofware release</a> under <tt>/applications/Processing/SparsityPromotingDenoising/</tt>.
+         </p>
+         <p>The code has been tested with <i>Matlab R2014b</i>.
+         </p>
+         <p>This code uses the following packages, also found in the <tt>tools</tt> part of the <a href="https://slim.gatech.edu/consortiumsoftware">SLIM software release</a>.
+         </p>
+         <div>
+            <ul>
+               <li><i>utilities/SPOT</i> - object oriented framework for matrix-free linear algebra.
+               </li>
+               <li><i>utilities/SegyMAT</i> - Matlab/Octave toolbox for reading and writing SEG-Y formatted files.
+               </li>
+               <li><i>solvers/SPGL1-SLIM</i> - SLIM version of SPGL1 solver.
+               </li>
+               <li><i>transforms/CurveLab-2.1.2-SLIM</i> - curvelet transform functions.
+               </li>
+            </ul>
+         </div>
+         <h2>Running<a name="2"></a></h2>
+         <p>All the examples and results are produced by the scripts found in this software release under <tt>applications/Processing/SparsityPromotingDenoising/</tt>. Start matlab from that directory or run <tt>startup</tt> in that directory to add the appropriate paths.
+         </p>
+         <p>To run the scripts follow the instructions in the README file enclosed with the code. The scripts are run in serial mode.</p>
+         <h2>Examples and results<a name="3"></a></h2>
+         <p><a href="example.html">Examples of denoising frequency slices (extracted from a 3D seismic data cube) are shown here.</a></p>
+         <h2>References<a name="4"></a></h2>
+         <p><a href="https://slim.gatech.edu/research/processing">[1]</a> SLIM's research webpage on processing. See the 'Denoising' section (<a href="https://slim.gatech.edu/research/processing#denoising-via-hybrid-support-identification-and-projection">https://slim.gatech.edu/research/processing#denoising-via-hybrid-support-identification-and-projection</a>).
+         </p>
+         <p><a href="https://slim.gatech.edu/content/frugal-full-waveform-inversion-theory-practical-algorithm">[2]</a> Felix J. Herrmann, Andrew J. Calvert, Ian Hanlon, Mostafa Javanmehri, Rajiv Kumar, Tristan van Leeuwen, Xiang Li, Brendan
+            Smithyman, Eric Takam Takougang, and Haneet Wason [2013].
+         </p>
+         <h2>Acknowledgements<a name="5"></a></h2>
+         <p>Thanks to our sponsors and NSERC for their financial support.</p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Sparsity-promoting denoising of seismic data
+%
+% This application is available only in the software release for members of SINBAD consortium.
+% 
+% This package contains a MATLAB implementation of sparsity-promoting denoising of seismic data in the curvelet domain using one-norm minimization. For details, please see Reference [1].
+%
+% Author: Haneet Wason (hwason@eos.ubc.ca)
+%
+% Date: December, 2015
+
+
+%% Downloading & Dependencies
+%
+% The code can be found in the <https://slim.gatech.edu/consortiumsoftware SLIM sofware release> under
+% |/applications/Processing/SparsityPromotingDenoising/|.
+%
+% The code has been tested with _Matlab R2014b_.
+%
+% This code uses the following packages, also found in the |tools| part of the <https://slim.gatech.edu/consortiumsoftware SLIM software release>.
+%
+% * _utilities/SPOT_ - object oriented framework for matrix-free linear algebra.
+% * _utilities/SegyMAT_ - Matlab/Octave toolbox for reading and writing SEG-Y formatted files.
+% * _solvers/SPGL1-SLIM_ - SLIM version of SPGL1 solver.
+% * _transforms/CurveLab-2.1.2-SLIM_ - curvelet transform functions.
+
+
+%% Running 
+%
+% All the examples and results are produced by the scripts found in this software release under |applications/Processing/SparsityPromotingDenoising/|. Start matlab from that directory or run |startup| in that directory to add the appropriate paths.
+%
+% To run the scripts follow the instructions in the README file enclosed with the code. The scripts are run in serial mode.
+
+
+%% Examples and results
+%
+% <example.html Examples of denoising frequency slices (extracted from a 3D seismic data cube) are shown here.> 
+
+
+%% References
+%
+% <https://slim.gatech.edu/research/processing [1]> SLIM's research webpage on processing. See the 'Denoising' section (<https://slim.gatech.edu/research/processing#denoising-via-hybrid-support-identification-and-projection>).
+%
+% <https://slim.gatech.edu/content/frugal-full-waveform-inversion-theory-practical-algorithm [2]> Felix J. Herrmann, Andrew J. Calvert, Ian Hanlon, Mostafa Javanmehri, Rajiv Kumar, Tristan van Leeuwen, Xiang Li, Brendan Smithyman, Eric Takam Takougang, and Haneet Wason [2013].
+
+
+%% Acknowledgements
+% Thanks to our sponsors and NSERC for their financial support.
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

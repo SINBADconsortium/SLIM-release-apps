@@ -1,0 +1,23 @@
+import os
+from rsf.proj import *
+
+################
+# RETRIEVE DATA
+################
+
+# Define SLIM FTP server information
+FTPserver = {
+             'server': 'ftp.slim.gatech.edu',
+             'login': 'ftp',
+             'password':''}
+
+loc = os.path.join('SoftwareRelease','Acquisition','TimeLapseJRM','results','TimeJitteredMarineAcq_OneReceiverGather')
+files = ['JRM_TimeJitAcq_1boat.log','JRM_TimeJitAcq_1boat_4Dsignal_L1diff.rsf','JRM_TimeJitAcq_1boat_4Dsignal_L1recov.rsf','JRM_TimeJitAcq_1boat_4Dsignal_adjrecov.rsf','JRM_TimeJitAcq_1boat_base_L1diff.rsf','JRM_TimeJitAcq_1boat_base_L1recov.rsf','JRM_TimeJitAcq_1boat_base_adjrecov.rsf','JRM_TimeJitAcq_1boat_base_jitdata.rsf','JRM_TimeJitAcq_1boat_mon_L1diff.rsf','JRM_TimeJitAcq_1boat_mon_L1recov.rsf','JRM_TimeJitAcq_1boat_mon_adjrecov.rsf','JRM_TimeJitAcq_1boat_mon_jitdata.rsf','JRM_TimeJitAcq_1boat_params.mat','JRM_TimeJitAcq_1boat_xest.rsf']
+
+
+# Fetch data from FTP server
+for elm in files:
+        Fetch(elm,loc,FTPserver)
+
+End()
+

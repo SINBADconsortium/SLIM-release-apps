@@ -1,0 +1,129 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>MGNFWI_BG</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 7.13">
+      <meta name="date" content="2012-03-12">
+      <meta name="m-file" content="MGNFWI_BG">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#2">setup parameters for the experiment</a></li>
+               <li><a href="#3">load observation data and wavelet information</a></li>
+               <li><a href="#4">inversion</a></li>
+            </ul>
+         </div><pre class="codeinput"><span class="comment">% This example produce the result from Modified Gauss-Newten Full-waveform</span>
+<span class="comment">% inversion.</span>
+<span class="comment">% -----------------------------------------------</span>
+<span class="comment">%</span>
+<span class="comment">% In this example, we process FWI from low frequency band to high frequency</span>
+<span class="comment">% band. 10 GN subproblems are solved for each frequency band which contains</span>
+<span class="comment">% 10 frequencies. For each GN subproblem, we use 7 randomly selected simultaneous</span>
+<span class="comment">% shots and roughly 20 L1 solver iterations</span>
+<span class="comment">%</span>
+<span class="comment">% We sugguest you run this script with parallel matlab, 10 workers will be the best</span>
+<span class="comment">%</span>
+<span class="comment">% Results will be saved as a mat file under results directory.</span>
+<span class="comment">% ------------------------------------------------</span>
+<span class="comment">%</span>
+<span class="comment">% setup a random seed</span>
+RandStream.setDefaultStream(RandStream(<span class="string">'mt19937ar'</span>,<span class="string">'seed'</span>,1));
+</pre><h2>setup parameters for the experiment<a name="2"></a></h2><pre class="codeinput">clear;  close <span class="string">all</span>;
+model.minf        = 2.9; <span class="comment">% minimal frequency</span>
+model.maxf        = 22;  <span class="comment">% maximal frequency</span>
+model.sourcet     = 1; <span class="comment">% source type: 1 sim source; 2 sequential source.</span>
+model.name        = [<span class="string">'/example_BG/FWIresult_BG'</span>]; <span class="comment">% name of result</span>
+model.vmin  = 1480;model.vmax  = 4800;<span class="comment">% min vel and max vel for the projection</span>
+model.nf          = 10; <span class="comment">% number of frequencies in each frequency band</span>
+model.snf         = 10; <span class="comment">% number of frequencies for each GN updates</span>
+model.ol          = 5;  <span class="comment">% number of overlap frequencies for two adjacent bands</span>
+model.gl          = 10; <span class="comment">% grid length</span>
+model.nshot       = 351;<span class="comment">% number of shot positions</span>
+model.nsim        = 7; <span class="comment">% Number of sim-shots for each GN subproblem</span>
+model.sdep        = 3; <span class="comment">% source depth, unit: meters</span>
+model.sp          = round(linspace(1,701,351)); <span class="comment">% source position</span>
+model.rdep        = 2; <span class="comment">% receiver depth, unit: meters</span>
+model.nrec        = 701; <span class="comment">% number of receivers</span>
+model.rp          = round(linspace(1,701,701)); <span class="comment">% receiver positions</span>
+model.water       = 16; <span class="comment">% estimated water depth, unit: number of grid</span>
+</pre><h2>load observation data and wavelet information<a name="3"></a></h2><pre class="codeinput">load(<span class="string">'obdata.mat'</span>)
+Dobs        = data; clear <span class="string">data</span> <span class="comment">% observation data</span>
+wavelet     = wavelet;         <span class="comment">% wavelet info</span>
+
+
+opts.iterations  = 20;<span class="comment">% max iterations for the l1 solver</span>
+
+<span class="comment">% load initial model and wavelet info</span>
+load <span class="string">bg2dmodel.mat</span>
+</pre><h2>inversion<a name="4"></a></h2><pre class="codeinput">[results] = MGNFWI(vel1,Dobs,wavelet,model,opts);
+</pre><p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+% This example produce the result from Modified Gauss-Newten Full-waveform
+% inversion.
+% REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+%
+% In this example, we process FWI from low frequency band to high frequency
+% band. 10 GN subproblems are solved for each frequency band which contains 
+% 10 frequencies. For each GN subproblem, we use 7 randomly selected simultaneous
+% shots and roughly 20 L1 solver iterations
+% 
+% We sugguest you run this script with parallel matlab, 10 workers will be the best
+%
+% Results will be saved as a mat file under results directory.
+% REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH
+%
+% setup a random seed
+RandStream.setDefaultStream(RandStream('mt19937ar','seed',1));
+
+%% setup parameters for the experiment
+clear;  close all;
+model.minf        = 2.9; % minimal frequency
+model.maxf        = 22;  % maximal frequency
+model.sourcet     = 1; % source type: 1 sim source; 2 sequential source.
+model.name        = ['/example_BG/FWIresult_BG']; % name of result
+model.vmin  = 1480;model.vmax  = 4800;% min vel and max vel for the projection
+model.nf          = 10; % number of frequencies in each frequency band
+model.snf         = 10; % number of frequencies for each GN updates 
+model.ol          = 5;  % number of overlap frequencies for two adjacent bands
+model.gl          = 10; % grid length
+model.nshot       = 351;% number of shot positions
+model.nsim        = 7; % Number of sim-shots for each GN subproblem
+model.sdep        = 3; % source depth, unit: meters
+model.sp          = round(linspace(1,701,351)); % source position
+model.rdep        = 2; % receiver depth, unit: meters
+model.nrec        = 701; % number of receivers
+model.rp          = round(linspace(1,701,701)); % receiver positions
+model.water       = 16; % estimated water depth, unit: number of grid
+
+%% load observation data and wavelet information
+load('obdata.mat')
+Dobs        = data; clear data % observation data 
+wavelet     = wavelet;         % wavelet info
+
+
+opts.iterations  = 20;% max iterations for the l1 solver
+
+% load initial model and wavelet info
+load bg2dmodel.mat
+
+%% inversion
+[results] = MGNFWI(vel1,Dobs,wavelet,model,opts);
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

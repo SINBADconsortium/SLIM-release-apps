@@ -1,0 +1,317 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Sparsity promoting LSRTM with linearized Bregman</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-02-26"><meta name="DC.source" content="marmousi_lsrtm.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Sparsity promoting LSRTM with linearized Bregman</h1><!--introduction--><p>Example script for running least-squares RTM with sparsity promotion and source subsampling on the Marmousi model.</p><p>Author: Philipp Witte Date: February 2016</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Set paths to result,data,model etc.</a></li><li><a href="#2">Modeling parameters</a></li><li><a href="#4">LSRTM parameters</a></li><li><a href="#6">Setup grid and modeling options</a></li><li><a href="#7">Call algorithm and save results</a></li><li><a href="#9">Plot results</a></li></ul></div><h2>Set paths to result,data,model etc.<a name="1"></a></h2><pre class="codeinput">clear <span class="string">all</span>; clc;
+rng(<span class="string">'default'</span>)
+
+<span class="comment">% Load software release functions</span>
+<span class="comment">% SLIM_APPS.tools.algorithms.TimeModeling</span>
+addpath(genpath(<span class="string">'~/SLIM-release-apps'</span>));
+
+<span class="comment">% paths  and name of results and snapshots</span>
+snapshotX = <span class="string">'UpdateTest_X.mat'</span>;
+snapshotZ = <span class="string">'UpdateTest_Z.mat'</span>;
+result = <span class="string">'Result.mat'</span>;
+params = <span class="string">'Parameters.mat'</span>;
+
+<span class="comment">% pull data and model</span>
+<span class="comment">% if ~exist('../data/modelMarmousi.mat','file')</span>
+<span class="comment">% 	cd ../data/; ! scons; cd ../examples/;</span>
+<span class="comment">% end</span>
+
+<span class="comment">% Marmousi slowness^2 model [s^2/km^2]</span>
+load <span class="string">modelMarmousi.mat</span>
+
+<span class="comment">% Load 2D data cube [ns x nrec x nsrc]</span>
+<span class="comment">% load ../data/linDataMarmousi.mat</span>
+</pre><h2>Modeling parameters<a name="2"></a></h2><p>Set up a structure that contains information about the velocity model and the source/receiver geometry of the input data.</p><pre class="codeinput"><span class="comment">% model parameters</span>
+model.o = [0, 0, 0];  <span class="comment">% Origin [m]</span>
+model.n = [320, 800, 1];  <span class="comment">% no. of grid points [z,x,y]</span>
+model.d = [10, 10, 10];   <span class="comment">% grid spacing [m]</span>
+model.freesurface = 0;
+
+<span class="comment">% data parameters</span>
+model.f0   = 0.030; <span class="comment">% peak frequency [MHz]</span>
+model.T= 4000;  <span class="comment">% Recording length [ms]</span>
+model.NyqT=0:4:model.T; <span class="comment">% Shot record time axis [ms]</span>
+
+<span class="comment">% source/receiver position [m]</span>
+model.xsrc = 25:25:(n(2)*d(2));
+model.zsrc = 10*ones(size(model.xsrc));
+model.ysrc =  0*ones(size(model.xsrc));
+model.xrec = 5:10:n(2)*d(2)-5;
+model.zrec = 210;
+model.yrec = 0;
+
+<span class="comment">% Code specific options</span>
+model.save = <span class="string">'RAM'</span>; <span class="comment">% save wavefields in memory</span>
+model.type=<span class="string">'full'</span>; <span class="comment">% acquisition geometry</span>
+model.space_order=4; <span class="comment">% Order of Laplacian</span>
+
+<span class="comment">% Domain decomposition</span>
+model.ddcompx = 1;
+model.ddcompz = 1;
+model.ddcompy = 1;
+</pre><h2>LSRTM parameters<a name="4"></a></h2><p>Define the number of iterations for the linearized Bregman method, as well as the L2 norm of the noise <img src="marmousi_lsrtm_eq11373214381793991308.png" alt="$\sigma$">, the thresholding value <img src="marmousi_lsrtm_eq07657233533591063549.png" alt="$\lambda$"> and the number of sources per iteration. Furthermore, set up a structure that defines which preconditioners are used. All preconditioners are disabled as default and can be enabled by setting them to '1'.</p><pre class="codeinput"><span class="comment">% LSRTM options</span>
+options.iterations = 40;
+options.lambda = [];
+options.sigma = 0;
+options.numShots = 8;   <span class="comment">% No. of shots per Bregman iteration</span>
+options.snapshotX = snapshotX;
+options.snapshotZ = snapshotZ;
+
+<span class="comment">% Preconditioners</span>
+precon.modelDepth = 1;
+precon.modelTopmute = 1;
+precon.dataScaling = 1;
+precon.dataTopmute = 1;
+</pre><h2>Setup grid and modeling options<a name="6"></a></h2><pre class="codeinput"><span class="comment">% Calculate optimal grid size and time step</span>
+[m,model,dmTrue]=Setup_CFL(m,model,dm);
+
+<span class="comment">% Source wavelet</span>
+q=sp_RickerWavelet(model.f0,1/model.f0,model.dt,model.T);
+</pre><pre class="codeoutput">CFL conditions gives dt = 0.57736ms and d = 5  5  5 m 
+Velocity interpolated on new grid
+</pre><h2>Call algorithm and save results<a name="7"></a></h2><p>Runtime per iteration (one demigration and one migration) for this example was ~20 minutes.</p><pre class="codeinput"><span class="comment">% [dm,info] = linbregLSRTM(dData,model,m0,q,precon,options);</span>
+<span class="comment">% save(result,'dm','info');</span>
+<span class="comment">% save(params,'model');</span>
+</pre><h2>Plot results<a name="9"></a></h2><pre class="codeinput">load <span class="string">Result.mat</span>
+load <span class="string">Parameters.mat</span>
+
+x = linspace(0,7.995,model.n(2));
+z = linspace(0,3.195,model.n(1));
+
+<span class="comment">% true image</span>
+figure(<span class="string">'Position'</span>,[400,400,1200,400]);
+imagesc(x,z,reshape(-dmTrue,model.n));
+xlabel(<span class="string">'Lateral Position [km]'</span>); ylabel(<span class="string">'Depth [km]'</span>);
+colormap <span class="string">gray</span>; caxis([-1 1]*8e-2);  colorbar
+title(<span class="string">'True dm'</span>);
+
+<span class="comment">% lsrtm image</span>
+figure(<span class="string">'Position'</span>,[400,400,1200,400]);
+imagesc(x,z,dm);
+xlabel(<span class="string">'Lateral Position [km]'</span>); ylabel(<span class="string">'Depth [km]'</span>);
+colormap <span class="string">gray</span>; caxis([-1 1]*8e-2);  colorbar
+title(<span class="string">'Inverted dm'</span>);
+
+figure(<span class="string">'Position'</span>,[400,400,800,400]);
+plot(info.residual)
+xlabel(<span class="string">'Iteration number'</span>); ylabel(<span class="string">'Relative residual'</span>);
+axis([1 40 0 18]);
+</pre><img vspace="5" hspace="5" src="marmousi_lsrtm_01.png" alt=""> <img vspace="5" hspace="5" src="marmousi_lsrtm_02.png" alt=""> <img vspace="5" hspace="5" src="marmousi_lsrtm_03.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Sparsity promoting LSRTM with linearized Bregman
+%
+% Example script for running least-squares RTM with sparsity promotion and 
+% source subsampling on the Marmousi model. 
+%
+% Author: Philipp Witte
+% Date: February 2016
+%
+%
+
+%% Set paths to result,data,model etc.
+
+clear all; clc;
+rng('default')
+
+% Load software release functions
+% SLIM_APPS.tools.algorithms.TimeModeling
+addpath(genpath('~/SLIM-release-apps'));
+
+% paths  and name of results and snapshots
+snapshotX = 'UpdateTest_X.mat';
+snapshotZ = 'UpdateTest_Z.mat';
+result = 'Result.mat';
+params = 'Parameters.mat';
+
+% pull data and model
+% if ~exist('../data/modelMarmousi.mat','file')
+% 	cd ../data/; ! scons; cd ../examples/;
+% end
+
+% Marmousi slowness^2 model [s^2/km^2]
+load modelMarmousi.mat
+
+% Load 2D data cube [ns x nrec x nsrc]
+% load ../data/linDataMarmousi.mat
+
+%% Modeling parameters
+
+%%
+% Set up a structure that contains information about the velocity model and
+% the source/receiver geometry of the input data.
+%
+
+% model parameters
+model.o = [0, 0, 0];  % Origin [m]
+model.n = [320, 800, 1];  % no. of grid points [z,x,y]
+model.d = [10, 10, 10];   % grid spacing [m]
+model.freesurface = 0;
+
+% data parameters
+model.f0   = 0.030; % peak frequency [MHz]
+model.T= 4000;  % Recording length [ms]
+model.NyqT=0:4:model.T; % Shot record time axis [ms]
+
+% source/receiver position [m]
+model.xsrc = 25:25:(n(2)*d(2));
+model.zsrc = 10*ones(size(model.xsrc));
+model.ysrc =  0*ones(size(model.xsrc));
+model.xrec = 5:10:n(2)*d(2)-5;
+model.zrec = 210;	
+model.yrec = 0;	
+
+% Code specific options
+model.save = 'RAM'; % save wavefields in memory
+model.type='full'; % acquisition geometry 
+model.space_order=4; % Order of Laplacian
+
+% Domain decomposition
+model.ddcompx = 1;
+model.ddcompz = 1;
+model.ddcompy = 1;
+
+%% LSRTM parameters
+
+%%
+% Define the number of iterations for the linearized Bregman method, as
+% well as the L2 norm of the noise $\sigma$, the thresholding value $\lambda$ and the
+% number of sources per iteration.
+% Furthermore, set up a structure that defines which preconditioners are
+% used. All preconditioners are disabled as default and can be enabled by
+% setting them to '1'.
+%
+
+% LSRTM options
+options.iterations = 40;
+options.lambda = [];
+options.sigma = 0;
+options.numShots = 8;   % No. of shots per Bregman iteration
+options.snapshotX = snapshotX;
+options.snapshotZ = snapshotZ;
+
+% Preconditioners
+precon.modelDepth = 1;
+precon.modelTopmute = 1;
+precon.dataScaling = 1;
+precon.dataTopmute = 1;
+
+
+%% Setup grid and modeling options
+
+% Calculate optimal grid size and time step
+[m,model,dmTrue]=Setup_CFL(m,model,dm);
+
+% Source wavelet
+q=sp_RickerWavelet(model.f0,1/model.f0,model.dt,model.T);
+
+
+%% Call algorithm and save results
+
+%%
+% Runtime per iteration (one demigration and one migration) for this
+% example was ~20 minutes.
+%
+
+% [dm,info] = linbregLSRTM(dData,model,m0,q,precon,options);
+% save(result,'dm','info');
+% save(params,'model');
+
+%% Plot results
+
+load Result.mat 
+load Parameters.mat
+
+x = linspace(0,7.995,model.n(2));
+z = linspace(0,3.195,model.n(1));
+
+% true image
+figure('Position',[400,400,1200,400]);
+imagesc(x,z,reshape(-dmTrue,model.n)); 
+xlabel('Lateral Position [km]'); ylabel('Depth [km]');
+colormap gray; caxis([-1 1]*8e-2);  colorbar
+title('True dm');
+
+% lsrtm image
+figure('Position',[400,400,1200,400]);
+imagesc(x,z,dm); 
+xlabel('Lateral Position [km]'); ylabel('Depth [km]');
+colormap gray; caxis([-1 1]*8e-2);  colorbar
+title('Inverted dm');
+
+figure('Position',[400,400,800,400]);
+plot(info.residual)
+xlabel('Iteration number'); ylabel('Relative residual');
+axis([1 40 0 18]);
+
+
+
+##### SOURCE END #####
+--></body></html>

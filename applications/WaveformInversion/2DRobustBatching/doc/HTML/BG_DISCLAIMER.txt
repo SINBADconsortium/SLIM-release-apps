@@ -1,0 +1,11 @@
+Compass synthetic velocity model developed by the BG-GROUP.
+
+DISCLAIMER
+
+The material provided is a synthetic and fictional dataset for testing purposes. 
+Any similarity or resemblance to any location is entirely coincidental and unintentional. 
+Accordingly, BG Group makes no representation or warranty, express or implied, in respect 
+to the quality, accuracy or usefulness of such data.  The data is supplied with the explicit 
+understanding and agreement of recipient that any action taken or expenditure made by 
+recipient based on its examination, evaluation, interpretation or use of the data is at 
+its own risk and responsibility.   

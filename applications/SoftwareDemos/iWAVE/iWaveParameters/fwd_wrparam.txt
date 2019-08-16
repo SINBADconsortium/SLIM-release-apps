@@ -1,0 +1,43 @@
+%% default parameters
+order       = 2;	       % scheme half-order
+scheme_phys = 24 ;        % scheme (22, 24, 44 - 1D only)
+cfl         = 0.4;	       % CFL conditional number
+cmin        = 1.0;        % minimal velocity
+cmax        = 4.5;        % maximum velocity
+dmin        = 0.5;        % minimal density
+dmax        = 6;          % maximum density
+fpeak       = 25/1000;    % central frequency
+max_step    = 0;          % 1 = set adaptively, 0 = use standard cfl from cmax
+
+mpi_np1  = 1 ;     %n_doms along axis 1
+mpi_np2  = 1 ;     %n_doms along axis 2
+mpi_np3  = 1 ;     %n_doms along axis 3
+partask  = 1 ;     %task parallelization
+sampord  = 1 ;     % sampling order
+
+% source information
+refdist = 1000.0;     % calibration distance
+refamp = 1.0  ;       % target amplitude at calibration distance 
+srctype = 'point'; %type - point or array (array requires wavelet)
+
+nl1 = 0.5;        % z - neg
+nr1 = 0.5 ;       % z - pos
+nl2 = 0.5 ;       % x - neg
+nr2 = 0.5 ;       % x - pos
+pmlampl    = 100.0;
+
+
+%Output info:
+dump_pi    = 0   ;        % dump parallel/dom. decomp info
+dump_lda   = 0   ;        % dump grid data for allocated arrays
+dump_ldc   = 0   ;        % dump grid data for computational arrays
+dump_term  = 0   ;        % dump terminator data
+dump_steps = 0   ;        % print major steps in IWaveOp
+printact   = 0   ;        % per-time-step verbosity level
+                          % 0 - none
+                          % 1 - time step index
+                          % 2 - internal time step info
+                          % > 5: dump everything
+
+dump_pars  = 0   ;        % print parameter table in IWaveOp
+

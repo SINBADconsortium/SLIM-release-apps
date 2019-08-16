@@ -1,0 +1,110 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>acoustic time-domain modeling, linearized modeling and imaging</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.1">
+      <meta name="date" content="2015-08-04">
+      <meta name="m-file" content="index">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>acoustic time-domain modeling, linearized modeling and imaging</h1>
+         <introduction>
+            <p>The modeling code is based on a 9-point mixed-grid discretization of the 2D Helmholtz operator [1]. It solves the system in
+               parallel over frequencies using direct factorization (Matlab's <tt>mldivide</tt>). Source injection and receiver sampling is done via cubic interpolation. The Jacobian is derived by linearizing the discretized
+               system and its forward and adjoint action is calculated via the adjoint-state method.
+            </p>
+            <p>Author: Dr. Xiang Li</p><pre>       Seismic Laboratory for Imaging and Modeling
+       Department of Earch &amp; Ocean Sciences
+       The University of British Columbia</pre></introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Dependencies</a></li>
+               <li><a href="#2">Running &amp; Parallelism</a></li>
+               <li><a href="#3">Examples</a></li>
+               <li><a href="#4">References</a></li>
+            </ul>
+         </div>
+         <h2>Dependencies<a name="1"></a></h2>
+         <p>The modeling code uses the following packages, found in the <tt>tools</tt> part of the software release.
+         </p>
+         <div>
+            <ul>
+               <li><i>SPOT</i> - object oriented framework for matrix-free linear algebra.
+               </li>
+               <li><i>pSPOT</i> - parallel extension of SPOT.
+               </li>
+            </ul>
+         </div>
+         <h2>Running &amp; Parallelism<a name="2"></a></h2>
+         <p>All the examples can be reproduced by running the scripts found in the software release under <tt>applications/Modeling/AcousticTimeModeling</tt>. Start matlab from that directory or run <tt>startup</tt> in that directory to add the appropriate paths.
+         </p>
+         <p>The scripts can be run in serial mode but parallel mode is advised for the modeling and imaging examples. Use <tt>parpool</tt> to start parallel pool with the appropriate configuration and a divisor of 12 workers.
+         </p>
+         <h2>Examples<a name="3"></a></h2>
+         <p>A few examples are included here</p>
+         <div>
+            <ul>
+               <li>Some examples of the modeling capabilities are shown in <a href="TimeModeling_example.html">TimeModeling_example.m</a>.
+               </li>
+               <li>Basic tests of the modeling code are presented in <a href="demo2D_gradient_test.html">demo2D_gradient_test.m</a></li>
+            </ul>
+         </div>
+         <h2>References<a name="4"></a></h2><pre class="codeinput"><span class="comment">%	[1]. Xiang Li - 2D/3D time-stepping for imaging and inversion, SINBAD Fall consortium talks. 2014</span>
+</pre><p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% acoustic time-domain modeling, linearized modeling and imaging
+%
+% The modeling code is based on a 9-point mixed-grid discretization of
+% the 2D Helmholtz operator [1]. It solves the system in parallel over
+% frequencies using direct factorization (Matlab's |mldivide|). Source
+% injection and receiver sampling is done via cubic interpolation. The
+% Jacobian is derived by linearizing the discretized system and its forward
+% and adjoint action is calculated via the adjoint-state method.
+%
+% Author: Dr. Xiang Li
+%
+%         Seismic Laboratory for Imaging and Modeling
+%         Department of Earch & Ocean Sciences
+%         The University of British Columbia
+
+%% Dependencies
+% The modeling code uses the following packages, found in the |tools| part
+% of the software release.
+%
+% * _SPOT_ - object oriented framework for matrix-free linear algebra.
+% * _pSPOT_ - parallel extension of SPOT.
+
+%% Running & Parallelism
+% All the examples can be reproduced by running the scripts found in
+% the software release under |applications/Modeling/AcousticTimeModeling|. 
+% Start matlab from that directory or run |startup| in that directory to add the appropriate paths.
+%
+% The scripts can be run in serial mode but parallel mode is advised
+% for the modeling and imaging examples. Use |parpool| to start parallel pool with the
+% appropriate configuration and a divisor of 12 workers.
+
+%% Examples
+% A few examples are included here
+%
+% * Some examples of the modeling capabilities are shown in <TimeModeling_example.html TimeModeling_example.m>.
+% * Basic tests of the modeling code are presented in <demo2D_gradient_test.html demo2D_gradient_test.m>
+
+
+%% References
+%	[1]. Xiang Li - 2D/3D time-stepping for imaging and inversion, SINBAD Fall consortium talks. 2014
+##### SOURCE END #####
+-->
+   </body>
+</html>

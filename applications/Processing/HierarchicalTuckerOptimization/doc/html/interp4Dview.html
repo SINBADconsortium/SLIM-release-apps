@@ -1,0 +1,151 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>interp4Dview</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.1">
+      <meta name="date" content="2014-04-11">
+      <meta name="m-file" content="interp4Dview">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#2">Original common shot gather</a></li>
+               <li><a href="#3">Subsampled shot gather (i.e. input data for the algorithm)</a></li>
+               <li><a href="#4">Interpolated shot gather</a></li>
+               <li><a href="#5">Difference</a></li>
+            </ul>
+         </div><pre class="codeinput"><span class="comment">% Interpolating 4D seismic data with missing receivers</span>
+<span class="comment">% using the Hierarchical Tucker format.</span>
+<span class="comment">%</span>
+<span class="comment">% This script displays the output after the interpolation carried</span>
+<span class="comment">% out in |applications/Processing/LowRankTensorInterpolation/examples/interp4D.m</span>
+<span class="comment">%</span>
+<span class="comment">% Author: Curt Da Silva (curtd@math.ubc.ca)</span>
+<span class="comment">% Date: March 2014</span>
+
+baseDir = pwd;
+baseDir = [baseDir(1:end-3)];
+resultsDir = [baseDir <span class="string">'results/'</span>];
+dataDir = [baseDir <span class="string">'data/'</span>];
+
+<span class="comment">% Load previously computed results</span>
+load([resultsDir <span class="string">'results.mat'</span>]);
+
+nsrcs = size(D,1); nrecs = size(D,3);
+
+srcx = 30; srcy = 30;
+slice = @(A) squeeze(real(A(:,:,srcx,srcy)));
+
+disp([<span class="string">'SNR of interpolated shots '</span> num2str(test_snr) <span class="string">'dB'</span>]);
+disp([<span class="string">'SNR of entire interpolated volume '</span> num2str(overall_snr) <span class="string">'dB'</span>]);
+</pre><pre class="codeoutput">SNR of interpolated shots 23.8346dB
+SNR of entire interpolated volume 24.2419dB
+</pre><h2>Original common shot gather<a name="2"></a></h2><pre class="codeinput">imagePlot(slice(D),<span class="string">'cbar'</span>,true,<span class="keyword">...</span>
+                        <span class="string">'visible'</span>,true,<span class="keyword">...</span>
+                        <span class="string">'centercaxis'</span>,true,<span class="keyword">...</span>
+                        <span class="string">'yLabel'</span>,<span class="string">'receiver y'</span>,<span class="keyword">...</span>
+                        <span class="string">'xLabel'</span>,<span class="string">'receiver x'</span>,<span class="keyword">...</span>
+                        <span class="string">'titleStr'</span>,<span class="string">'True data'</span>);
+coloraxis = caxis;
+</pre><img vspace="5" hspace="5" src="interp4Dview_01.png"> <h2>Subsampled shot gather (i.e. input data for the algorithm)<a name="3"></a></h2><pre class="codeinput">imagePlot(slice(bsub),<span class="string">'cbar'</span>,true,<span class="keyword">...</span>
+                      <span class="string">'coloraxis'</span>,coloraxis,<span class="keyword">...</span>
+                      <span class="string">'visible'</span>,true,<span class="keyword">...</span>
+                      <span class="string">'centercaxis'</span>,true,<span class="keyword">...</span>
+                      <span class="string">'yLabel'</span>,<span class="string">'receiver y'</span>,<span class="keyword">...</span>
+                      <span class="string">'xLabel'</span>,<span class="string">'receiver x'</span>,<span class="keyword">...</span>
+                      <span class="string">'titleStr'</span>,<span class="string">'Subsampled data'</span>);
+</pre><img vspace="5" hspace="5" src="interp4Dview_02.png"> <h2>Interpolated shot gather<a name="4"></a></h2><pre class="codeinput">imagePlot(slice(X),<span class="string">'cbar'</span>,true,<span class="keyword">...</span>
+                      <span class="string">'coloraxis'</span>,coloraxis,<span class="keyword">...</span>
+                      <span class="string">'visible'</span>,true,<span class="keyword">...</span>
+                      <span class="string">'centercaxis'</span>,true,<span class="keyword">...</span>
+                      <span class="string">'yLabel'</span>,<span class="string">'receiver y'</span>,<span class="keyword">...</span>
+                      <span class="string">'xLabel'</span>,<span class="string">'receiver x'</span>,<span class="keyword">...</span>
+                      <span class="string">'titleStr'</span>,<span class="string">'Interpolated data'</span>);
+</pre><img vspace="5" hspace="5" src="interp4Dview_03.png"> <h2>Difference<a name="5"></a></h2><pre class="codeinput">imagePlot(slice(X) - slice(D),<span class="string">'cbar'</span>,true,<span class="keyword">...</span>
+                      <span class="string">'coloraxis'</span>,coloraxis,<span class="keyword">...</span>
+                      <span class="string">'visible'</span>,true,<span class="keyword">...</span>
+                      <span class="string">'centercaxis'</span>,true,<span class="keyword">...</span>
+                      <span class="string">'yLabel'</span>,<span class="string">'receiver y'</span>,<span class="keyword">...</span>
+                      <span class="string">'xLabel'</span>,<span class="string">'receiver x'</span>,<span class="keyword">...</span>
+                      <span class="string">'titleStr'</span>,<span class="string">'Difference'</span>);
+</pre><img vspace="5" hspace="5" src="interp4Dview_04.png"> <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+% Interpolating 4D seismic data with missing receivers
+% using the Hierarchical Tucker format. 
+%
+% This script displays the output after the interpolation carried
+% out in |applications/Processing/LowRankTensorInterpolation/examples/interp4D.m
+%
+% Author: Curt Da Silva (curtd@math.ubc.ca)
+% Date: March 2014
+
+baseDir = pwd;
+baseDir = [baseDir(1:end-3)];
+resultsDir = [baseDir 'results/'];
+dataDir = [baseDir 'data/'];
+
+% Load previously computed results
+load([resultsDir 'results.mat']);
+
+nsrcs = size(D,1); nrecs = size(D,3);
+
+srcx = 30; srcy = 30;
+slice = @(A) squeeze(real(A(:,:,srcx,srcy)));
+
+disp(['SNR of interpolated shots ' num2str(test_snr) 'dB']);
+disp(['SNR of entire interpolated volume ' num2str(overall_snr) 'dB']);
+
+%% Original common shot gather
+imagePlot(slice(D),'cbar',true,...
+                        'visible',true,...
+                        'centercaxis',true,...
+                        'yLabel','receiver y',...
+                        'xLabel','receiver x',...
+                        'titleStr','True data');
+coloraxis = caxis;
+
+%% Subsampled shot gather (i.e. input data for the algorithm)
+imagePlot(slice(bsub),'cbar',true,...
+                      'coloraxis',coloraxis,...
+                      'visible',true,...
+                      'centercaxis',true,...
+                      'yLabel','receiver y',...
+                      'xLabel','receiver x',...
+                      'titleStr','Subsampled data');
+
+%% Interpolated shot gather
+imagePlot(slice(X),'cbar',true,...
+                      'coloraxis',coloraxis,...
+                      'visible',true,...
+                      'centercaxis',true,...
+                      'yLabel','receiver y',...
+                      'xLabel','receiver x',...
+                      'titleStr','Interpolated data');
+
+%% Difference
+imagePlot(slice(X) - slice(D),'cbar',true,...
+                      'coloraxis',coloraxis,...
+                      'visible',true,...
+                      'centercaxis',true,...
+                      'yLabel','receiver y',...
+                      'xLabel','receiver x',...
+                      'titleStr','Difference');
+
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

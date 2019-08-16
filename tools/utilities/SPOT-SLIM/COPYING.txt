@@ -1,0 +1,83 @@
+License to Software
+
+Use or download of the Software by the Company shall be acceptance by the Company 
+of the terms of this license agreement.
+
+The Software is a Matlab toolbox that provides an object-oriented framework for easily 
+computing with implicit linear operators and is provided as source.
+
+Subject to the terms of this license agreement, The University of British Columbia (the 
+"University") grants the Company and its affiliates a perpetual worldwide, non-exclusive, 
+non transferable royalty free license to use and exploit the Software for internal use only 
+in the field of signal and image processing, including seismic data processing. 
+
+Such internal use shall not include the provision of products to third parties but may 
+include the provision of services to third parties, provided that neither the source code nor 
+executable code is disclosed to such third parties. Neither the Company nor its affiliates 
+will grant sublicenses of the Software to any third party. The Company shall not remove 
+or obscure any visible copyright or trademark notice.
+
+No software maintenance support or training is provided by the University as part of this 
+license.
+
+THE UNIVERSITY MAKES NO REPRESENTATIONS OR WARRANTIES, EITHER 
+EXPRESS OR IMPLIED, REGARDING DATA OR SOFTWARE OR OTHER RESULTS 
+ARISING FROM THE RESEARCH OR REGARDING CONFIDENTIAL INFORMATION 
+THE UNIVERSITY MAY DISCLOSE TO THE COMPANY.   THE UNIVERSITY 
+SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTY OF NON-INFRINGEMENT OR 
+MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE AND THE 
+UNIVERSITY WILL, IN NO EVENT, BE LIABLE FOR ANY LOSS OF PROFITS, BE 
+THEY DIRECT, CONSEQUENTIAL, INCIDENTAL, OR SPECIAL OR OTHER SIMILAR 
+DAMAGES ARISING FROM ANY DEFECT, ERROR OR FAILURE TO PERFORM, 
+EVEN IF THE UNIVERSITY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH 
+DAMAGES. THE COMPANY ACKNOWLEDGES THAT THE RESEARCH IS OF AN 
+EXPERIMENTAL AND EXPLORATORY NATURE, THAT NO PARTICULAR RESULTS 
+CAN BE GUARANTEED, AND THAT THE COMPANY HAS BEEN ADVISED BY THE 
+UNIVERSITY TO UNDERTAKE ITS OWN DUE DILIGENCE WITH RESPECT TO ALL 
+MATTERS ARISING FROM THIS AGREEMENT.
+
+NOTHING IN THIS AGREEMENT:
+(A) 	CONSTITUTES A WARRANTY OR REPRESENTATION BY THE UNIVERSITY 
+AS TO TITLE TO THE INTELLECTUAL PROPERTY LICENSED HEREUNDER, 
+OR THAT ANYTHING MADE, USED, SOLD OR OTHERWISE DISPOSED OF 
+UNDER THE LICENSE GRANTED IN THIS AGREEMENT WILL NOT 
+INFRINGE THE PATENTS, COPYRIGHTS, TRADE-MARKS, INDUSTRIAL 
+DESIGNS OR OTHER INTELLECTUAL PROPERTY RIGHTS OF ANY THIRD 
+PARTIES, OR ANY PATENTS, COPYRIGHTS, TRADE-MARKS, INDUSTRIAL 
+DESIGN OR OTHER INTELLECTUAL PROPERTY RIGHTS OWNED, IN 
+WHOLE OR IN PART, BY THE UNIVERSITY, OR LICENSED BY THE 
+UNIVERSITY TO ANY THIRD PARTIES;
+
+(B) 	CONSTITUTES AN EXPRESS OR IMPLIED WARRANTY OR 
+REPRESENTATION BY THE UNIVERSITY THAT THE COMPANY HAS, OR 
+WILL HAVE THE FREEDOM TO OPERATE OR PRACTICE THE 
+INTELLECTUAL PROPERTY LICENSED HEREUNDER, OR THE FREEDOM 
+TO MAKE, HAVE MADE, USE, SELL OR OTHERWISE DISPOSE OF ANY 
+PRODUCTS; OR
+
+(C) 	IMPOSES AN OBLIGATION ON THE UNIVERSITY TO BRING, PROSECUTE 
+OR DEFEND ACTIONS OR SUITS AGAINST THIRD PARTIES FOR 
+INFRINGEMENT OF PATENTS, COPYRIGHTS, TRADE-MARKS, 
+INDUSTRIAL DESIGNS OR OTHER INTELLECTUAL PROPERTY OR 
+CONTRACTUAL RIGHTS.
+
+The Company indemnifies, holds harmless and defends the University, its Board of 
+Governors, directors, officers, employees, faculty, students, invitees and agents against 
+any and all claims (including all reasonable legal fees and disbursements) arising out of 
+the receipt or use by the Company or its affiliates of the Software.
+
+The University's total liability, whether under the express or implied terms of this 
+Agreement, in tort (including negligence) or at common law, for any loss or damage 
+suffered by the Company or its affiliates, whether direct, indirect or special, or any other 
+similar damage that may arise or does arise from any breaches of this license by the 
+University, its Board of Governors, officers, employees, faculty, students or agents, is 
+limited to zero ($0). 
+
+This license begins upon first use or download by the Company of the Software and 
+continues indefinitely unless the Company or affiliate breaches a term of this license, in 
+which case the license terminates immediately.
+
+This license is governed by, and will be construed in accordance with, the laws of British 
+Columbia and the laws of Canada in force in that province, without regard to its conflict 
+of law rules.  The Company agrees that by consenting to this license, they have attorned 
+to the exclusive jurisdiction of the Supreme Court of British Columbia.

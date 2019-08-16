@@ -1,0 +1,285 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>camembert</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.6">
+      <meta name="date" content="2016-06-06">
+      <meta name="m-file" content="camembert">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Camembert example</a></li>
+               <li><a href="#2">define velocity model</a></li>
+               <li><a href="#3">setup modeling parameters for reflection experiment</a></li>
+               <li><a href="#4">create data</a></li>
+               <li><a href="#5">inversion</a></li>
+               <li><a href="#6">setup modeling parameters for transmission experiment</a></li>
+               <li><a href="#7">create data</a></li>
+               <li><a href="#8">inversion</a></li>
+               <li><a href="#9">write results</a></li>
+            </ul>
+         </div>
+         <h2>Camembert example<a name="1"></a></h2>
+         <p>This script is based on the famous `Camembert' examples from O. Gauthier, J. Virieux, and A. Tarantola. Two-dimensional nonlinear
+            inversion of seismic waveforms: Numerical results. Geophysics 51, 1387-1403 (1986)
+         </p>
+         <p>It should take a couple of minutes to run, even in serial mode. To run in parallel, use <tt>parpool(3)</tt> (or use whatever configuration makes sense on your machine).
+         </p>
+         <p>The results are stored in the path defined in the script setpath.m</p><pre class="codeinput">setpath;
+</pre><h2>define velocity model<a name="2"></a></h2><pre class="codeinput"><span class="comment">% grid</span>
+z = 0:10:1000;
+x = 0:10:1000;
+[o,d,n] = grid2odn(z,x);
+[zz,xx] = ndgrid(z,x);
+
+<span class="comment">% background velocity 2500 [m/s]</span>
+v0 = 2500 + 0*xx;
+
+<span class="comment">% circular perturbation with radius 250 m and strenth 10\%</span>
+dv = 0*xx; dv((xx-500).^2 + (zz-500).^2 &lt;= 250^2) = .1*2500;
+
+<span class="comment">% plot</span>
+figure;imagesc(x,z,v0 + dv);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'velocity [m/s]'</span>);colorbar;
+</pre><h2>setup modeling parameters for reflection experiment<a name="3"></a></h2><pre class="codeinput"><span class="comment">% grid</span>
+model_r.o = o;
+model_r.d = d;
+model_r.n = n;
+
+<span class="comment">% number of points for absorbing boundary</span>
+model_r.nb = [20 20];
+
+<span class="comment">% frequencies [5, 10, 15] Hz.</span>
+model_r.freq = [5 10 15]; nfreq = length(model_r.freq);
+
+<span class="comment">% Ricker wavelet with peak frequency f0 and phase shift t0</span>
+model_r.f0 = 10;
+model_r.t0 = 0;
+
+<span class="comment">% source and receiver locations</span>
+model_r.zsrc = 10;
+model_r.xsrc = 0:100:1000; nsrc = length(model_r.xsrc);
+model_r.zrec = 10;
+model_r.xrec = 0:10:1000;  nrec = length(model_r.xrec);
+
+<span class="comment">% source matrix, each column is a source function defined on the source</span>
+<span class="comment">% grid [model.zsrc, model.xsrc].</span>
+Q = speye(nsrc);
+
+<span class="comment">% squared slowness [km^2/s^2]</span>
+m = 1e6./(v0(:) + dv(:)).^2;
+</pre><h2>create data<a name="4"></a></h2><pre class="codeinput">D_r = F(m,Q,model_r);
+</pre><h2>inversion<a name="5"></a></h2><pre class="codeinput"><span class="comment">% initial model</span>
+m0 = 1e6./v0(:).^2;
+
+<span class="comment">% create function handle for misfit</span>
+fh = misfit_setup(m0,Q,D_r,model_r);
+
+<span class="comment">% call l-bfgs with default options</span>
+[mn_r] = mylbfgs(fh,m0);
+
+<span class="comment">% plot</span>
+figure;imagesc(x,z,reshape(mn_r,n));xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'reconstruction from reflection data'</span>);
+</pre><h2>setup modeling parameters for transmission experiment<a name="6"></a></h2><pre class="codeinput"><span class="comment">% grid</span>
+model_t.o = o;
+model_t.d = d;
+model_t.n = n;
+
+<span class="comment">% number of points for absorbing boundary</span>
+model_t.nb = [20 20];
+
+<span class="comment">% frequencies [5, 10, 15] Hz.</span>
+model_t.freq = [5 10 15]; nfreq = length(model_t.freq);
+
+<span class="comment">% Ricker wavelet with peak frequency f0 and phase shift t0</span>
+model_t.f0 = 10;
+model_t.t0 = 0;
+
+<span class="comment">% source and receiver locations</span>
+model_t.zsrc = 0:100:1000; nsrc = length(model_t.zsrc);
+model_t.xsrc = 50;
+model_t.zrec = 0:10:1000;  nrec = length(model_t.zrec);
+model_t.xrec = 950;
+
+<span class="comment">% source matrix, each column is a source function defined on the source</span>
+<span class="comment">% grid [model.zsrc, model.xsrc].</span>
+Q = speye(nsrc);
+
+<span class="comment">% squared slowness [km^2/s^2]</span>
+m = 1e6./(v0(:) + dv(:)).^2;
+</pre><h2>create data<a name="7"></a></h2><pre class="codeinput">D_t = F(m,Q,model_t);
+</pre><h2>inversion<a name="8"></a></h2><pre class="codeinput"><span class="comment">% initial model</span>
+m0 = 1e6./v0(:).^2;
+
+<span class="comment">% create function handle for misfit</span>
+fh = misfit_setup(m0,Q,D_t,model_t);
+
+<span class="comment">% call l-bfgs with default options</span>
+[mn_t] = mylbfgs(fh,m0);
+
+<span class="comment">% plot</span>
+figure;imagesc(x,z,reshape(mn_t,n));xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'reconstruction from transmission data'</span>);
+</pre><h2>write results<a name="9"></a></h2><pre class="codeinput"><span class="keyword">if</span> ~exist([resultsdir <span class="string">'camembert'</span>],<span class="string">'dir'</span>)
+    mkdir([resultsdir <span class="string">'camembert'</span>]);
+<span class="keyword">end</span>
+
+rsf_write_all([resultsdir <span class="string">'camembert/vn_r.rsf'</span>],{<span class="string">'out=stdout'</span>},reshape(1e3./sqrt(mn_r),n),d,o);
+rsf_write_all([resultsdir <span class="string">'camembert/vn_t.rsf'</span>],{<span class="string">'out=stdout'</span>},reshape(1e3./sqrt(mn_t),n),d,o);
+rsf_write_all([resultsdir <span class="string">'camembert/vtrue.rsf'</span>],{<span class="string">'out=stdout'</span>},reshape(v0+dv,n),d,o);
+</pre><p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Camembert example 
+% This script is based on the famous `Camembert' examples from 
+% O. Gauthier, J. Virieux, and A. Tarantola. Two-dimensional nonlinear
+% inversion of seismic waveforms: Numerical results. Geophysics 51, 1387-1403 (1986)
+%
+% It should take a couple of minutes to run, even in serial mode. To run
+% in parallel, use |parpool(3)| (or use whatever configuration
+% makes sense on your machine).
+%
+% The results are stored in the path defined in the script setpath.m
+% 
+
+
+setpath;
+
+%% define velocity model
+
+% grid
+z = 0:10:1000;
+x = 0:10:1000;
+[o,d,n] = grid2odn(z,x);
+[zz,xx] = ndgrid(z,x);
+
+% background velocity 2500 [m/s]
+v0 = 2500 + 0*xx;
+
+% circular perturbation with radius 250 m and strenth 10\%
+dv = 0*xx; dv((xx-500).^2 + (zz-500).^2 <= 250^2) = .1*2500;
+
+% plot
+figure;imagesc(x,z,v0 + dv);xlabel('x [m]');ylabel('z [m]');title('velocity [m/s]');colorbar;
+
+
+%% setup modeling parameters for reflection experiment
+
+% grid
+model_r.o = o; 
+model_r.d = d;
+model_r.n = n;
+
+% number of points for absorbing boundary
+model_r.nb = [20 20];
+
+% frequencies [5, 10, 15] Hz.
+model_r.freq = [5 10 15]; nfreq = length(model_r.freq);
+
+% Ricker wavelet with peak frequency f0 and phase shift t0
+model_r.f0 = 10;
+model_r.t0 = 0;
+
+% source and receiver locations
+model_r.zsrc = 10;
+model_r.xsrc = 0:100:1000; nsrc = length(model_r.xsrc);
+model_r.zrec = 10;
+model_r.xrec = 0:10:1000;  nrec = length(model_r.xrec);
+
+% source matrix, each column is a source function defined on the source
+% grid [model.zsrc, model.xsrc].
+Q = speye(nsrc);
+
+% squared slowness [km^2/s^2]
+m = 1e6./(v0(:) + dv(:)).^2;
+
+%% create data
+D_r = F(m,Q,model_r);
+
+%% inversion
+
+% initial model
+m0 = 1e6./v0(:).^2;
+
+% create function handle for misfit
+fh = misfit_setup(m0,Q,D_r,model_r);
+
+% call l-bfgs with default options
+[mn_r] = mylbfgs(fh,m0);
+
+% plot
+figure;imagesc(x,z,reshape(mn_r,n));xlabel('x [m]');ylabel('z [m]');title('reconstruction from reflection data');
+
+%% setup modeling parameters for transmission experiment
+
+% grid
+model_t.o = o; 
+model_t.d = d;
+model_t.n = n;
+
+% number of points for absorbing boundary
+model_t.nb = [20 20];
+
+% frequencies [5, 10, 15] Hz.
+model_t.freq = [5 10 15]; nfreq = length(model_t.freq);
+
+% Ricker wavelet with peak frequency f0 and phase shift t0
+model_t.f0 = 10;
+model_t.t0 = 0;
+
+% source and receiver locations
+model_t.zsrc = 0:100:1000; nsrc = length(model_t.zsrc);
+model_t.xsrc = 50;
+model_t.zrec = 0:10:1000;  nrec = length(model_t.zrec);
+model_t.xrec = 950;
+
+% source matrix, each column is a source function defined on the source
+% grid [model.zsrc, model.xsrc].
+Q = speye(nsrc);
+
+% squared slowness [km^2/s^2]
+m = 1e6./(v0(:) + dv(:)).^2;
+
+%% create data
+D_t = F(m,Q,model_t);
+
+%% inversion
+
+% initial model
+m0 = 1e6./v0(:).^2;
+
+% create function handle for misfit
+fh = misfit_setup(m0,Q,D_t,model_t);
+
+% call l-bfgs with default options
+[mn_t] = mylbfgs(fh,m0);
+
+% plot
+figure;imagesc(x,z,reshape(mn_t,n));xlabel('x [m]');ylabel('z [m]');title('reconstruction from transmission data');
+
+%% write results
+if ~exist([resultsdir 'camembert'],'dir')
+    mkdir([resultsdir 'camembert']);
+end
+
+rsf_write_all([resultsdir 'camembert/vn_r.rsf'],{'out=stdout'},reshape(1e3./sqrt(mn_r),n),d,o);
+rsf_write_all([resultsdir 'camembert/vn_t.rsf'],{'out=stdout'},reshape(1e3./sqrt(mn_t),n),d,o);
+rsf_write_all([resultsdir 'camembert/vtrue.rsf'],{'out=stdout'},reshape(v0+dv,n),d,o);
+
+
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

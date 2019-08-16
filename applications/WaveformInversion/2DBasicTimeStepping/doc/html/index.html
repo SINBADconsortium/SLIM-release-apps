@@ -1,0 +1,156 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Time-domain Gauss-Newton full-waveform inversion (applied to Chevron 2014 benchmark dataset)</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.1">
+      <meta name="date" content="2015-07-30">
+      <meta name="m-file" content="index">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>Time-domain Gauss-Newton full-waveform inversion (applied to Chevron 2014 benchmark dataset)</h1>
+         <introduction>
+            <p>This application is available only in the software release for members of SINBAD consortium.</p>
+            <p>This software release includes an parallel framework in Matlab for time-domain Gauss-Newton full-waveform inversion [1]. This
+               application package is an extension of our previous work which is conducted in the frequency domain [2,3]. In this package,
+               we only carried out Gauss-Newton FWI with randomized dimensionality reduction techniques. Our future work will be time domain
+               FWI with modified Gauss-Newton techniques [2,3].
+            </p>
+            <p>Author: Dr. Xiang Li</p><pre>       Seismic Laboratory for Imaging and Modeling
+       Department of Earch &amp; Ocean Sciences
+       The University of British Columbia</pre><p>Date  : July, 2015</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Downloading &amp; Dependencies</a></li>
+               <li><a href="#2">Running &amp; Parallelism</a></li>
+               <li><a href="#3">Examples and results</a></li>
+               <li><a href="#4">References</a></li>
+            </ul>
+         </div>
+         <h2>Downloading &amp; Dependencies<a name="1"></a></h2>
+         <p>The code can be found in the <a href="https://slim.gatech.edu/consortiumsoftware/">SLIM software release</a> under <tt>/applications/WaveformInversion/2DBasicTimeStepping</tt>.
+         </p>
+         <p>The code has been tested with <i>Matlab R2013a</i> and requires the Parallel Computing Toolbox.
+         </p>
+         <p>To run this code, please download Chevron 2014 SEG workshop benchmark dataset from <a href="https://s3.amazonaws.com/open.source.geoscience/open_data/seg_workshop_fwi_2014/seg_workshop_fwi_2014.html">https://s3.amazonaws.com/open.source.geoscience/open_data/seg_workshop_fwi_2014/seg_workshop_fwi_2014.html</a> You can also find DATA LICENSE AGREEMENT information with the above link. Please use this dataset according to thire requirement
+            presented in the above link.
+         </p>
+         <p>This code uses the following packages, also found in the <tt>tools</tt> part of the <a href="https://slim.gatech.edu/consortiumsoftware/">SLIM software release</a>.
+         </p>
+         <div>
+            <ul>
+               <li><i>utilities/SPOT</i> - object oriented framework for matrix-free linear algebra.
+               </li>
+               <li><i>utilities/pSPOT</i> - parallel extension of SPOT.
+               </li>
+               <li>_algorithms/TimeModeling - 2D/3D time-stepping modeling kernel</li>
+               <li><i>operators/misc</i> - Misc. operators such as interpolation, smoothing and splines
+               </li>
+               <li><i>functions/misc</i> - Misc. functions.
+               </li>
+            </ul>
+         </div>
+         <h2>Running &amp; Parallelism<a name="2"></a></h2>
+         <p>All the examples and results are produced by the scripts found in this software release under <tt>applications/WaveformInversion/2DBasicTimeStepping/</tt>. Start matlab from that directory or run <tt>startup</tt> in that directory to add the appropriate paths.
+         </p>
+         <p>To run the scripts follow the instrictions in the README file enclosed with the code. The scripts can be run in serial mode
+            but parallel mode is advised.
+         </p>
+         <p>Read more about <a href="https://slim.gatech.edu/SoftwareDemos/tools/">SLIM's approach to parallel computing in Matlab</a>.
+         </p>
+         <h2>Examples and results<a name="3"></a></h2>
+         <p>Scripts to generate results of examples can be found in the scripts directory. <a href="examples_TSGNFWI.html">The results are shown here</a>.
+         </p>
+         <h2>References<a name="4"></a></h2>
+         <p><a href="https://slim.gatech.edu/content/2d3d-time-stepping-imaging-and-inversion">https://slim.gatech.edu/content/2d3d-time-stepping-imaging-and-inversion</a> [1]. Xiang Li - 2D/3D time-stepping for imaging and inversion, SINBAD Fall consortium talks. 2014
+         </p>
+         <p><a href="https://slim.gatech.edu/node/6390">[2]</a> Felix J. Herrmann, Xiang Li, Aleksandr Y. Aravkin, and Tristan van Leeuwen, A modified, sparsity promoting, Gauss-Newton
+            algorithm for seismic waveform inversion, in Proc. SPIE, 2011, vol. 2011.
+         </p>
+         <p><a href="https://slim.gatech.edu/node/6621">[3]</a> Xiang Li, Aleksandr Y. Aravkin, Tristan van Leeuwen, and Felix J. Herrmann, Fast randomized full-waveform inversion with
+            compressive sensing. 2011. Geophysics, accepted.
+         </p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Time-domain Gauss-Newton full-waveform inversion (applied to Chevron 2014 benchmark dataset)
+%
+% This application is available only in the software release for members of SINBAD consortium.
+%
+% This software release includes an parallel framework in Matlab for time-domain 
+% Gauss-Newton full-waveform inversion [1]. This application package is an extension 
+% of our previous work which is conducted in the frequency domain [2,3]. In this package, we
+% only carried out Gauss-Newton FWI with randomized dimensionality reduction techniques.
+% Our future work will be time domain FWI with modified Gauss-Newton techniques [2,3].
+%
+% Author: Dr. Xiang Li
+%
+%         Seismic Laboratory for Imaging and Modeling
+%         Department of Earch & Ocean Sciences
+%         The University of British Columbia
+%
+% Date  : July, 2015
+
+%% Downloading & Dependencies
+% The code can be found in the <https://slim.gatech.edu/consortiumsoftware/ SLIM software release> under
+% |/applications/WaveformInversion/2DBasicTimeStepping|.
+%
+% The code has been tested with _Matlab R2013a_ and requires the Parallel
+% Computing Toolbox.
+%
+% To run this code, please download Chevron 2014 SEG workshop benchmark dataset from 
+% <https://s3.amazonaws.com/open.source.geoscience/open_data/seg_workshop_fwi_2014/seg_workshop_fwi_2014.html>
+% You can also find DATA LICENSE AGREEMENT information with the above link. Please
+% use this dataset according to thire requirement presented in the above link.
+%
+% This code uses the following packages, also found in the |tools| part
+% of the <https://slim.gatech.edu/consortiumsoftware/ SLIM software release>.
+%
+% * _utilities/SPOT_ - object oriented framework for matrix-free linear algebra.
+% * _utilities/pSPOT_ - parallel extension of SPOT.
+% * _algorithms/TimeModeling - 2D/3D time-stepping modeling kernel
+% * _operators/misc_ - Misc. operators such as interpolation, smoothing and splines
+% * _functions/misc_ - Misc. functions.
+
+
+%% Running & Parallelism
+% All the examples and results are produced by the scripts found in
+% this software release under |applications/WaveformInversion/2DBasicTimeStepping/|. 
+% Start matlab from that directory or run |startup| in that directory to add the appropriate paths.
+%
+% To run the scripts follow the instrictions in the README file enclosed
+% with the code.
+% The scripts can be run in serial mode but parallel mode is advised.
+% 
+% Read more about <https://slim.gatech.edu/SoftwareDemos/tools/ SLIM's approach to parallel computing in Matlab>.
+
+%% Examples and results
+%
+% Scripts to generate results of examples can be found in the scripts directory. <examples_TSGNFWI.html
+% The results are shown here>.
+%
+
+%% References
+%
+% <https://slim.gatech.edu/content/2d3d-time-stepping-imaging-and-inversion> [1]. Xiang Li - 2D/3D time-stepping for imaging and inversion, SINBAD Fall consortium talks. 2014
+%
+% <https://slim.gatech.edu/node/6390 [2]> Felix J. Herrmann, Xiang Li, Aleksandr Y. Aravkin, and Tristan van Leeuwen, A modified, sparsity promoting, Gauss-Newton algorithm for seismic waveform inversion, in Proc. SPIE, 2011, vol. 2011.
+%
+% <https://slim.gatech.edu/node/6621 [3]> Xiang Li, Aleksandr Y. Aravkin, Tristan van Leeuwen, and Felix J. Herrmann, Fast randomized full-waveform inversion with compressive sensing. 2011. Geophysics, accepted.
+%
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

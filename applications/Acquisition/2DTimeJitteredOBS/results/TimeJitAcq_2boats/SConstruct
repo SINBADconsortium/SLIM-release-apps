@@ -1,0 +1,23 @@
+import os
+from rsf.proj import *
+
+########################################################################
+# RETRIEVE DATA
+########################################################################
+
+# Define SLIM FTP server information
+FTPserver = {
+        'server': 'ftp.slim.gatech.edu',
+        'login': 'ftp',
+        'password':''}
+
+loc = os.path.join('SoftwareRelease','Acquisition','2DTimeJitteredOBS','results','TimeJitAcq_2boats')
+files = ['comptime_SNR_2boats.mat','Suez_ds12pt5m.rsf','TimeJitAcq_2boats_adjrecov.rsf','TimeJitAcq_2boats_jitdata.rsf','TimeJitAcq_2boats_L1diff.rsf','TimeJitAcq_2boats_L1recov.rsf','TimeJitAcq_2boats_params.mat','TimeJitAcq_2boats.log']
+
+
+# Fetch data from FTP server
+for elm in files:
+        Fetch(elm,loc,FTPserver)
+
+End()
+

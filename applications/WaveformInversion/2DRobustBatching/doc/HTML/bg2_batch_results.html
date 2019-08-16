@@ -1,0 +1,101 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Fast Waveform inversion without source-encoding</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.6">
+      <meta name="date" content="2016-05-19">
+      <meta name="m-file" content="bg2_batch_results">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>Fast Waveform inversion without source-encoding</h1>
+         <p>Waveform inversion using `batching' optimization scheme and source estimation See the script <a href="bg2_batch.html">bg2_batch.m</a>.
+         </p><pre class="codeinput">[v,n,d,o] = rsf_read_all([datadir <span class="string">'/bg2v.rsf'</span>]);
+[v0,n,d,o] = rsf_read_all([datadir <span class="string">'/bg2v0.rsf'</span>]);
+
+v  = 1e-3*v;
+v0 = 1e-3*v0;
+[z,x] = odn2grid(o,d,n);
+z = z*1e-3; x = x*1e-3;
+</pre><pre class="codeinput">scnsize = get(0,<span class="string">'ScreenSize'</span>);
+
+<span class="comment">% The true and initial model</span>
+<span class="comment">%</span>
+
+figure(<span class="string">'Position'</span>,scnsize./[1 1 2 2]);imagesc(x,z,v,[1.5 4.5]);colorbar;set(gca,<span class="string">'plotboxaspectratio'</span>,[3 1 1]);
+xlabel(<span class="string">'x [km]'</span>);ylabel(<span class="string">'z [km]'</span>); title(<span class="string">'true model'</span>);
+</pre><img vspace="5" hspace="5" src="bg2_batch_results_01.png"> <pre class="codeinput">figure(<span class="string">'Position'</span>,scnsize./[1 1 2 2]);imagesc(x,z,v0,[1.5 4.5]);colorbar;set(gca,<span class="string">'plotboxaspectratio'</span>,[3 1 1]);
+xlabel(<span class="string">'x [km]'</span>);ylabel(<span class="string">'z [km]'</span>); title(<span class="string">'initial model'</span>);
+</pre><img vspace="5" hspace="5" src="bg2_batch_results_02.png"> <p>reconstruction with batching after 17th. frequency band.</p><pre class="codeinput">[mn,n,d,o] = rsf_read_all([resultsdir <span class="string">'/bg2_batch/mn_17.rsf'</span>]);
+vn = real(1./sqrt(mn));
+
+figure(<span class="string">'Position'</span>,scnsize./[1 1 2 2]);imagesc(x,z,vn,[1.5 4.5]);colorbar;set(gca,<span class="string">'plotboxaspectratio'</span>,[3 1 1]);
+xlabel(<span class="string">'x [km]'</span>);ylabel(<span class="string">'z [km]'</span>); title(<span class="string">'final model'</span>);
+</pre><img vspace="5" hspace="5" src="bg2_batch_results_03.png"> <pre class="codeinput">xslices = [3 8 13];
+<span class="keyword">for</span> i=1:length(xslices)
+    ix = x==xslices(i);
+    figure;plot(v(:,ix),z,<span class="string">'k'</span>,v0(:,ix),z,<span class="string">'k--'</span>,vn(:,ix),z,<span class="string">'r'</span>);axis <span class="string">ij</span>; ylim([0 2]);set(gca,<span class="string">'plotboxaspectratio'</span>,[1 1.5 1]);
+    xlabel(<span class="string">'v [km/s]'</span>);ylabel(<span class="string">'z [km/s]'</span>);title([<span class="string">'x = '</span> num2str(xslices(i)) <span class="string">' km'</span>]);legend(<span class="string">'true'</span>,<span class="string">'initial'</span>,<span class="string">'final'</span>);
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="bg2_batch_results_04.png"> <img vspace="5" hspace="5" src="bg2_batch_results_05.png"> <img vspace="5" hspace="5" src="bg2_batch_results_06.png"> <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Fast Waveform inversion without source-encoding
+%
+% Waveform inversion using `batching' optimization scheme and source estimation
+% See the script <bg2_batch.html bg2_batch.m>.
+
+[v,n,d,o] = rsf_read_all([datadir '/bg2v.rsf']);
+[v0,n,d,o] = rsf_read_all([datadir '/bg2v0.rsf']);
+
+v  = 1e-3*v;
+v0 = 1e-3*v0;
+[z,x] = odn2grid(o,d,n);
+z = z*1e-3; x = x*1e-3;
+
+%%
+scnsize = get(0,'ScreenSize');
+
+% The true and initial model
+%
+
+figure('Position',scnsize./[1 1 2 2]);imagesc(x,z,v,[1.5 4.5]);colorbar;set(gca,'plotboxaspectratio',[3 1 1]);
+xlabel('x [km]');ylabel('z [km]'); title('true model');
+
+%%
+%
+
+figure('Position',scnsize./[1 1 2 2]);imagesc(x,z,v0,[1.5 4.5]);colorbar;set(gca,'plotboxaspectratio',[3 1 1]);
+xlabel('x [km]');ylabel('z [km]'); title('initial model');
+
+%%
+% reconstruction with batching after 17th. frequency band. 
+
+[mn,n,d,o] = rsf_read_all([resultsdir '/bg2_batch/mn_17.rsf']);
+vn = real(1./sqrt(mn));
+
+figure('Position',scnsize./[1 1 2 2]);imagesc(x,z,vn,[1.5 4.5]);colorbar;set(gca,'plotboxaspectratio',[3 1 1]);
+xlabel('x [km]');ylabel('z [km]'); title('final model');
+
+%%
+% 
+xslices = [3 8 13];
+for i=1:length(xslices)
+    ix = x==xslices(i);
+    figure;plot(v(:,ix),z,'k',v0(:,ix),z,'kREPLACE_WITH_DASH_DASH',vn(:,ix),z,'r');axis ij; ylim([0 2]);set(gca,'plotboxaspectratio',[1 1.5 1]);
+    xlabel('v [km/s]');ylabel('z [km/s]');title(['x = ' num2str(xslices(i)) ' km']);legend('true','initial','final');
+end
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

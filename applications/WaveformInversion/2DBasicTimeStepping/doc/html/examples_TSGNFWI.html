@@ -1,0 +1,223 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>2D time-stepping Gauss-Newton full-waveform inversion (applied to Chevron 2014 benchmark dataset)</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.1">
+      <meta name="date" content="2015-07-30">
+      <meta name="m-file" content="examples_TSGNFWI">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>2D time-stepping Gauss-Newton full-waveform inversion (applied to Chevron 2014 benchmark dataset)</h1>
+         <introduction>
+            <p>Author: Dr. Xiang Li</p><pre>       Seismic Laboratory for Imaging and Modeling
+       Department of Earch &amp; Ocean Sciences
+       The University of British Columbia</pre><p>Date: July, 2015</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Chevron 2014 SEG FWI workshop benchmark</a></li>
+               <li><a href="#2">Released initial model and frequency domain GN FWI result.</a></li>
+               <li><a href="#3">Time domain GN fwi with frequency domain GN FWI result.</a></li>
+               <li><a href="#4">Continuing modify the velocity model</a></li>
+               <li><a href="#5">Time domain GN FWI with curvelet domain angle restriction.</a></li>
+            </ul>
+         </div>
+         <h2>Chevron 2014 SEG FWI workshop benchmark<a name="1"></a></h2>
+         <p>This is an demonstration of our workflow of time domain Gauss-Newton FWI for the benchmark dataset</p>
+         <h2>Released initial model and frequency domain GN FWI result.<a name="2"></a></h2>
+         <p>In this section, we carried a frequency domain GN FWI with the chevron released initial model from 3Hz to 5Hz. For more information
+            about frequency domain GN FWI, please see [1,2]. The related code can be found in the <a href="https://slim.gatech.edu/consortiumsoftware/">SLIM software release</a> under  <tt>/applications/WaveformInversion/2DModGaussNewton</tt>.
+         </p><pre class="codeinput">load <span class="string">released_model.mat</span>
+scrsz = get(0,<span class="string">'ScreenSize'</span>);
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);set(gca,<span class="string">'fontsize'</span>,18);
+imagesc(mmx,mmz,vel_init);caxis([1500,4000]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'Chevron released initial model [m/s]'</span>);colorbar;
+load <span class="string">ray_paths.mat</span>
+<span class="keyword">for</span> k=1:size(r1,1)
+	r = r1{k};
+	line(r(:,1)+20000,r(:,2),ones(size(r,1)),<span class="string">'color'</span>,<span class="string">'w'</span>,<span class="string">'lineWidth'</span>,1);
+<span class="keyword">end</span>
+
+load <span class="string">model_freq_forfwi.mat</span>
+scrsz = get(0,<span class="string">'ScreenSize'</span>);
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);set(gca,<span class="string">'fontsize'</span>,18);
+imagesc(mmx,mmz,vel_freq);caxis([1500,4000]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'frequency domain GN FWI result [m/s]'</span>);colorbar;
+</pre><img vspace="5" hspace="5" src="examples_TSGNFWI_01.png"> <img vspace="5" hspace="5" src="examples_TSGNFWI_02.png"> <h2>Time domain GN fwi with frequency domain GN FWI result.<a name="3"></a></h2>
+         <p>In this section, we carried out our time domain FWI by using frequency domain GN FWI result as an initial guess. Frequency
+            domain FWI approach can start from a monochromatic frequency, thus frequency domain approach can avoid certain amount of noises
+            at low-frequency end and without including high-frequency signals that might cause "cycle skipping" .
+         </p><pre class="codeinput">load <span class="string">chevron2_5_nsp_3.mat</span>
+scrsz = get(0,<span class="string">'ScreenSize'</span>);
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);set(gca,<span class="string">'fontsize'</span>,18);
+imagesc(mmx(1:2999),mmz,reshape(model.vel,467,2999));caxis([1500,4000]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'time domain GN FWI by using frequency domain GN FWI result [m/s]'</span>);colorbar;
+</pre><img vspace="5" hspace="5" src="examples_TSGNFWI_03.png"> <h2>Continuing modify the velocity model<a name="4"></a></h2>
+         <p>The dataset is very challenging because of the limited offset. According to ray paths in the first figure, turning wave (refraction
+            wave) can not reach the area below 2km, thus the velocity below 2km can not be updated with low-frequency component from turning
+            wave. According to the kirchhoff migration result of the time domain GN FWI result, the moveout corresponding to the area
+            below 2km is not flattened. To address this issue, we scale the velocity below 2km with 0.9 based on the flatness of the moveout
+            roughly.
+         </p><pre class="codeinput">load <span class="string">model_fwi_mask.mat</span>
+scrsz = get(0,<span class="string">'ScreenSize'</span>);
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);set(gca,<span class="string">'fontsize'</span>,18);
+imagesc(mmx,mmz,vel_init);caxis([1500,4000]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'scaled initial velocity model[m/s]'</span>);colorbar;
+
+load <span class="string">chevron2_reflec_5_nsp_3.mat</span>
+scrsz = get(0,<span class="string">'ScreenSize'</span>);
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);set(gca,<span class="string">'fontsize'</span>,18);
+imagesc(mmx,mmz,reshape(model.vel, 467,3066));caxis([1500,4000]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'time domain GN FWI with only reflected wave[m/s]'</span>);colorbar;
+</pre><img vspace="5" hspace="5" src="examples_TSGNFWI_04.png"> <img vspace="5" hspace="5" src="examples_TSGNFWI_05.png"> <h2>Time domain GN FWI with curvelet domain angle restriction.<a name="5"></a></h2>
+         <p>As we can observe from the last example, there are a lot of turning artifact in the FWI result. To get rid of those artifacts,
+            we regularize the GN FWI updates in the curvelet domain by setting the curvelet coefficients that corresponding to the vertical
+            events to zeros.
+         </p><pre class="codeinput">load <span class="string">chevron2_reflec_l1_5_nsp_3.mat</span>
+scrsz = get(0,<span class="string">'ScreenSize'</span>);
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);set(gca,<span class="string">'fontsize'</span>,18);
+imagesc(mmx,mmz,reshape(model.vel, 467,3066));caxis([1500,4000]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'curvelet-angle restricted time domain GN FWI with only reflected wave[m/s]'</span>);colorbar;
+
+load <span class="string">kh_mig.mat</span>
+mmx = 0:10:47990;
+mmz = 0:10:5990;
+
+
+scrsz = get(0,<span class="string">'ScreenSize'</span>);
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);set(gca,<span class="string">'fontsize'</span>,18);
+imagesc(mmx,mmz,mig_init);caxis(.8e1*[-1 1]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);colormap <span class="string">gray</span>;title(<span class="string">'kirkhoff migration of the initial model'</span>);colorbar;
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);set(gca,<span class="string">'fontsize'</span>,18);
+imagesc(mmx,mmz,mig_fwi);caxis(.8e1*[-1 1]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);colormap <span class="string">gray</span>;title(<span class="string">'kirkhoff migration of the final FWI result'</span>);colorbar;
+
+
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);set(gca,<span class="string">'fontsize'</span>,18);
+imagesc(1:7704,mmz,gather_init);caxis(.5e-1*[-1 1]);xlabel(<span class="string">'trace number'</span>);ylabel(<span class="string">'z [m]'</span>);colormap <span class="string">gray</span>;title(<span class="string">'kirkhoff migration gather of the initial model'</span>);colorbar;
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);set(gca,<span class="string">'fontsize'</span>,18);
+imagesc(1:7704,mmz,gather_fwi);caxis(.5e-1*[-1 1]);xlabel(<span class="string">'trace number'</span>);ylabel(<span class="string">'z [m]'</span>);colormap <span class="string">gray</span>;title(<span class="string">'kirkhoff migration gather of the final FWI result'</span>);colorbar;
+</pre><img vspace="5" hspace="5" src="examples_TSGNFWI_06.png"> <img vspace="5" hspace="5" src="examples_TSGNFWI_07.png"> <img vspace="5" hspace="5" src="examples_TSGNFWI_08.png"> <img vspace="5" hspace="5" src="examples_TSGNFWI_09.png"> <img vspace="5" hspace="5" src="examples_TSGNFWI_10.png"> <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% 2D time-stepping Gauss-Newton full-waveform inversion (applied to Chevron 2014 benchmark dataset)
+%
+% Author: Dr. Xiang Li
+%
+%         Seismic Laboratory for Imaging and Modeling
+%         Department of Earch & Ocean Sciences
+%         The University of British Columbia
+%         
+% Date: July, 2015
+%
+
+%%  Chevron 2014 SEG FWI workshop benchmark 
+% 
+% This is an demonstration of our workflow of time domain Gauss-Newton FWI for the benchmark dataset
+
+%% Released initial model and frequency domain GN FWI result.
+%
+% In this section, we carried a frequency domain GN FWI with the chevron released
+% initial model from 3Hz to 5Hz. For more information about frequency domain GN FWI,
+% please see [1,2]. The related code can be found in the <https://slim.gatech.edu/consortiumsoftware/
+% SLIM software release> under  |/applications/WaveformInversion/2DModGaussNewton|.
+% 
+
+load released_model.mat
+scrsz = get(0,'ScreenSize');
+figure('Position',[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);set(gca,'fontsize',18);
+imagesc(mmx,mmz,vel_init);caxis([1500,4000]);xlabel('x [m]');ylabel('z [m]');title('Chevron released initial model [m/s]');colorbar;
+load ray_paths.mat
+for k=1:size(r1,1)
+	r = r1{k};
+	line(r(:,1)+20000,r(:,2),ones(size(r,1)),'color','w','lineWidth',1);
+end
+
+load model_freq_forfwi.mat
+scrsz = get(0,'ScreenSize');
+figure('Position',[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);set(gca,'fontsize',18);
+imagesc(mmx,mmz,vel_freq);caxis([1500,4000]);xlabel('x [m]');ylabel('z [m]');title('frequency domain GN FWI result [m/s]');colorbar;
+
+%% Time domain GN fwi with frequency domain GN FWI result.
+% In this section, we carried out our time domain FWI by using frequency domain GN FWI
+% result as an initial guess. Frequency domain FWI approach can start from a monochromatic
+% frequency, thus frequency domain approach can avoid certain amount of noises at
+% low-frequency end and without including high-frequency signals that might cause
+% "cycle skipping" .
+load chevron2_5_nsp_3.mat
+scrsz = get(0,'ScreenSize');
+figure('Position',[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);set(gca,'fontsize',18);
+imagesc(mmx(1:2999),mmz,reshape(model.vel,467,2999));caxis([1500,4000]);xlabel('x [m]');ylabel('z [m]');title('time domain GN FWI by using frequency domain GN FWI result [m/s]');colorbar;
+
+
+
+%% Continuing modify the velocity model
+% The dataset is very challenging because of the limited offset. According to ray paths
+% in the first figure, turning wave (refraction wave) can not reach the area below 2km, thus the
+% velocity below 2km can not be updated with low-frequency component from turning wave.
+% According to the kirchhoff migration result of the time domain GN FWI result, the moveout
+% corresponding to the area below 2km is not flattened. To address this issue, we scale
+% the velocity below 2km with 0.9 based on the flatness of the moveout roughly.
+%
+
+load model_fwi_mask.mat
+scrsz = get(0,'ScreenSize');
+figure('Position',[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);set(gca,'fontsize',18);
+imagesc(mmx,mmz,vel_init);caxis([1500,4000]);xlabel('x [m]');ylabel('z [m]');title('scaled initial velocity model[m/s]');colorbar;
+
+load chevron2_reflec_5_nsp_3.mat
+scrsz = get(0,'ScreenSize');
+figure('Position',[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);set(gca,'fontsize',18);
+imagesc(mmx,mmz,reshape(model.vel, 467,3066));caxis([1500,4000]);xlabel('x [m]');ylabel('z [m]');title('time domain GN FWI with only reflected wave[m/s]');colorbar;
+
+
+%% Time domain GN FWI with curvelet domain angle restriction.
+% As we can observe from the last example, there are a lot of turning artifact in the FWI
+% result. To get rid of those artifacts, we regularize the GN FWI updates in the curvelet
+% domain by setting the curvelet coefficients that corresponding to the vertical events
+% to zeros.
+%
+load chevron2_reflec_l1_5_nsp_3.mat
+scrsz = get(0,'ScreenSize');
+figure('Position',[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);set(gca,'fontsize',18);
+imagesc(mmx,mmz,reshape(model.vel, 467,3066));caxis([1500,4000]);xlabel('x [m]');ylabel('z [m]');title('curvelet-angle restricted time domain GN FWI with only reflected wave[m/s]');colorbar;
+
+load kh_mig.mat
+mmx = 0:10:47990;
+mmz = 0:10:5990;
+
+
+scrsz = get(0,'ScreenSize');
+figure('Position',[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);set(gca,'fontsize',18);
+imagesc(mmx,mmz,mig_init);caxis(.8e1*[-1 1]);xlabel('x [m]');ylabel('z [m]');colormap gray;title('kirkhoff migration of the initial model');colorbar;
+figure('Position',[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);set(gca,'fontsize',18);
+imagesc(mmx,mmz,mig_fwi);caxis(.8e1*[-1 1]);xlabel('x [m]');ylabel('z [m]');colormap gray;title('kirkhoff migration of the final FWI result');colorbar;
+
+
+figure('Position',[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);set(gca,'fontsize',18);
+imagesc(1:7704,mmz,gather_init);caxis(.5e-1*[-1 1]);xlabel('trace number');ylabel('z [m]');colormap gray;title('kirkhoff migration gather of the initial model');colorbar;
+figure('Position',[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);set(gca,'fontsize',18);
+imagesc(1:7704,mmz,gather_fwi);caxis(.5e-1*[-1 1]);xlabel('trace number');ylabel('z [m]');colormap gray;title('kirkhoff migration gather of the final FWI result');colorbar;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

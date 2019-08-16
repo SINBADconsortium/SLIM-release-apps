@@ -1,0 +1,13 @@
+nl1=1;
+nl2=1;
+nl3=1;
+nr1=1;
+nr2=1;
+nr3=1;
+partask=1;
+mpi_np1=2;
+mpi_np2=2;
+bulkonly=1;
+nsnaps=400;          % number of live checkpoints
+maxbuffernum=400;    % max num of incore buffers
+%window_width=500;

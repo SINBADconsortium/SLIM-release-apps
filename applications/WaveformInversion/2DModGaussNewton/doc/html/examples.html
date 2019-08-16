@@ -1,0 +1,195 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>2D modified gauss-newton full-waveform inversion</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 7.13">
+      <meta name="date" content="2012-03-12">
+      <meta name="m-file" content="examples">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>2D modified gauss-newton full-waveform inversion</h1>
+         <introduction>
+            <p>Author: Xiang Li</p><pre>       Seismic Laboratory for Imaging and Modeling
+       Department of Earch &amp; Ocean Sciences
+       The University of British Columbia</pre><p>Date: 02, 2012</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Camenbert example</a></li>
+               <li><a href="#3">BG model example</a></li>
+               <li><a href="#7">References</a></li>
+               <li><a href="#8">Acknowledgements</a></li>
+            </ul>
+         </div>
+         <h2>Camenbert example<a name="1"></a></h2>
+         <p>This is an demonstration of modified gausss-newton algorithm based on Camembert model [3], please visit the script <a href="MGNFWI_camenbert.html">MGNFWI_camenbert.html</a> for detail
+         </p>
+         <p>true model and initial model</p><pre class="codeinput">z = 0:10:1000;
+x = 0:10:1000;
+[o,d,n] = grid2odn(z,x);
+[zz,xx] = ndgrid(z,x);
+m0 = 2500 + 0*xx;
+
+<span class="comment">% circular perturbation with radius 250 m and strenth 10%</span>
+dv = 0*xx; dv((xx-500).^2 + (zz-500).^2 &lt;= 250^2) = .1*2500;
+m  = m0 + dv;
+figure(1);imagesc(x,z,m);caxis([2250,2750]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'true model [m/s]'</span>);colorbar;
+figure(2);imagesc(x,z,m0);caxis([2250,2750]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'initial model [m/s]'</span>);colorbar;
+</pre><img vspace="5" hspace="5" src="examples_01.png"> <img vspace="5" hspace="5" src="examples_02.png"> <pre class="codeinput"><span class="comment">% reconstructions model</span>
+
+<span class="comment">% reflection example, source and receivers are on the top of the model</span>
+load <span class="string">FWIresult_camenbert.mat</span>
+figure(3);imagesc(x,z,results(:,:,end));caxis([2250,2750]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'inverted result from relection data'</span>);colorbar;
+
+
+<span class="comment">% tranmission example with source at the top and recievers at the bottom</span>
+load <span class="string">FWIresult_camenbert_tranmission.mat</span>
+figure(4);imagesc(x,z,results(:,:,end));caxis([2250,2750]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'inverted result from tranmission data'</span>);colorbar;
+</pre><img vspace="5" hspace="5" src="examples_03.png"> <img vspace="5" hspace="5" src="examples_04.png"> <h2>BG model example<a name="3"></a></h2>
+         <p>This is an demonstration of modified gausss-newton algorithm based on BG Compass model [1,2], please visit the script <a href="MGNFWI_BG.html">MGNFWI_BG.html</a> for detail
+         </p>
+         <p>true model and initial model</p><pre class="codeinput">load <span class="string">bg2dmodel.mat</span>
+z = 0:10:2040;
+x = 0:10:7000;
+scrsz = get(0,<span class="string">'ScreenSize'</span>);
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);imagesc(x,z,vel);set(gca,<span class="string">'plotboxaspectratio'</span>,[7 2 2]);caxis([1480,4680]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'true model [m/s]'</span>);colorbar;
+</pre><img vspace="5" hspace="5" src="examples_05.png"> <pre class="codeinput">scrsz = get(0,<span class="string">'ScreenSize'</span>);
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);imagesc(x,z,vel1);set(gca,<span class="string">'plotboxaspectratio'</span>,[7 2 2]);caxis([1480,4680]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'initial model [m/s]'</span>);colorbar;
+</pre><img vspace="5" hspace="5" src="examples_06.png"> <pre class="codeinput"><span class="comment">% reconstructions model with 7 simultaneous shots and 10 frequencies for each GN update</span>
+
+load <span class="string">FWIresult_BG.mat</span>
+
+scrsz = get(0,<span class="string">'ScreenSize'</span>);
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);imagesc(x,z,results(:,:,end));set(gca,<span class="string">'plotboxaspectratio'</span>,[7 2 2]);caxis([1480,4680]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'true model [m/s]'</span>);colorbar;
+</pre><img vspace="5" hspace="5" src="examples_07.png"> <pre class="codeinput"><span class="comment">% trace to trace comparison</span>
+
+offset = 300;
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/2 scrsz(3)/4 scrsz(4)/2]);plot(vel(:,offset),z,<span class="string">'k'</span>,vel1(:,offset),z,<span class="string">'k--'</span>,results(:,offset,end),z,<span class="string">'r'</span>);axis <span class="string">ij</span>; ylim([0 z(end)]);set(gca,<span class="string">'plotboxaspectratio'</span>,[1 2 1]);
+xlabel(<span class="string">'v [m/s]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'x = 3 km'</span>);legend(<span class="string">'true'</span>,<span class="string">'initial'</span>,<span class="string">'final'</span>);
+
+
+offset = 500;
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/2 scrsz(3)/4 scrsz(4)/2]);plot(vel(:,offset),z,<span class="string">'k'</span>,vel1(:,offset),z,<span class="string">'k--'</span>,results(:,offset,end),z,<span class="string">'r'</span>);axis <span class="string">ij</span>; ylim([0 z(end)]);set(gca,<span class="string">'plotboxaspectratio'</span>,[1 2 1]);
+xlabel(<span class="string">'v [m/s]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'x = 5 km'</span>);legend(<span class="string">'true'</span>,<span class="string">'initial'</span>,<span class="string">'final'</span>);
+</pre><img vspace="5" hspace="5" src="examples_08.png"> <img vspace="5" hspace="5" src="examples_09.png"> <h2>References<a name="7"></a></h2>
+         <p><a href="https://slim.gatech.edu/node/6390">[1]</a> Felix J. Herrmann, Xiang Li, Aleksandr Y. Aravkin, and Tristan van Leeuwen, A modified, sparsity promoting, Gauss-Newton
+            algorithm for seismic waveform inversion, in Proc. SPIE, 2011, vol. 2011.
+         </p>
+         <p><a href="https://slim.gatech.edu/node/6621">[2]</a> Xiang Li, Aleksandr Y. Aravkin, Tristan van Leeuwen, and Felix J. Herrmann, Fast randomized full-waveform inversion with
+            compressive sensing. 2011. Geophysics, accepted.
+         </p>
+         <p><a href="http://dx.doi.org/10.1190/1.1442188"> [3]</a> O. Gauthier, J. Virieux, and A. Tarantola. Two-dimensional nonlinear inversion of seismic waveforms: Numerical results. Geophysics
+            51, 1387-1403 (1986)
+         </p>
+         <h2>Acknowledgements<a name="8"></a></h2>
+         <p>The synthetic Compass model was provided by the BG-GROUP, see also the <a href="BG_DISCLAIMER.txt">disclaimer</a>.
+         </p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% 2D modified gauss-newton full-waveform inversion
+%
+% Author: Xiang Li
+%
+%         Seismic Laboratory for Imaging and Modeling
+%         Department of Earch & Ocean Sciences
+%         The University of British Columbia
+%         
+% Date: 02, 2012
+%
+
+%% Camenbert example 
+% 
+% This is an demonstration of modified gausss-newton algorithm based on Camembert
+% model [3], please visit the script <MGNFWI_camenbert.html> for detail 
+%
+% true model and initial model
+z = 0:10:1000;
+x = 0:10:1000;
+[o,d,n] = grid2odn(z,x);
+[zz,xx] = ndgrid(z,x);
+m0 = 2500 + 0*xx;
+
+% circular perturbation with radius 250 m and strenth 10%
+dv = 0*xx; dv((xx-500).^2 + (zz-500).^2 <= 250^2) = .1*2500;
+m  = m0 + dv; 
+figure(1);imagesc(x,z,m);caxis([2250,2750]);xlabel('x [m]');ylabel('z [m]');title('true model [m/s]');colorbar;
+figure(2);imagesc(x,z,m0);caxis([2250,2750]);xlabel('x [m]');ylabel('z [m]');title('initial model [m/s]');colorbar;
+
+%%
+
+% reconstructions model
+
+% reflection example, source and receivers are on the top of the model
+load FWIresult_camenbert.mat
+figure(3);imagesc(x,z,results(:,:,end));caxis([2250,2750]);xlabel('x [m]');ylabel('z [m]');title('inverted result from relection data');colorbar;
+
+
+% tranmission example with source at the top and recievers at the bottom
+load FWIresult_camenbert_tranmission.mat
+figure(4);imagesc(x,z,results(:,:,end));caxis([2250,2750]);xlabel('x [m]');ylabel('z [m]');title('inverted result from tranmission data');colorbar;
+
+%% BG model example
+%
+% This is an demonstration of modified gausss-newton algorithm based on BG Compass
+% model [1,2], please visit the script <MGNFWI_BG.html> for detail
+%
+% true model and initial model
+load bg2dmodel.mat
+z = 0:10:2040;
+x = 0:10:7000;
+scrsz = get(0,'ScreenSize');
+figure('Position',[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);imagesc(x,z,vel);set(gca,'plotboxaspectratio',[7 2 2]);caxis([1480,4680]);xlabel('x [m]');ylabel('z [m]');title('true model [m/s]');colorbar;
+%%
+scrsz = get(0,'ScreenSize');
+figure('Position',[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);imagesc(x,z,vel1);set(gca,'plotboxaspectratio',[7 2 2]);caxis([1480,4680]);xlabel('x [m]');ylabel('z [m]');title('initial model [m/s]');colorbar;
+
+%%
+
+% reconstructions model with 7 simultaneous shots and 10 frequencies for each GN update
+
+load FWIresult_BG.mat
+
+scrsz = get(0,'ScreenSize');
+figure('Position',[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);imagesc(x,z,results(:,:,end));set(gca,'plotboxaspectratio',[7 2 2]);caxis([1480,4680]);xlabel('x [m]');ylabel('z [m]');title('true model [m/s]');colorbar;
+
+%%
+
+% trace to trace comparison
+
+offset = 300;
+figure('Position',[1 scrsz(4)/2 scrsz(3)/4 scrsz(4)/2]);plot(vel(:,offset),z,'k',vel1(:,offset),z,'kREPLACE_WITH_DASH_DASH',results(:,offset,end),z,'r');axis ij; ylim([0 z(end)]);set(gca,'plotboxaspectratio',[1 2 1]);
+xlabel('v [m/s]');ylabel('z [m]');title('x = 3 km');legend('true','initial','final');
+
+
+offset = 500;
+figure('Position',[1 scrsz(4)/2 scrsz(3)/4 scrsz(4)/2]);plot(vel(:,offset),z,'k',vel1(:,offset),z,'kREPLACE_WITH_DASH_DASH',results(:,offset,end),z,'r');axis ij; ylim([0 z(end)]);set(gca,'plotboxaspectratio',[1 2 1]);
+xlabel('v [m/s]');ylabel('z [m]');title('x = 5 km');legend('true','initial','final');
+
+%% References
+%
+% <https://slim.gatech.edu/node/6390 [1]> Felix J. Herrmann, Xiang Li, Aleksandr Y. Aravkin, and Tristan van Leeuwen, A modified, sparsity promoting, Gauss-Newton algorithm for seismic waveform inversion, in Proc. SPIE, 2011, vol. 2011.
+%
+% <https://slim.gatech.edu/node/6621 [2]> Xiang Li, Aleksandr Y. Aravkin, Tristan van Leeuwen, and Felix J. Herrmann, Fast randomized full-waveform inversion with compressive sensing. 2011. Geophysics, accepted.
+%
+% <http://dx.doi.org/10.1190/1.1442188  [3]> O. Gauthier, J. Virieux, and A. Tarantola. Two-dimensional nonlinear inversion of seismic waveforms: Numerical results. Geophysics 51, 1387-1403 (1986)
+%
+%% Acknowledgements
+% The synthetic Compass model was provided by the BG-GROUP, see also the
+% <BG_DISCLAIMER.txt disclaimer>.
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

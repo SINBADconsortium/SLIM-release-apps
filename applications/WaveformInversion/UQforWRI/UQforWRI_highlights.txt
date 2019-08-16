@@ -1,0 +1,36 @@
+The source document for Software Highlights is composed in Latex. There are five entries needed for each section:
+1. Title (one line)
+2. Description (paragraphs separated the empty line)
+3. References (one per line)
+4. Locations for applications and/or software toolboxes (one per line)
+5. BibTex (entries separated by empty line, that are missing from SLIMS's slimbib.bib)
+
+Please, send to Henryk by e-mail the text that goes into the missing (or requiring modification) entries clearly separated, as in the example:
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+TITLE:
+Uncertainty quantification for  2D Wavefield Reconstruction Inversion
+
+DESCRIPTION:
+This software is about uncertainty quantification for wavefield reconstruction inversion (WRI). We implement an algorithm that can quantify uncertainties in the framework of WRI.
+
+REFERENCES:
+\cite{fang2017uqfip}
+
+LOCATIONS (in software relase directories, relative to root, that this package depends on):
+The code can be found under /applications/WaveformInversion/UQforWRI/.
+
+This package depends on the following packages:
+_utilities/SPOT_ - object oriented framework for matrix-free linear algebra.
+_utilities/pSPOT_ - parallel extension of SPOT.
+_operators/misc_ - Misc. operators such as interpolation, smoothing and splines
+_functions/misc_ - Misc. functions.
+_tools/solvers/QuasiNewton/minConf_mod/_ - nonlinear optimization
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Note the following:
+1. If the title changes, let me know which one is to be replaced.
+2. BIBTEX entries must match citations in REFERENCES, including the keys.
+3. In the 'tragic' case when entire new section is needed, let me know where to put it.:-)
+4. If there is more than one person responsible for missing stuff, please, coordinate and send me one version.

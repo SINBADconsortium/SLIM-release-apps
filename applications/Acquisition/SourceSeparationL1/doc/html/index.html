@@ -1,0 +1,144 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Source separation for towed-streamer marine data via sparsity promotion</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.6">
+      <meta name="date" content="2016-08-02">
+      <meta name="m-file" content="index">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>Source separation for towed-streamer marine data via sparsity promotion</h1>
+         <introduction>
+            <p>This application is available only in the software release for members of SINBAD consortium.</p>
+            <p>This package contains a MATLAB implementation of a 2-D over/under blended marine acquisition scheme, and a deblending (or
+               source separation) algorithm based on sparsity-promoting inversion in the curvelet domain using L1 minimization.
+            </p>
+            <p>Author: Haneet Wason (<a href="mailto:hwason@eos.ubc.ca">hwason@eos.ubc.ca</a>)
+            </p>
+            <p>Date: July, 2016</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Downloading &amp; Dependencies</a></li>
+               <li><a href="#2">Functions</a></li>
+               <li><a href="#3">Running &amp; Parallelism</a></li>
+               <li><a href="#4">Examples and results</a></li>
+               <li><a href="#5">References</a></li>
+               <li><a href="#6">Acknowledgements</a></li>
+            </ul>
+         </div>
+         <h2>Downloading &amp; Dependencies<a name="1"></a></h2>
+         <p>The code can be found in the <a href="https://slim.gatech.edu/consortiumsoftware">SLIM sofware release</a> under <tt>applications/Acquisition/SourceSeparationL1</tt>.
+         </p>
+         <p>The code has been tested with <i>Matlab R2015b</i>.
+         </p>
+         <p>This code uses the following packages, also found in the <tt>tools</tt> part of the <a href="https://slim.gatech.edu/consortiumsoftware">SLIM software release</a>.
+         </p>
+         <div>
+            <ul>
+               <li><i>utilities/SPOT</i> - object oriented framework for matrix-free linear algebra.
+               </li>
+               <li><i>utilities/SegyMAT</i> - Matlab/Octave toolbox for reading and writing SEG-Y formatted files.
+               </li>
+               <li><i>functions/misc</i> - miscellaneous functions.
+               </li>
+               <li><i>solvers/SPGL1-SLIM</i> - SLIM version of SPGL1 solver.
+               </li>
+            </ul>
+         </div>
+         <p>The CurveLab package is downloaded from the <tt>tools</tt> part of the SLIM-release-comp repository. * <i>transforms/CurveLab-2.1.2-SLIM</i> - curvelet transform functions.
+         </p>
+         <h2>Functions<a name="2"></a></h2>
+         <p>Some functions specific to this package can be found in the <tt>applications/Acquisition/SourceSeparationL1/misc_funcs</tt> directory.
+         </p>
+         <h2>Running &amp; Parallelism<a name="3"></a></h2>
+         <p>All the examples and results are produced by the scripts found in this software release under <tt>applications/Acquisition/SourceSeparationL1</tt>. Start matlab from that directory or run <tt>startup</tt> in that directory to add the appropriate paths.
+         </p>
+         <p>To run the scripts follow the instructions in the README file under <tt>applications/Acquisition/SourceSeparationL1/examples</tt>. The scripts are run in serial mode but can also be run in parallel with slight modifications to the code. Please see the
+            README file.
+         </p>
+         <p>Read more about <a href="https://slim.gatech.edu/SoftwareDemos/tools/">SLIM's approach to parallel computing in Matlab</a>.
+         </p>
+         <h2>Examples and results<a name="4"></a></h2>
+         <p><a href="example.html">Examples and results are shown here.</a> Scripts to reproduce the results can be found under <tt>applications/Acquisition/SourceSeparationL1/examples</tt>.
+         </p>
+         <h2>References<a name="5"></a></h2>
+         <p><a href="https://slim.gatech.edu/content/source-separation-simultaneous-towed-streamer-marine-acquisition-%E2%80%93-compressed-sensing-approa">[1]</a> Rajiv Kumar, Haneet Wason, and Felix J. Herrmann [2015]. Source separation for simultaneous towed-streamer marine acquisition
+            --- a compressed sensing approach, Geophysics, vol. 80, pp. WD73-WD88.
+         </p>
+         <h2>Acknowledgements<a name="6"></a></h2>
+         <p>Thanks to our sponsors and NSERC for their financial support.</p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Source separation for towed-streamer marine data via sparsity promotion
+%
+% This application is available only in the software release for members of SINBAD consortium.
+% 
+% This package contains a MATLAB implementation of a 2-D over/under blended marine acquisition scheme, and a deblending (or source separation) algorithm based on sparsity-promoting inversion in the curvelet domain using L1 minimization.
+% 
+% Author: Haneet Wason (hwason@eos.ubc.ca)
+%
+% Date: July, 2016
+
+
+%% Downloading & Dependencies
+%
+% The code can be found in the <https://slim.gatech.edu/consortiumsoftware SLIM sofware release> under |applications/Acquisition/SourceSeparationL1|.
+%
+% The code has been tested with _Matlab R2015b_.
+%
+% This code uses the following packages, also found in the |tools| part of the <https://slim.gatech.edu/consortiumsoftware SLIM software release>.
+%
+% * _utilities/SPOT_ - object oriented framework for matrix-free linear algebra.
+% * _utilities/SegyMAT_ - Matlab/Octave toolbox for reading and writing SEG-Y formatted files.
+% * _functions/misc_ - miscellaneous functions.
+% * _solvers/SPGL1-SLIM_ - SLIM version of SPGL1 solver.
+%
+% The CurveLab package is downloaded from the |tools| part of the SLIM-release-comp repository. 
+% * _transforms/CurveLab-2.1.2-SLIM_ - curvelet transform functions.
+
+
+%% Functions
+%
+% Some functions specific to this package can be found in the |applications/Acquisition/SourceSeparationL1/misc_funcs| directory.
+
+
+%% Running & Parallelism
+%
+% All the examples and results are produced by the scripts found in this software release under |applications/Acquisition/SourceSeparationL1|. Start matlab from that directory or run |startup| in that directory to add the appropriate paths.
+%
+% To run the scripts follow the instructions in the README file under |applications/Acquisition/SourceSeparationL1/examples|. The scripts are run in serial mode but can also be run in parallel with slight modifications to the code. Please see the README file.
+%
+% Read more about <https://slim.gatech.edu/SoftwareDemos/tools/ SLIM's approach to parallel computing in Matlab>.
+
+
+%% Examples and results
+%
+% <example.html Examples and results are shown here.> Scripts to reproduce the results can be found under |applications/Acquisition/SourceSeparationL1/examples|. 
+
+
+%% References
+%
+% <https://slim.gatech.edu/content/source-separation-simultaneous-towed-streamer-marine-acquisition-–-compressed-sensing-approa [1]> Rajiv Kumar, Haneet Wason, and Felix J. Herrmann [2015]. Source separation for simultaneous towed-streamer marine acquisition REPLACE_WITH_DASH_DASH- a compressed sensing approach, Geophysics, vol. 80, pp. WD73-WD88.
+
+
+%% Acknowledgements
+% Thanks to our sponsors and NSERC for their financial support.
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

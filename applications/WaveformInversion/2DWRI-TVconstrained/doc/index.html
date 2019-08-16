@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="generator" content="scholpandoc">
+  <meta name="viewport" content="width=device-width">
+  
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.7.1/modernizr.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.js"></script>
+  <link rel="stylesheet" href="https://slim.gatech.edu/Publications/Resources/ScholMD/standalone/slimweb-scholmd-standalone-v0.1-latest.min.css">
+</head>
+<body>
+<div class="scholmd-container">
+<div class="scholmd-main">
+<div class="math scholmd-math-definitions" style="visibility: hidden; height: 0px; width 0px;">\[
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator{\mean}{mean}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\conj}{conj}
+\providecommand{\re}{}
+\renewcommand{\re}{\mathrm{Re}}
+\providecommand{\im}{}
+\renewcommand{\im}{\mathrm{Im}}
+\providecommand{\I}{}
+\renewcommand{\I}{\mathrm{I}}
+\providecommand{\X}{}
+\renewcommand{\X}{\mathcal{X}}
+\providecommand{\N}{}
+\renewcommand{\N}{\mathcal{N}}
+\providecommand{\L}{}
+\renewcommand{\L}{\mathcal{L}}
+\providecommand{\R}{}
+\renewcommand{\R}{\mathbb{R}}
+\providecommand{\C}{}
+\renewcommand{\C}{\mathbb{C}}
+\providecommand{\bbm}{}
+\renewcommand{\bbm}{\begin{bmatrix}}
+\providecommand{\ebm}{}
+\renewcommand{\ebm}{\end{bmatrix}}
+\providecommand{\dm}{}
+\renewcommand{\dm}{\Delta m}
+\providecommand{\dt}{}
+\renewcommand{\dt}{\Delta t}
+\providecommand{\alg}{}
+\renewcommand{\alg}[1]{\vspace{.2in} \needspace{5 \baselineskip}
+\hrule \vspace{.1in} {#1} \hrule \vspace{.2in} \noindent}
+\providecommand{\comments}{}
+\renewcommand{\comments}[1]{}
+\providecommand{\e}{}
+\renewcommand{\e}[1]{\ensuremath{\times 10^{#1}}}
+\]</div>
+<div class="scholmd-content">
+<h1 id="summary-of-tv-wri-matlab-code">Summary of TV WRI MATLAB Code</h1>
+<h2 id="included-files">Included files</h2>
+<h3 id="main-script-and-functions">Main Script and Functions</h3>
+<ol type="1">
+<li>main.m</li>
+<li>setup_problem.m</li>
+<li>pTV.m</li>
+<li>convex_sub.m</li>
+</ol>
+<h3 id="additional-functions">Additional Functions</h3>
+<ol type="1">
+<li>getDiscreteLap.m</li>
+<li>generateData.m</li>
+<li>getDiscreteGrad.m</li>
+<li>proj_TVbounds.m</li>
+<li>vsmooth.m</li>
+<li>figadust.m</li>
+<li>make_movie.m</li>
+</ol>
+<h2 id="structure-of-code-and-summary-of-algorithm">Structure of Code and Summary of Algorithm</h2>
+<p>The main script is <code>main.m</code> and can be run by typing <code>main</code> at the MATLAB prompt. It calls</p>
+<pre><code>[model,pm,Ps,Pr,q,d,ssW] = setup_problem(example);</code></pre>
+<p>to define a struct of model parameters, <code>model</code>, a struct of algorithm parameters, <code>pm</code>, sampling operators <code>Ps</code> and <code>Pr</code> that project onto source and receiver locations respectively, Fourier coefficients of the source wavelet <code>q</code> at the sampled frequencies and a cell structure of data, <code>d</code>, such that <code>d{v}</code> is a frequency slice of data at the frequency indexed by <code>v</code>. It also defines a matrix of weights <code>ssW</code> that can be used to blend sources and data to simulate simultaneous shots.</p>
+<p>A detailed description of the total variation regularized Wavefield Reconstruction Inversion method can be found in the technical report at <a href="https://slim.gatech.edu/content/scaled-gradient-projection-method-total-variation-regularized-full-waveform-inversion">https://slim.gatech.edu/content/scaled-gradient-projection-method-total-variation-regularized-full-waveform-inversion</a> and the SINBAD presentation at <a href="https://slim.gatech.edu/content/scaled-gradient-projection-method-total-variation-regularized-full-waveform-inversion-0">https://slim.gatech.edu/content/scaled-gradient-projection-method-total-variation-regularized-full-waveform-inversion-0</a>. Briefly, it is minimizing a constrained quadratic penalty objective for acoustic full waveform inversion that has the form 
+<span class="math scholmd-math-display" style="display: block;">\[
+\begin{equation}
+\label{QP}
+\min_m F(m) \qquad \text{s.t.} \qquad m_i \in [b_i , B_i] \text{ and } \|m\|_{TV} \leq \tau \ .
+\end{equation}
+\]</span>
+ where 
+<span class="math scholmd-math-display" style="display: block;">\[
+\begin{equation}
+\label{F}
+F(m) = \sum_{sv}F_{sv}(m)
+\end{equation}
+\]</span>
+ and 
+<span class="math scholmd-math-display" style="display: block;">\[
+\begin{equation}
+\label{Fsv}
+F_{sv}(m) = \frac{1}{2}\|P \bar{u}_{sv}(m) - d_{sv}\|^2 + \frac{\lambda^2}{2}\|A_v(m)\bar{u}_{sv}(m) - q_{sv}\|^2 \ .
+\end{equation}
+\]</span>
+ This nonconvex objective is a sum of squares of data misfits and PDE misfits in the frequency domain, summed over source indices <span class="math scholmd-math-inline">\(s\)</span> and frequency indices <span class="math scholmd-math-inline">\(v\)</span>.</p>
+<p>A candidate initial model <code>minit</code> is defined in <code>setup_problem.m</code>, but if it doesn’t satisfy the bound and TV constraints, it is projected onto the nearest model that does by calling the function <code>proj_TVbounds.m</code>.</p>
+<pre><code>minit = proj_TVbounds(minit,.99*pm.tau,model.h,pm.dpw,model.mmin,model.mmax);</code></pre>
+<p>The resulting initial model is stored in a 3D matrix <code>mb</code> that will eventially contain the models (slowness squared) that are estimated after each small batch of frequency data moving from low to high frequencies in overlapping batches.</p>
+<pre><code>mb(:,:,1) = minit; </code></pre>
+<p>For each frequency batch <code>b</code>, only a subset of frequency indices <code>Vb</code> are used so that the objective we work with is defined by 
+<span class="math scholmd-math-display" style="display: block;">\[
+\begin{equation}
+\label{FVb}
+F(m) = \sum_{s,v \in V_b}F_{sv}(m)
+\end{equation}
+\]</span>
+ The result from the previous batch <code>mb(:,:,b)</code> is used as a warm start when solving the problem on the next frequency batch for <code>mb(:,:,b+1)</code>. This procedure is carried out in <code>main.m</code> with the loop</p>
+<pre><code>for b = 1:model.batches
+    [mTV,energy,oits,cinit] = pTV(model,pm,b,mb(:,:,b),Ps,Pr,q,d,ssW,cinit);
+    mb(:,:,b+1) = mTV;
+end</code></pre>
+<p>The function <code>pTV.m</code> solves (<span class="scholmd-crossref"><span class="math scholmd-math-inline">\(\ref{FVb}\)</span></span>) by a sequence of outer iterations of the form 
+<span class="math scholmd-math-display" style="display: block;">\[
+\begin{equation}
+\label{pTVb}
+\begin{aligned}
+\dm &amp; = \arg \min_{\dm} \dm^T \nabla F(m^n) + \frac{1}{2}\dm^T (H^n + c_n\I) \dm  \\
+&amp; \text{s.t. } m^n_i + \dm_i \in [b_i , B_i] \text{ and } \|m^n + \dm\|_{TV} \leq \tau \\
+m^{n+1} &amp; = m^n + \dm \ .
+\end{aligned}
+\end{equation}
+\]</span>
+ At the current model estimate <span class="math scholmd-math-inline">\(m^n\)</span>, it uses the gradient <span class="math scholmd-math-inline">\(\nabla F(m^n)\)</span> and a diagonal Gauss Newton approximation to the Hessian <span class="math scholmd-math-inline">\(H_n\)</span> to construct a quadratic approximation to the objective, which can then be minimized subject to the bound and TV constraints to get a model update <span class="math scholmd-math-inline">\(\dm\)</span>.</p>
+<p>Inside <code>pTV.m</code> is a function <code>computeGradient()</code>, which computes the objective, the gradient and the Gauss Newton Hessian via</p>
+<pre><code>[obj,g,H] = computeGradient(m,model,pm,Q,ssW,Ps,Pr,freq_ind,freq,q,d);</code></pre>
+<p>The convex subproblems for <span class="math scholmd-math-inline">\(\dm\)</span> are solved by an iterative primal dual method defined in the function <code>convex_sub()</code>, which is called by <code>pTV.m</code> during every outer iteration via</p>
+<pre><code>dm = reshape(convex_sub(model,pm,m,g,Hc),n(1),n(2));</code></pre>
+<p>At the end of <code>main.m</code>, the sequence of model estimates stored in <code>mb</code> can be used to make a movie of the algorithm’s progress by</p>
+<pre><code>make_movie 
+movie(99,velocity_movie,1,4);</code></pre>
+<h2 id="how-to-modify-code-to-run-different-examples">How to Modify Code to Run Different Examples</h2>
+<p>Two included examples can be run by typing <code>main</code> at the MATLAB prompt. In <code>main.m</code> set <code>example = 'blob'</code> to run a simple example based on a synthetic velocity model that has a high velocity blob against a smooth background velocity that increases linearly with depth. This model is defined in <code>setup_problem.m</code> and does not require any additional data to be downloaded. Set <code>example = 'BPC'</code> to use a downsampled portion of the BP 2004 Velocity Benchmark data set as the true velocity model.</p>
+<p>Additional examples can be defined in <code>setup_problem.m</code>, which is currently organized as a switch statement</p>
+<pre><code>switch example    
+    case {&#39;blob&#39;}
+        %sets up parameters and data for blob example
+    case {&#39;BPC&#39;} 
+        %sets up parameters and data for BP example
+end</code></pre>
+<p>More examples can be included as additional cases. The following parameter, data and functions are defined in <code>setup_problem(example)</code></p>
+<ul>
+<li><code>model.example = example</code></li>
+<li><code>model.h</code> – mesh width in meters</li>
+<li><code>model.n</code> – model dimensions, depth by width</li>
+<li><code>model.N</code> – total number of model parameters (defined by <code>prod(n)</code>)</li>
+<li><code>model.zt = 0:h:h*(n(1)-1)</code> – <span class="math scholmd-math-inline">\(z\)</span> coordinates</li>
+<li><code>model.xt = 0:h:h*(n(2)-1)</code> – <span class="math scholmd-math-inline">\(x\)</span> coordinates</li>
+<li><code>model.vtrue</code> – define to be true velocity model</li>
+<li><code>model.vinit</code> – define to be initial velocity model</li>
+<li><code>model.vmin</code> – minimum velocity (same dimension as model)</li>
+<li><code>model.vmax</code> – maximum velocity (same dimension as model)</li>
+<li><code>model.mtrue = 1./model.vtrue.^2</code></li>
+<li><code>model.minit = 1./model.vinit.^2</code></li>
+<li><code>model.mmin = 1./model.vmax.^2</code></li>
+<li><code>model.mmax = 1./model.vmin.^2</code></li>
+<li><code>model.freq</code> – list of sampled frequencies (Hz)</li>
+<li><code>model.nf</code> – number of frequencies used</li>
+<li><code>model.Vb</code> – each row defines a frequency batch by specifying the indices into <code>model.freq</code> to be used in that batch</li>
+<li><code>model.batches = size(model.Vb,1)</code></li>
+<li><code>model.f0</code> – peak frequency of source wavelet, assumed here to be a Ricker wavelet</li>
+<li><code>model.t0</code> – phase shift of source wavelet in seconds</li>
+<li><code>model.zsrc</code> – <span class="math scholmd-math-inline">\(z\)</span> coordinates of source locations</li>
+<li><code>model.xsrc</code> – <span class="math scholmd-math-inline">\(x\)</span> coordinates of source locations</li>
+<li><code>model.ns</code> – number of sources</li>
+<li><code>model.zrec</code> – <span class="math scholmd-math-inline">\(z\)</span> coordinates of receiver locations</li>
+<li><code>model.xrec</code> – <span class="math scholmd-math-inline">\(x\)</span> coordinates of receiver locations</li>
+<li><code>model.nr</code> – number of receivers</li>
+<li><code>q</code> – Fourier coefficients of the source wavelet at the sampled frequencies</li>
+<li><code>model.vweights</code> – optional frequency dependent weights to scale each <span class="math scholmd-math-inline">\(F_{sv}(m)\)</span> component of the objective</li>
+<li><code>model.nsim</code> – number of simultaneous shots</li>
+<li><code>model.redraw</code> – <code>1</code> to randomly redraw weights, <code>0</code> for no redraws</li>
+<li><code>model.rngshots = rng('shuffle')</code> – store seed for random number generator</li>
+<li><code>ssW</code> – matrix of weights that can be used to blend sources and data to simulate <code>model.nsim</code> simultaneous shots. If <code>model.redraw = 1</code>, these are redrawn from a Gaussian distribution every time the model is updated. If <code>model.redraw = 0</code>, the weights in <code>ssW</code> don’t change. The case of sequential shots corresponds to setting <code>model.nsim = ns</code>, <code>model.redraw = 0</code> and <code>ssW = speye(ns,model.nsim)</code>.</li>
+<li><code>Ps</code> and <code>Pr</code> – sampling operators that project onto source and receiver locations. Their definitions currently assume that these locations correspond to points in the discretization.</li>
+<li><code>model.Xint</code> and <code>model.Xbnd</code> – masks used in defining the absorbing boundary condition, which here is a simple Robin boundary condition</li>
+<li><code>model.L</code> – Discrete Laplacian defined by <code>L = getDiscreteLap(n,h)</code>, which uses a simple <span class="math scholmd-math-inline">\(5\)</span> point stencil</li>
+<li><code>model.rngnoise = rng('shuffle')</code> – store seed for random number generator</li>
+<li><code>model.dsig</code> – if nonzero, then frequency dependent Gaussian random noise is added to the data with standard deviation <code>model.dsig/sqrt(model.ns*model.nr)</code> times the norm of each frequency slice of data <code>d{v}</code></li>
+<li><code>model.M = @(ff,mm) (2*pi*ff)^2*spdiags(model.Xint(:).*mm(:),0,N,N) - ...</code> <code>1i*(2*pi*ff)*spdiags(model.Xbnd(:).*sqrt(mm(:)),0,N,N)</code> – this function of frequency and model is used in the definition of the Helmholtz operator <code>L + M</code></li>
+<li><code>d</code> – data defined by <code>generateData(model,q,Ps,Pr)</code></li>
+<li><code>model.D</code> and <code>model.E</code> are defined by <code>[D,E] = getDiscreteGrad(n(1),n(2),h,pm.dpw)</code> and used to define the TV constraint</li>
+<li><code>pm.dpw</code> – optional depth weights to make the strength of the TV penalty depth dependent. Should be a vector of length <code>model.n(1)</code> with values between <span class="math scholmd-math-inline">\(0\)</span> and <span class="math scholmd-math-inline">\(1\)</span>.</li>
+<li><code>pm.TV = @(t) sum(sqrt(E'*((D*t(:)).^2)))</code> – function for evaluating the total variation of a <code>model.n(1)</code> by <code>model.n(2)</code> image.</li>
+<li><code>pm.mu</code> – numerical parameter that doesn’t change objective but can affect rate of convergence. OK to set to <span class="math scholmd-math-inline">\(1\)</span>.</li>
+<li><code>pm.lambda</code> – penalty parameter for PDE misfit</li>
+<li><code>pm.tau</code> – parameter for total variation constraint. The total variation of the true model is <code>pm.TV(model.mtrue)</code></li>
+<li><code>pm.cmin</code> and <code>cmax</code> – bounds on an adaptive parameter for damping the Hessian</li>
+<li><code>pm.c1</code> – factor to decrease c if objective is decreasing enough</li>
+<li><code>pm.c2</code> – factor to increase c if objective doesn’t decrease enough</li>
+<li><code>pm.sigma</code> – what fraction of ideal objective decrease is acceptable</li>
+<li><code>pm.itol</code> – tolerance for inner iteration stopping condition</li>
+<li><code>pm.miniits</code> – minimum number of inner iterations</li>
+<li><code>pm.maxiits</code> – maximum number of allowed inner iterations</li>
+<li><code>pm.admax = h^2/8</code> – lower bound for <span class="math scholmd-math-inline">\(\frac{1}{\|D^TD\|}\)</span>, used to define convex subproblem parameters</li>
+<li><code>pm.otol</code> – tolerance for outer iteration stopping condition</li>
+<li><code>pm.maxoits</code> – maximum number of allowed outer iterations</li>
+<li><code>pm.minoits = min(2,pm.maxoits)</code> – minimum number of outer iterations</li>
+</ul>
+<h2 id="results-for-included-examples">Results for Included Examples</h2>
+<p>For the blob example, the true model, source and receiver locations and initial model are shown in Figure <span class="scholmd-crossref"><a href="#blob_setup">1</a></span>.</p>
+<figure class="scholmd-float scholmd-figure" id="blob_setup">
+<div class="scholmd-float-content"><figure class="scholmd-subfig" id="fig:blob_vtrue" style="display: inline-block; width: 33%">
+<img src="./images/true_velocity_blob.png" />
+<div class="scholmd-float-subcaption"><figcaption><span class="scholmd-caption-head"><span class="scholmd-caption-head-prefix"></span><span class="scholmd-caption-head-label">(a)</span></span></figcaption></div>
+</figure><figure class="scholmd-subfig" id="fig:blob_src_rec" style="display: inline-block; width: 33%">
+<img src="./images/source_receivers_blob.png" />
+<div class="scholmd-float-subcaption"><figcaption><span class="scholmd-caption-head"><span class="scholmd-caption-head-prefix"></span><span class="scholmd-caption-head-label">(b)</span></span></figcaption></div>
+</figure><figure class="scholmd-subfig" id="fig:blob_vinit" style="display: inline-block; width: 33%">
+<img src="./images/initial_velocity_blob.png" />
+<div class="scholmd-float-subcaption"><figcaption><span class="scholmd-caption-head"><span class="scholmd-caption-head-prefix"></span><span class="scholmd-caption-head-label">(c)</span></span></figcaption></div>
+</figure></div>
+<div class="scholmd-float-caption"><figcaption><span class="scholmd-caption-head"><span class="scholmd-caption-head-prefix">Figure</span><span class="scholmd-caption-head-label">1</span></span><span class="scholmd-caption-text">Synthetic velocity model (a), source and receiver locations (b) and initial velocity (c).</span></figcaption></div>
+</figure>
+<p>The results with <span class="math scholmd-math-inline">\(\tau = 1000||m_{\text{true}}|_{TV}\)</span> and <span class="math scholmd-math-inline">\(\tau = .875||m_{\text{true}}|_{TV}\)</span> are shown in Figure <span class="scholmd-crossref"><a href="#blob_results">2</a></span>. Both examples use noisy data corresponding to <code>model.dsig = .05</code>.</p>
+<figure class="scholmd-float scholmd-figure" id="blob_results">
+<div class="scholmd-float-content"><figure class="scholmd-subfig" id="fig:blobtaularge" style="display: inline-block; width: 48%">
+<img src="./images/blob.png" />
+<div class="scholmd-float-subcaption"><figcaption><span class="scholmd-caption-head"><span class="scholmd-caption-head-prefix"></span><span class="scholmd-caption-head-label">(a)</span></span></figcaption></div>
+</figure><figure class="scholmd-subfig" style="display: inline-block; width: 48%">
+<img src="./images/TVblob.png" />
+<div class="scholmd-float-subcaption"><figcaption><span class="scholmd-caption-head"><span class="scholmd-caption-head-prefix"></span><span class="scholmd-caption-head-label">(b)</span></span></figcaption></div>
+</figure></div>
+<div class="scholmd-float-caption"><figcaption><span class="scholmd-caption-head"><span class="scholmd-caption-head-prefix">Figure</span><span class="scholmd-caption-head-label">2</span></span><span class="scholmd-caption-text">Results for <span class="math scholmd-math-inline">\(\tau = 1000\tau_{\text{true}}\)</span> (a) and <span class="math scholmd-math-inline">\(\tau = .875\tau_{\text{true}}\)</span> (b)</span></figcaption></div>
+</figure>
+<p>A comparison of their relative model errors are shown in Figure <span class="scholmd-crossref"><a href="#blob_model_error">3</a></span>.</p>
+<figure class="scholmd-float scholmd-figure" id="blob_model_error">
+<div class="scholmd-float-content"><figure class="scholmd-subfig" id="blob_model_error_a" style="display: inline-block; width: 33%">
+<img src="./images/blob_model_error.png" />
+<div class="scholmd-float-subcaption"><figcaption><span class="scholmd-caption-head"><span class="scholmd-caption-head-prefix"></span><span class="scholmd-caption-head-label">(a)</span></span></figcaption></div>
+</figure><figure class="scholmd-subfig" id="blob_model_error_b" style="display: inline-block; width: 33%">
+<img src="./images/TVblob_model_error.png" />
+<div class="scholmd-float-subcaption"><figcaption><span class="scholmd-caption-head"><span class="scholmd-caption-head-prefix"></span><span class="scholmd-caption-head-label">(b)</span></span></figcaption></div>
+</figure></div>
+<div class="scholmd-float-caption"><figcaption><span class="scholmd-caption-head"><span class="scholmd-caption-head-prefix">Figure</span><span class="scholmd-caption-head-label">3</span></span><span class="scholmd-caption-text">Relative model error versus frequency batch with bound constraints (a), and with bound and TV constraints (b).</span></figcaption></div>
+</figure>
+<p>For the BP example, the true model, source and receiver locations and initial model are shown in Figure <span class="scholmd-crossref"><a href="#BPC_setup">4</a></span>.</p>
+<figure class="scholmd-float scholmd-figure" id="BPC_setup">
+<div class="scholmd-float-content"><figure class="scholmd-subfig" id="BPC_vtrue" style="display: inline-block; width: 33%">
+<img src="./images/true_velocity_BPC.png" />
+<div class="scholmd-float-subcaption"><figcaption><span class="scholmd-caption-head"><span class="scholmd-caption-head-prefix"></span><span class="scholmd-caption-head-label">(a)</span></span></figcaption></div>
+</figure><figure class="scholmd-subfig" id="BPC_src_rec" style="display: inline-block; width: 33%">
+<img src="./images/source_receivers_BPC.png" />
+<div class="scholmd-float-subcaption"><figcaption><span class="scholmd-caption-head"><span class="scholmd-caption-head-prefix"></span><span class="scholmd-caption-head-label">(b)</span></span></figcaption></div>
+</figure><figure class="scholmd-subfig" id="BPC_vinit" style="display: inline-block; width: 33%">
+<img src="./images/initial_velocity_BPC.png" />
+<div class="scholmd-float-subcaption"><figcaption><span class="scholmd-caption-head"><span class="scholmd-caption-head-prefix"></span><span class="scholmd-caption-head-label">(c)</span></span></figcaption></div>
+</figure></div>
+<div class="scholmd-float-caption"><figcaption><span class="scholmd-caption-head"><span class="scholmd-caption-head-prefix">Figure</span><span class="scholmd-caption-head-label">4</span></span><span class="scholmd-caption-text">Top middle portion of BP 2004 velocity model (a), source and receiver locations (b) and initial velocity (c).</span></figcaption></div>
+</figure>
+<p>The results with <span class="math scholmd-math-inline">\(\tau = 1000||m_{\text{true}}|_{TV}\)</span> and <span class="math scholmd-math-inline">\(\tau = .9||m_{\text{true}}|_{TV}\)</span> are shown in Figure <span class="scholmd-crossref"><a href="#BPC_results">5</a></span>. Both examples use noise free synthetic data.</p>
+<figure class="scholmd-float scholmd-figure" id="BPC_results">
+<div class="scholmd-float-content"><figure class="scholmd-subfig" id="BPC_a" style="display: inline-block; width: 48%">
+<img src="./images/BPC.png" />
+<div class="scholmd-float-subcaption"><figcaption><span class="scholmd-caption-head"><span class="scholmd-caption-head-prefix"></span><span class="scholmd-caption-head-label">(a)</span></span></figcaption></div>
+</figure><figure class="scholmd-subfig" id="BPC_b" style="display: inline-block; width: 48%">
+<img src="./images/TVBPC.png" />
+<div class="scholmd-float-subcaption"><figcaption><span class="scholmd-caption-head"><span class="scholmd-caption-head-prefix"></span><span class="scholmd-caption-head-label">(b)</span></span></figcaption></div>
+</figure></div>
+<div class="scholmd-float-caption"><figcaption><span class="scholmd-caption-head"><span class="scholmd-caption-head-prefix">Figure</span><span class="scholmd-caption-head-label">5</span></span><span class="scholmd-caption-text">Results for <span class="math scholmd-math-inline">\(\tau = 1000\tau_{\text{true}}\)</span> (a) and <span class="math scholmd-math-inline">\(\tau = .9\tau_{\text{true}}\)</span> (b)</span></figcaption></div>
+</figure>
+<p>A comparison of their relative model errors are shown in Figure <span class="scholmd-crossref"><a href="#BPC_model_error">6</a></span>.</p>
+<figure class="scholmd-float scholmd-figure" id="BPC_model_error">
+<div class="scholmd-float-content"><figure class="scholmd-subfig" id="BPC_model_error_a" style="display: inline-block; width: 33%">
+<img src="./images/BPC_model_error.png" />
+<div class="scholmd-float-subcaption"><figcaption><span class="scholmd-caption-head"><span class="scholmd-caption-head-prefix"></span><span class="scholmd-caption-head-label">(a)</span></span></figcaption></div>
+</figure><figure class="scholmd-subfig" id="BPC_model_error_b" style="display: inline-block; width: 33%">
+<img src="./images/TVBPC_model_error.png" />
+<div class="scholmd-float-subcaption"><figcaption><span class="scholmd-caption-head"><span class="scholmd-caption-head-prefix"></span><span class="scholmd-caption-head-label">(b)</span></span></figcaption></div>
+</figure></div>
+<div class="scholmd-float-caption"><figcaption><span class="scholmd-caption-head"><span class="scholmd-caption-head-prefix">Figure</span><span class="scholmd-caption-head-label">6</span></span><span class="scholmd-caption-text">Relative model error versus frequency batch with bound constraints (a), and with bound and TV constraints (b).</span></figcaption></div>
+</figure>
+<p></p>
+<div class="references">
+
+</div>
+</div>
+</div>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+      processClass: "math"
+    },
+    TeX: {
+        TagSide: "left",
+        TagIndent: "1.2em",
+        equationNumbers: {
+            autoNumber: "AMS"
+        },
+        Macros: {
+            ensuremath: ["#1",1],
+            textsf: ["\\mathsf{\\text{#1}}",1],
+            texttt: ["\\mathtt{\\text{#1}}",1]
+        }
+    },
+    "HTML-CSS": { 
+        scale: 100,
+        availableFonts: ["TeX"], 
+        preferredFont: "TeX",
+        webFont: "TeX",
+        imageFont: "TeX",
+        EqnChunk: 1000
+    }
+});
+</script>
+<script src="https://slim.gatech.edu/MathJax/MathJax.js?config=TeX-AMS_HTML-full" type="text/javascript"></script>
+</div>
+</body>
+</html>

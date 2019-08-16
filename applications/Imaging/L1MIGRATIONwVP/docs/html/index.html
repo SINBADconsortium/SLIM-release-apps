@@ -1,0 +1,170 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Fast least-squares imaging with source estimation using multiples</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.4">
+      <meta name="date" content="2015-12-21">
+      <meta name="m-file" content="index">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>Fast least-squares imaging with source estimation using multiples</h1>
+         <introduction>
+            <p>This applications is available only in the software release for members of SINBAD consortium.</p>
+            <p>This software provides an algorithm to do fast least-squares migration while estimating the source wavelet on the fly by variable
+               projection. Using multiples further improves image quality and enables the retrieval of the true-amplitude image and source
+               wavelet. The inversion process is sped up by using source/frequency subsampling and rerandomization.
+            </p>
+            <p>Author: Ning Tu (<a href="mailto:tning@eos.ubc.ca">tning@eos.ubc.ca</a>) Date: Dec/17/2015
+            </p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Downloading &amp; Dependencies</a></li>
+               <li><a href="#2">Running &amp; Parallelism</a></li>
+               <li><a href="#3">Examples and results</a></li>
+               <li><a href="#4">References</a></li>
+               <li><a href="#5">Acknowledgements</a></li>
+            </ul>
+         </div>
+         <h2>Downloading &amp; Dependencies<a name="1"></a></h2>
+         <p>The code can be found in the <a href="https://slim.gatech.edu/consortiumsoftware">SLIM software release</a> under <tt>/applications/Imaging/L1MIGRATIONwVP</tt>.
+         </p>
+         <p>The code has been tested with <i>Matlab R2013b</i> and requires the Parallel Computing Toolbox.
+         </p>
+         <p>This code uses the following packages, also found in the <tt>tools</tt> part of the <a href="https://slim.gatech.edu/consortiumsoftware">SLIM software release</a>.
+         </p>
+         <div>
+            <ul>
+               <li><i>utilities/SPOT</i> - object oriented framework for matrix-free linear algebra.
+               </li>
+               <li><i>utilities/pSPOT</i> - parallel extension of SPOT.
+               </li>
+               <li><i>algorithms/2DFreqModeling</i> - 2D constant-density acoustic modeling
+               </li>
+               <li><i>tools/algorithms/REPSI</i> - Robust EPSI algorithm
+               </li>
+               <li><i>operators/misc</i> - Misc. operators such as interpolation, smoothing and splines
+               </li>
+               <li><i>functions/misc</i> - Misc. functions.
+               </li>
+               <li><i>tools/solvers/GenSPGL1</i> - Generalized SPGL1
+               </li>
+            </ul>
+         </div>
+         <p>If you want to use your own modules to do modelling, please contact the author.</p>
+         <h2>Running &amp; Parallelism<a name="2"></a></h2>
+         <p>All the examples and results are produced by the scripts found in this software release under <tt>/applications/Imaging/L1MIGRATIONwVP/examples/</tt>. Start matlab from <tt>/applications/Imaging/L1MIGRATIONwVP</tt> to add the appropriate paths.
+         </p>
+         <p>To run the scripts follow the instructions in the README file enclosed inside the folder for each set of examples.</p>
+         <p>The scripts can be run in serial mode while parallel mode is advised.</p>
+         <p>Read more about <a href="https://slim.gatech.edu/SoftwareDemos/tools/">SLIM's approach to parallel computing in Matlab</a>.
+         </p>
+         <h2>Examples and results<a name="3"></a></h2>
+         <p><a href="example.html">Examples and results are shown here.</a> Scripts to reproduce the results can be found under <tt>/applications/Imaging/L1MIGRATIONwVP/examples</tt>.
+         </p>
+         <h2>References<a name="4"></a></h2>
+         <p><a href="https://slim.gatech.edu/content/source-estimation-surface-related-multiples%E2%80%93-fast-ambiguity-resolved-seismic-imaging">[1]</a>. Ning Tu, Aleksandr Aravkin, Tristan van Leeuwen, Tim Lin, and Felix J. Herrmann, "Source estimation with surface-related
+            multiples&#8212;fast ambiguity-resolved seismic imaging", submitted to Geophysical Journal International. 2015
+         </p>
+         <p><a href="https://slim.gatech.edu/content/fast-least-squares-migration-multiples-and-source-estimation">[2]</a>. Ning Tu, Aleksandr Y. Aravkin, Tristan van Leeuwen, and Felix J. Herrmann, &#8220;Fast least-squares migration with multiples
+            and source estimation&#8221;, EAGE. 2013.
+         </p>
+         <p><a href="https://slim.gatech.edu/content/sparse-seismic-imaging-using-variable-projection">[3]</a>. Aleksandr Y. Aravkin, Tristan van Leeuwen, and Ning Tu, &#8220;Sparse seismic imaging using variable projection&#8221;, ICASSP. 2012
+         </p>
+         <h2>Acknowledgements<a name="5"></a></h2>
+         <p>Thanks to our sponsors and NSERC for their financial support. The author is also receives a scholarship from China Scholarship
+            Council. The synthetic Compass model is by courtesy of BG Group.
+         </p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Fast least-squares imaging with source estimation using multiples
+% This applications is available only in the software release for
+% members of SINBAD consortium.
+%
+% This software provides an algorithm to do fast least-squares
+% migration while estimating the source wavelet on the fly by variable
+% projection. Using multiples further improves image quality and
+% enables the retrieval of the true-amplitude image and source
+% wavelet. The inversion process is sped up by using source/frequency
+% subsampling and rerandomization.
+%
+% Author: Ning Tu (tning@eos.ubc.ca)
+% Date: Dec/17/2015
+
+%% Downloading & Dependencies
+% The code can be found in the <https://slim.gatech.edu/consortiumsoftware SLIM software release> under
+% |/applications/Imaging/L1MIGRATIONwVP|.
+%
+% The code has been tested with _Matlab R2013b_ and requires the Parallel
+% Computing Toolbox.
+%
+% This code uses the following packages, also found in the |tools| part
+% of the <https://slim.gatech.edu/consortiumsoftware SLIM software release>.
+%
+% * _utilities/SPOT_ - object oriented framework for matrix-free linear algebra.
+% * _utilities/pSPOT_ - parallel extension of SPOT.
+% * _algorithms/2DFreqModeling_ - 2D constant-density acoustic modeling
+% * _tools/algorithms/REPSI_ - Robust EPSI algorithm
+% * _operators/misc_ - Misc. operators such as interpolation, smoothing and splines
+% * _functions/misc_ - Misc. functions.
+% * _tools/solvers/GenSPGL1_ - Generalized SPGL1
+%
+% If you want to use your own modules to do modelling, please contact
+% the author.
+
+%% Running & Parallelism
+% All the examples and results are produced by the scripts found in
+% this software release under |/applications/Imaging/L1MIGRATIONwVP/examples/|. 
+% Start matlab from |/applications/Imaging/L1MIGRATIONwVP| to add the appropriate paths.
+%
+% To run the scripts follow the instructions in the README file
+% enclosed inside the folder for each set of examples.
+% 
+% The scripts can be run in serial mode while parallel mode is advised.
+% 
+% Read more about <https://slim.gatech.edu/SoftwareDemos/tools/ SLIM's approach to parallel computing in Matlab>.
+
+%% Examples and results
+% <example.html Examples and results are shown here.>
+% Scripts to reproduce the results can be found under
+% |/applications/Imaging/L1MIGRATIONwVP/examples|.
+
+%% References
+% <https://slim.gatech.edu/content/source-estimation-surface-related-multiples–-fast-ambiguity-resolved-seismic-imaging
+% [1]>. Ning Tu, Aleksandr Aravkin, Tristan van Leeuwen, Tim Lin, and Felix J. 
+% Herrmann, "Source estimation with surface-related multiples—fast 
+% ambiguity-resolved seismic imaging", submitted to Geophysical Journal 
+% International. 2015
+%
+% <https://slim.gatech.edu/content/fast-least-squares-migration-multiples-and-source-estimation
+% [2]>. Ning Tu, Aleksandr Y. Aravkin, Tristan van Leeuwen, and Felix
+% J. Herrmann, “Fast least-squares migration with multiples and source
+% estimation”, EAGE. 2013.
+%
+% <https://slim.gatech.edu/content/sparse-seismic-imaging-using-variable-projection
+% [3]>. Aleksandr Y. Aravkin, Tristan van Leeuwen, and Ning Tu,
+% “Sparse seismic imaging using variable projection”, ICASSP. 2012
+%
+
+
+%% Acknowledgements
+% Thanks to our sponsors and NSERC for their financial support. The
+% author is also receives a scholarship from China Scholarship
+% Council. The synthetic Compass model is by courtesy of BG Group.
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

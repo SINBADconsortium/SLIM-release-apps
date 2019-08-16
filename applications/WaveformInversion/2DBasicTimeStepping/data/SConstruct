@@ -1,0 +1,19 @@
+import os
+from rsf.proj import *
+
+########################################################################
+# RETRIEVE DATA
+########################################################################
+# define SLIM FTP server information
+FTPserver = {
+        'server': 'ftp.slim.gatech.edu',
+        'login': 'ftp',
+        'password':''}
+
+loc = os.path.join('SoftwareRelease','WaveformInversion','2DBasicTimeStepping','data')
+files = [ 'model_freq_forfwi.mat','model_fwi_mask.mat','rec_src_pos.mat','released_model.mat','released_wavelet.mat','ray_paths.mat']
+
+# fetch data from FTP server
+for elm in files:
+        Fetch(elm,loc,FTPserver)
+

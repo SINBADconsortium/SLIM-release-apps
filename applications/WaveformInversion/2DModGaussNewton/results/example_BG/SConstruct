@@ -1,0 +1,18 @@
+from rsf.proj import *
+
+########################################################################
+# RETRIEVE DATA
+########################################################################
+# define SLIM FTP server information
+FTPserver = {
+    # 'server': os.environ.get('SLIM_SERVER'),
+    'server': 'ftp.slim.gatech.edu',
+    'login': 'ftp',
+    'password':''}
+
+loc = os.path.join('SoftwareRelease','WaveformInversion','2DModGaussNewton','results','example_BG')
+
+# fetch data from FTP server
+
+# matlab workspace
+Fetch('FWIresult_BG.mat',loc,FTPserver)

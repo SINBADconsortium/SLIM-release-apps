@@ -1,0 +1,288 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>example</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.6">
+      <meta name="date" content="2018-03-07">
+      <meta name="m-file" content="example">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1></h1>
+         <introduction>
+            <p>Written by Zhilong Fang (<a href="mailto:zfang@eoas.ubc.ca">zfang@eoas.ubc.ca</a>), March 2018.
+            </p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Wavefield Reconstruction Inversion with Source Estimation</a></li>
+               <li><a href="#2">Models</a></li>
+               <li><a href="#3">Inversion result</a></li>
+               <li><a href="#4">References</a></li>
+            </ul>
+         </div>
+         <h2>Wavefield Reconstruction Inversion with Source Estimation<a name="1"></a></h2>
+         <p>This script will show examples of waveform inversion with source estimation using the Camembert model. The theory behind this
+            method, named Wavefield Reconstruction Inversion (WRI) with source estimation is described in [1].
+         </p>
+         <p>The modeling used in this example is described in <a href="https://slim.gatech.edu/SoftwareDemos/applications/Modeling/2DAcousticFreqModeling/modeling.html">https://slim.gatech.edu/SoftwareDemos/applications/Modeling/2DAcousticFreqModeling/modeling.html</a>.
+         </p>
+         <p><b>System requirements:</b></p>
+         <div>
+            <ul>
+               <li>This script was tested using Matlab 2015b with the parallel computing toolbox.</li>
+            </ul>
+         </div>
+         <div>
+            <ul>
+               <li>Parallelism is achieved by factorizing overdetermined systems (one for each frequency) in parallel. Each factorization requires
+                  about 1 GB.
+               </li>
+            </ul>
+         </div>
+         <div>
+            <ul>
+               <li>Runtime is about 1 hours when factorizing 3 overdetermined systems in parallel. Tested using 2.6GHz Intel processors.</li>
+            </ul>
+         </div>
+         <h2>Models<a name="2"></a></h2><pre class="codeinput">  n = [101, 101];
+  d = [20, 20];
+  o = [0, 0];
+
+  vel    = 2*ones(n);
+  velini = vel;
+  <span class="keyword">for</span> i = 1:n(1)
+    <span class="keyword">for</span> j = 1:n(2)
+      <span class="keyword">if</span> norm([i-51,j-51])&lt;18
+          vel(i,j) = 2.25;
+      <span class="keyword">end</span>
+    <span class="keyword">end</span>
+  <span class="keyword">end</span>
+<span class="comment">%</span>
+  model.zsrc = d(1):d(1)*2:d(1)*(n(1)-2);
+  model.xsrc = d(1)*2;
+  model.zrec = d(1):d(1):d(1)*(n(1)-2);
+  model.xrec = d(1)*(n(1)-2);
+
+  [zz xx] = odn2grid(o,d,n);
+
+<span class="comment">% The true model and initial model are</span>
+  figure;subplot(1,2,1)
+  imagesc(zz,xx,vel);xlabel(<span class="string">'X [m]'</span>);ylabel(<span class="string">'Z [m]'</span>);a =caxis;colorbar
+  title(<span class="string">'True model'</span>)
+
+  subplot(1,2,2)
+  imagesc(zz,xx,velini);xlabel(<span class="string">'X [m]'</span>);ylabel(<span class="string">'Z [m]'</span>);caxis(a);colorbar
+  title(<span class="string">'Initial model'</span>)
+  x0=10;
+  y0=10;
+  width=900;
+  height=400;
+  set(gcf,<span class="string">'units'</span>,<span class="string">'points'</span>,<span class="string">'position'</span>,[x0,y0,width,height])
+</pre><img vspace="5" hspace="5" src="example_01.png"> <h2>Inversion result<a name="3"></a></h2><pre class="codeinput"><span class="comment">%The inversion results w/ the true source wavelet and w/ the source estimation are:</span>
+
+  load(<span class="string">'../results/Result_truesrc.mat'</span>);
+  m_t = Result.mf;
+  v_t = reshape(1./sqrt(m_t),n);
+  info_t = Result.info;
+  info_t = info_t.obj;
+
+  figure;subplot(1,2,1)
+  imagesc(zz,xx,v_t);xlabel(<span class="string">'X [m]'</span>);ylabel(<span class="string">'Z [m]'</span>);caxis(a);colorbar
+  title(<span class="string">'Result w/ the true source wavelet'</span>)
+
+  load(<span class="string">'../results/Result_estsrc.mat'</span>);
+  m_e = Result.mf;
+  v_e = reshape(1./sqrt(m_e),n);
+  info_e = Result.info;
+  info_e = info_e.obj;
+
+  subplot(1,2,2)
+  imagesc(zz,xx,v_e);xlabel(<span class="string">'X [m]'</span>);ylabel(<span class="string">'Z [m]'</span>);caxis(a);colorbar
+  title(<span class="string">'Result w/ source estimation'</span>)
+  x0=10;
+  y0=10;
+  width=900;
+  height=400;
+  set(gcf,<span class="string">'units'</span>,<span class="string">'points'</span>,<span class="string">'position'</span>,[x0,y0,width,height])
+
+<span class="comment">%The comparison of the objective history is:</span>
+
+  nit    = min(length(info_e),length(info_t));
+  info_e = info_e(:);
+  info_t = info_t(:);
+  xi     = [1:nit];
+  xi     = xi(:);
+  figure;loglog(xi, [info_t(1:nit) info_e(1:nit)],<span class="string">'linewidth'</span>,2);
+  xlabel(<span class="string">'Iteration'</span>);ylabel(<span class="string">'Objective function'</span>);
+  legend(<span class="string">'True source'</span>,<span class="string">'Estimated source'</span>)
+  x0=10;
+  y0=10;
+  width=900;
+  height=400;
+  set(gcf,<span class="string">'units'</span>,<span class="string">'points'</span>,<span class="string">'position'</span>,[x0,y0,width,height])
+
+<span class="comment">%The compaison of the source wavelet is shown as follows.</span>
+
+<span class="comment">%The true source function is</span>
+
+  load(<span class="string">'../results/src_true.mat'</span>);
+  src_true
+
+<span class="comment">%The estimated source function is</span>
+  load(<span class="string">'../results/src_est.mat'</span>);
+  src_est
+</pre><pre class="codeoutput">
+src_true =
+
+    3.5794   13.2437    6.2177
+
+
+src_est =
+
+   3.5810 - 0.0206i  13.1653 - 0.1947i   6.1422 - 0.1137i
+
+</pre><img vspace="5" hspace="5" src="example_02.png"> <img vspace="5" hspace="5" src="example_03.png"> <h2>References<a name="4"></a></h2>
+         <p><a href="https://slim.gatech.edu/content/source-estimation-wavefield-reconstruction-inversion-0">[1]</a> Zhilong Fang, Rongrong Wang. Felix J. Herrmann, 2017, Source estimation for wavefield-reconstruction inversion.
+         </p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%%
+% Written by Zhilong Fang (zfang@eoas.ubc.ca), March 2018.
+
+%% Wavefield Reconstruction Inversion with Source Estimation
+%
+% This script will show examples of waveform inversion with source estimation using the Camembert model. The
+% theory behind this method, named Wavefield Reconstruction Inversion (WRI) with source estimation is described in [1].
+%
+% The modeling used in this example is described in
+% <https://slim.gatech.edu/SoftwareDemos/applications/Modeling/2DAcousticFreqModeling/modeling.html>.
+%
+% *System requirements:*
+%
+% * This script was tested using Matlab 2015b with the parallel computing
+% toolbox.
+%
+% * Parallelism is achieved by factorizing overdetermined systems (one for each
+% frequency) in parallel. Each factorization requires about 1 GB.
+%
+% * Runtime is about 1 hours when factorizing 3 overdetermined systems in
+% parallel. Tested using 2.6GHz Intel processors.
+
+%% Models
+%
+  n = [101, 101];
+  d = [20, 20];
+  o = [0, 0];
+
+  vel    = 2*ones(n);
+  velini = vel;
+  for i = 1:n(1)
+    for j = 1:n(2)
+      if norm([i-51,j-51])<18
+          vel(i,j) = 2.25;
+      end
+    end
+  end
+%
+  model.zsrc = d(1):d(1)*2:d(1)*(n(1)-2);
+  model.xsrc = d(1)*2;
+  model.zrec = d(1):d(1):d(1)*(n(1)-2);
+  model.xrec = d(1)*(n(1)-2);
+
+  [zz xx] = odn2grid(o,d,n);
+
+% The true model and initial model are
+  figure;subplot(1,2,1)
+  imagesc(zz,xx,vel);xlabel('X [m]');ylabel('Z [m]');a =caxis;colorbar
+  title('True model')
+
+  subplot(1,2,2)
+  imagesc(zz,xx,velini);xlabel('X [m]');ylabel('Z [m]');caxis(a);colorbar
+  title('Initial model')
+  x0=10;
+  y0=10;
+  width=900;
+  height=400;
+  set(gcf,'units','points','position',[x0,y0,width,height])
+
+%% Inversion result
+
+%The inversion results w/ the true source wavelet and w/ the source estimation are:
+
+  load('../results/Result_truesrc.mat');
+  m_t = Result.mf;
+  v_t = reshape(1./sqrt(m_t),n);
+  info_t = Result.info;
+  info_t = info_t.obj;
+
+  figure;subplot(1,2,1)
+  imagesc(zz,xx,v_t);xlabel('X [m]');ylabel('Z [m]');caxis(a);colorbar
+  title('Result w/ the true source wavelet')
+
+  load('../results/Result_estsrc.mat');
+  m_e = Result.mf;
+  v_e = reshape(1./sqrt(m_e),n);
+  info_e = Result.info;
+  info_e = info_e.obj;
+
+  subplot(1,2,2)
+  imagesc(zz,xx,v_e);xlabel('X [m]');ylabel('Z [m]');caxis(a);colorbar
+  title('Result w/ source estimation')
+  x0=10;
+  y0=10;
+  width=900;
+  height=400;
+  set(gcf,'units','points','position',[x0,y0,width,height])
+
+%The comparison of the objective history is:
+
+  nit    = min(length(info_e),length(info_t));
+  info_e = info_e(:);
+  info_t = info_t(:);
+  xi     = [1:nit];
+  xi     = xi(:);
+  figure;loglog(xi, [info_t(1:nit) info_e(1:nit)],'linewidth',2);
+  xlabel('Iteration');ylabel('Objective function');
+  legend('True source','Estimated source')
+  x0=10;
+  y0=10;
+  width=900;
+  height=400;
+  set(gcf,'units','points','position',[x0,y0,width,height])
+
+%The compaison of the source wavelet is shown as follows.
+
+%The true source function is
+
+  load('../results/src_true.mat');
+  src_true
+
+%The estimated source function is
+  load('../results/src_est.mat');
+  src_est
+
+
+
+
+%% References
+
+%%
+% <https://slim.gatech.edu/content/source-estimation-wavefield-reconstruction-inversion-0 [1]> Zhilong Fang, Rongrong Wang.
+% Felix J. Herrmann, 2017, Source estimation for wavefield-reconstruction inversion.
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

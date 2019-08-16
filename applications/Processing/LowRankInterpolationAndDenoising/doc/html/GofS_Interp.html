@@ -1,0 +1,212 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Seismic data regularization, missing-trace interpolation and denoising</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.1">
+      <meta name="date" content="2014-04-29">
+      <meta name="m-file" content="GofS_Interp">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>Seismic data regularization, missing-trace interpolation and denoising</h1>
+         <introduction>
+            <p>This script display the output results of regularization, missing-trace interpolation and denoising. Please note that the
+               regularization, interpolation and denoised results are produced by running the example scripts without using the optimal parameters.
+               Users can play with parameter to improve the results.
+            </p>
+            <p>Author: Rajiv Kumar (<a href="mailto:rakumar@eos.ubc.ca">rakumar@eos.ubc.ca</a>) Date: April, 2014
+            </p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Data dimensions</a></li>
+               <li><a href="#2">Regularization</a></li>
+               <li><a href="#3">Missing Trace Interpolation</a></li>
+               <li><a href="#4">Missing Trace Interpolation and denoising</a></li>
+            </ul>
+         </div>
+         <h2>Data dimensions<a name="1"></a></h2><pre class="codeinput">curdir     = pwd;
+basedir    = curdir(1:end-4);
+datadir    = [basedir <span class="string">'/data/'</span>];
+resultsdir = [basedir <span class="string">'/results/'</span>];
+
+<span class="comment">% Data parameter</span>
+ntime = 1024;
+nrec  = 355;
+nsrc  = 355;
+d     = [0.004 12.5 12.5];
+t     = (0:1:(ntime-1))*d(1);
+xrec  = (0:1:(nrec-1))*d(2);
+xsrc  = (0:1:(nsrc-1))*d(3);
+idx = 177;
+</pre><h2>Regularization<a name="2"></a></h2>
+         <p>Perform regularization and missing-trace interpolation by running the example file in the directory <tt>/applications/Processing/LowRankInterpolationAndDenoising/examples/GulfofSuez/GofS_regularize_and_interp.m</tt></p><pre class="codeinput">options.datafile = [datadir <span class="string">'Interpolation/SuezShots125.355shots.su'</span>];
+<span class="comment">% Read input data</span>
+D              = ReadSuFast(options.datafile);
+D              = reshape(D,ntime,nrec,nsrc);
+
+<span class="comment">% Read output results after regularization</span>
+load([resultsdir <span class="string">'GulfofSuez/GulfofSuezreginterp.mat'</span>]);
+Dt = reshape(Dt,ntime,nrec+1,nsrc+1);
+<span class="comment">% Display regularization results</span>
+<span class="comment">% View a shot gather</span>
+figure;
+imagesc(xrec,t,squeeze(D(:,:,idx)));
+xlabel(<span class="string">'Receiver(m)'</span>);ylabel(<span class="string">'time(s)'</span>);ylim([0 2]);
+title(<span class="string">'Ground truth'</span>);colormap(<span class="string">'gray'</span>);caxis([-1 1]*2e2)
+figure;
+imagesc(xrec,t,squeeze(Dt(:,1:nrec,idx)));
+xlabel(<span class="string">'Receiver(m)'</span>);ylabel(<span class="string">'time(s)'</span>);ylim([0 2]);
+title(<span class="string">'Regularized shot gather'</span>);colormap(<span class="string">'gray'</span>);caxis([-1 1]*2e2)
+figure;
+imagesc(xrec,t,(squeeze(D(:,:,idx))-squeeze(Dt(:,1:nrec,idx))));
+xlabel(<span class="string">'Receiver(m)'</span>);ylabel(<span class="string">'time(s)'</span>);ylim([0 2]);
+title(<span class="string">'Residual'</span>);colormap(<span class="string">'gray'</span>);caxis([-1 1]*2e2)
+</pre><img vspace="5" hspace="5" src="GofS_Interp_01.png"> <img vspace="5" hspace="5" src="GofS_Interp_02.png"> <img vspace="5" hspace="5" src="GofS_Interp_03.png"> <h2>Missing Trace Interpolation<a name="3"></a></h2>
+         <p>Perform interpolation by running the example file in the directory <tt>/applications/Processing/LowRankInterpolationAndDenoising/examples/GulfofSuez/GofS_Interp.m</tt></p><pre class="codeinput"><span class="comment">% Read output results after interpolation</span>
+load([resultsdir <span class="string">'GulfofSuez/GulfofSuezinterp.mat'</span>]);
+
+<span class="comment">% Display interpolated results</span>
+<span class="comment">% View a shot gather</span>
+figure;
+imagesc(xrec,t,squeeze(D(:,:,idx)));
+xlabel(<span class="string">'Receiver(m)'</span>);ylabel(<span class="string">'time(s)'</span>);ylim([0 2]);
+title(<span class="string">'Ground truth'</span>);colormap(<span class="string">'gray'</span>);caxis([-1 1]*2e2)
+figure;
+imagesc(xrec,t,squeeze(output(:,:,idx)));
+xlabel(<span class="string">'Receiver(m)'</span>);ylabel(<span class="string">'time(s)'</span>);ylim([0 2]);
+title(<span class="string">'Interpolated shot gather'</span>);colormap(<span class="string">'gray'</span>);caxis([-1 1]*2e2)
+figure;
+imagesc(xrec,t,(squeeze(D(:,:,idx))-squeeze(output(:,:,idx))));
+xlabel(<span class="string">'Receiver(m)'</span>);ylabel(<span class="string">'time(s)'</span>);ylim([0 2]);
+title(<span class="string">'Residual'</span>);colormap(<span class="string">'gray'</span>);caxis([-1 1]*2e2)
+</pre><img vspace="5" hspace="5" src="GofS_Interp_04.png"> <img vspace="5" hspace="5" src="GofS_Interp_05.png"> <img vspace="5" hspace="5" src="GofS_Interp_06.png"> <h2>Missing Trace Interpolation and denoising<a name="4"></a></h2>
+         <p>Perform interpolation by running the example file in the directory <tt>/applications/Processing/LowRankInterpolationAndDenoising/examples/GulfofSuez/GofS_Interp_and_denoise.m</tt></p><pre class="codeinput"><span class="comment">% Read output results after Interpolation</span>
+load([resultsdir <span class="string">'GulfofSuez/GulfofSuezinterpanddenoise.mat'</span>]);
+
+<span class="comment">% Display interpolated and denoised results</span>
+<span class="comment">% View a shot gather</span>
+figure;
+imagesc(xrec,t,squeeze(D(:,:,idx)));
+xlabel(<span class="string">'Receiver(m)'</span>);ylabel(<span class="string">'time(s)'</span>);ylim([0 2]);
+title(<span class="string">'Ground truth'</span>);colormap(<span class="string">'gray'</span>);caxis([-1 1]*2e2)
+figure;
+imagesc(xrec,t,squeeze(output(:,:,idx)));
+xlabel(<span class="string">'Receiver(m)'</span>);ylabel(<span class="string">'time(s)'</span>);ylim([0 2]);
+title(<span class="string">'Interpolated and denoised shot gather'</span>);colormap(<span class="string">'gray'</span>);caxis([-1 1]*2e2)
+figure;
+imagesc(xrec,t,(squeeze(D(:,:,idx))-squeeze(output(:,:,idx))));
+xlabel(<span class="string">'Receiver(m)'</span>);ylabel(<span class="string">'time(s)'</span>);ylim([0 2]);
+title(<span class="string">'Residual'</span>);colormap(<span class="string">'gray'</span>);caxis([-1 1]*2e2)
+</pre><img vspace="5" hspace="5" src="GofS_Interp_07.png"> <img vspace="5" hspace="5" src="GofS_Interp_08.png"> <img vspace="5" hspace="5" src="GofS_Interp_09.png"> <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Seismic data regularization, missing-trace interpolation and denoising
+%
+% This script display the output results of regularization, missing-trace interpolation
+% and denoising.
+% Please note that the regularization, interpolation and denoised results are produced by 
+% running the example scripts without using the optimal parameters. 
+% Users can play with parameter to improve the results.
+%
+% Author: Rajiv Kumar (rakumar@eos.ubc.ca)
+% Date: April, 2014
+
+%% Data dimensions
+curdir     = pwd;
+basedir    = curdir(1:end-4);
+datadir    = [basedir '/data/'];
+resultsdir = [basedir '/results/'];
+
+% Data parameter
+ntime = 1024;
+nrec  = 355;
+nsrc  = 355;
+d     = [0.004 12.5 12.5];
+t     = (0:1:(ntime-1))*d(1);
+xrec  = (0:1:(nrec-1))*d(2);
+xsrc  = (0:1:(nsrc-1))*d(3);
+idx = 177;
+%% Regularization
+% Perform regularization and missing-trace interpolation by running the example file in the directory 
+% |/applications/Processing/LowRankInterpolationAndDenoising/examples/GulfofSuez/GofS_regularize_and_interp.m|
+options.datafile = [datadir 'Interpolation/SuezShots125.355shots.su'];
+% Read input data
+D              = ReadSuFast(options.datafile);
+D              = reshape(D,ntime,nrec,nsrc);
+
+% Read output results after regularization 
+load([resultsdir 'GulfofSuez/GulfofSuezreginterp.mat']);
+Dt = reshape(Dt,ntime,nrec+1,nsrc+1);
+% Display regularization results
+% View a shot gather
+figure;
+imagesc(xrec,t,squeeze(D(:,:,idx)));
+xlabel('Receiver(m)');ylabel('time(s)');ylim([0 2]);
+title('Ground truth');colormap('gray');caxis([-1 1]*2e2)
+figure;
+imagesc(xrec,t,squeeze(Dt(:,1:nrec,idx)));
+xlabel('Receiver(m)');ylabel('time(s)');ylim([0 2]);
+title('Regularized shot gather');colormap('gray');caxis([-1 1]*2e2)
+figure;
+imagesc(xrec,t,(squeeze(D(:,:,idx))-squeeze(Dt(:,1:nrec,idx))));
+xlabel('Receiver(m)');ylabel('time(s)');ylim([0 2]);
+title('Residual');colormap('gray');caxis([-1 1]*2e2)
+%% Missing Trace Interpolation
+% Perform interpolation by running the example file in the directory 
+% |/applications/Processing/LowRankInterpolationAndDenoising/examples/GulfofSuez/GofS_Interp.m|
+
+% Read output results after interpolation
+load([resultsdir 'GulfofSuez/GulfofSuezinterp.mat']);
+
+% Display interpolated results
+% View a shot gather
+figure;
+imagesc(xrec,t,squeeze(D(:,:,idx)));
+xlabel('Receiver(m)');ylabel('time(s)');ylim([0 2]);
+title('Ground truth');colormap('gray');caxis([-1 1]*2e2)
+figure;
+imagesc(xrec,t,squeeze(output(:,:,idx)));
+xlabel('Receiver(m)');ylabel('time(s)');ylim([0 2]);
+title('Interpolated shot gather');colormap('gray');caxis([-1 1]*2e2)
+figure;
+imagesc(xrec,t,(squeeze(D(:,:,idx))-squeeze(output(:,:,idx))));
+xlabel('Receiver(m)');ylabel('time(s)');ylim([0 2]);
+title('Residual');colormap('gray');caxis([-1 1]*2e2)
+
+%% Missing Trace Interpolation and denoising
+% Perform interpolation by running the example file in the directory 
+% |/applications/Processing/LowRankInterpolationAndDenoising/examples/GulfofSuez/GofS_Interp_and_denoise.m|
+
+% Read output results after Interpolation
+load([resultsdir 'GulfofSuez/GulfofSuezinterpanddenoise.mat']);
+
+% Display interpolated and denoised results
+% View a shot gather
+figure;
+imagesc(xrec,t,squeeze(D(:,:,idx)));
+xlabel('Receiver(m)');ylabel('time(s)');ylim([0 2]);
+title('Ground truth');colormap('gray');caxis([-1 1]*2e2)
+figure;
+imagesc(xrec,t,squeeze(output(:,:,idx)));
+xlabel('Receiver(m)');ylabel('time(s)');ylim([0 2]);
+title('Interpolated and denoised shot gather');colormap('gray');caxis([-1 1]*2e2)
+figure;
+imagesc(xrec,t,(squeeze(D(:,:,idx))-squeeze(output(:,:,idx))));
+xlabel('Receiver(m)');ylabel('time(s)');ylim([0 2]);
+title('Residual');colormap('gray');caxis([-1 1]*2e2)
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

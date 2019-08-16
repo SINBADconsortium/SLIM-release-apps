@@ -1,0 +1,52 @@
+##### set the paths to the homes of SLIM-release-comp/apps
+# define the path to SLIM-release-comp if installed, or leave it as it is
+export SLIM_COMP=absolute_path_to_SLIM-release-comp
+# define the path to SLIM-release-apps
+export SLIM_APPS=absolute_path_to_SLIM-release-apps
+# define the path to personal copy (if other then SLIM_APPS) of SLIM-release-apps
+export SLIM_APPS_RUNS=$SLIM_APPS
+##### DO NOT MODIFY PAST THIS LINE
+
+# set PATH environment
+export PATH=$SLIM_APPS/bin:$SLIM_APPS/ibin:$SLIM_COMP/external/bin:$PATH
+hash -r
+
+# set library paths for dynamic compile-time linker
+if [ -n "$LD_LIBRARY_PATH" ]; then
+	export LD_LIBRARY_PATH=$SLIM_COMP/external/lib64:$SLIM_COMP/external/lib:$LD_LIBRARY_PATH
+else
+	export LD_LIBRARY_PATH=$SLIM_COMP/external/lib64:$SLIM_COMP/external/lib
+fi
+if [ -n "$LD_RUN_PATH" ]; then
+	export LD_RUN_PATH=$SLIM_COMP/external/lib64:$SLIM_COMP/external/lib:$LD_RUN_PATH
+else
+	export LD_RUN_PATH=$SLIM_COMP/external/lib64:$SLIM_COMP/external/lib
+fi
+if [ -n "$PYTHONPATH" ]; then
+	export PYTHONPATH=$SLIM_COMP/external/lib64:$SLIM_COMP/external/lib:$SLIM_COMP/external/pylib:$PYTHONPATH
+else
+	export PYTHONPATH=$SLIM_COMP/external/lib64:$SLIM_COMP/external/lib:$SLIM_COMP/external/pylib
+fi
+if [ -n "$MANPATH" ]; then
+	export MANPATH=$SLIM_COMP/external/man:$SLIM_COMP/external/share/man:$MANPATH
+else
+	export MANPATH=$SLIM_COMP/external/man:$SLIM_COMP/external/share/man:`manpath`
+fi
+
+# add default MATLABPATH
+if [ -n "$MATLABPATH" ]; then
+    test -d $SLIM_APPS/matlab && export MATLABPATH=$SLIM_APPS/matlab:$MATLABPATH
+    test -d $SLIM_COMP/matlab && export MATLABPATH=$SLIM_COMP/matlab:$MATLABPATH
+else
+    test -d $SLIM_APPS/matlab && export MATLABPATH=$SLIM_APPS/matlab
+    test -d $SLIM_COMP/matlab && export MATLABPATH=$SLIM_COMP/matlab:$MATLABPATH
+fi
+
+# MADAGASCAR specific setup
+export RSFROOT=$SLIM_COMP/external
+# Path for binary data files part of RSF datasets
+if [ -z "$DATAPATH" ]; then
+	export DATAPATH=$SLIM_APPS/tmp/
+fi
+test -d $DATAPATH || mkdir -p $DATAPATH
+test -d $DATAPATH || echo "ERROR: Problem creating $DATAPATH"

@@ -1,0 +1,174 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>2D/3D acoustic anisotropic time-domain modeling and linearized modeling</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.5">
+      <meta name="date" content="2016-04-07">
+      <meta name="m-file" content="index">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>2D/3D acoustic anisotropic time-domain modeling and linearized modeling</h1>
+         <introduction>
+            <p>The modeling operator is based on a star 1D stencil of order 2,4 or 6. It solves the system in parallel over sources . Source
+               injection and receiver sampling is done via cubic interpolation and exponential damping over a 3x3 square around the source
+               location. The Jacobian is derived by linearizing the discretized system and its forward.
+            </p>
+            <p>Author: Mathias Louboutin, Philipp Witte</p><pre>       September 2015
+       Seismic Laboratory for Imaging and Modeling
+       Department of Earch &amp; Ocean Sciences
+       The University of British Columbia</pre></introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Dependencies</a></li>
+               <li><a href="#2">Running &amp; Parallelism</a></li>
+               <li><a href="#3">Functions</a></li>
+               <li><a href="#4">Examples</a></li>
+               <li><a href="#5">References</a></li>
+            </ul>
+         </div>
+         <h2>Dependencies<a name="1"></a></h2>
+         <p>The modeling code uses the following packages, found in the <tt>tools</tt> part of the software release.
+         </p>
+         <div>
+            <ul>
+               <li><i>SPOT</i> - object oriented framework for matrix-free linear algebra.
+               </li>
+               <li><i>pSPOT</i> - parallel extension of SPOT.
+               </li>
+            </ul>
+         </div>
+         <h2>Running &amp; Parallelism<a name="2"></a></h2>
+         <p>All the examples can be reproduced by running the scripts found in the software release under <tt>applications/Modeling/2DAcousticFreqModeling</tt>. Start matlab from that directory or run <tt>startup</tt> in that directory to add the appropriate paths.
+         </p>
+         <p>The scripts can be run in serial mode but parallel mode is advised for the modeling and imaging examples. Use <tt>parpool</tt> to start parallel pool with the appropriate configuration and a divisor of 12 workers.
+         </p>
+         <h2>Functions<a name="3"></a></h2>
+         <p>The modeling code consists of 3 distinct packages which can be found in the <tt>tools</tt> part of the software release. The main components are listed below
+         </p>
+         <p><i>algorithms/TimeModeling</i></p>
+         <div>
+            <ul>
+               <li><tt>opF</tt> - modeling operator
+               </li>
+               <li><tt>opJ</tt> - Jacobian
+               </li>
+               <li><tt>Gen_data</tt> - Data generation function
+               </li>
+               <li><tt>Born</tt> - Born modelling and RTM function
+               </li>
+               <li><tt>GS</tt> - function that output [f,g] misfit and gradient for FWI
+               </li>
+            </ul>
+         </div>
+         <p><i>operators/misc</i></p>
+         <div>
+            <ul>
+               <li><tt>opLInterp1D</tt> - 1D cubic Lagrange interpolation
+               </li>
+               <li><tt>opExtension</tt> - Pads input with zeros or constant values
+               </li>
+               <li><tt>opSmooth</tt> - 1D smoothing by convolution with triangular kernel
+               </li>
+            </ul>
+         </div>
+         <p><i>functions/misc</i></p>
+         <div>
+            <ul>
+               <li><tt>grid2odn</tt>, <tt>odn2grid</tt> - convert grid vectors to [origin, increment, size] triplet and vice versa
+               </li>
+            </ul>
+         </div>
+         <h2>Examples<a name="4"></a></h2>
+         <p>A few examples are included here</p>
+         <div>
+            <ul>
+               <li>Some examples of the 2D modeling capabilities are shown in <a href="Modelling_TTI_2D.html">Modelling_TTI_2D.m</a>.
+               </li>
+               <li>Some examples of the 3D modeling capabilities are shown in <a href="Modelling_3D.html">Modelling_3D.m</a></li>
+            </ul>
+         </div>
+         <h2>References<a name="5"></a></h2>
+         <p><a href="https://slim.gatech.edu/Publications/Private/TechReport/2015/witte2015TRoam/witte2015TRoam.html">.[1]</a> Philipp Witte*, Mathias Louboutin and Felix J. Herrmann, Overview on anisotropic modeling and inversion, Technical report
+         </p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% 2D/3D acoustic anisotropic time-domain modeling and linearized modeling
+%
+% The modeling operator is based on a star 1D stencil of order 2,4 or 6. 
+% It solves the system in parallel over sources . 
+% Source injection and receiver sampling is done via cubic interpolation and
+% exponential damping over a 3x3 square around the source location. The
+% Jacobian is derived by linearizing the discretized system and its forward.
+%
+% Author: Mathias Louboutin, Philipp Witte 
+%
+%         September 2015 
+%         Seismic Laboratory for Imaging and Modeling
+%         Department of Earch & Ocean Sciences
+%         The University of British Columbia
+
+%% Dependencies
+% The modeling code uses the following packages, found in the |tools| part
+% of the software release.
+%
+% * _SPOT_ - object oriented framework for matrix-free linear algebra.
+% * _pSPOT_ - parallel extension of SPOT.
+
+%% Running & Parallelism
+% All the examples can be reproduced by running the scripts found in
+% the software release under |applications/Modeling/2DAcousticFreqModeling|. 
+% Start matlab from that directory or run |startup| in that directory to add the appropriate paths.
+%
+% The scripts can be run in serial mode but parallel mode is advised
+% for the modeling and imaging examples. Use |parpool| to start parallel pool with the
+% appropriate configuration and a divisor of 12 workers.
+
+%% Functions
+% The modeling code consists of 3 distinct packages which can be found in the |tools| part of
+% the software release. The main components are listed below
+%
+% _algorithms/TimeModeling_
+%
+% * |opF| - modeling operator 
+% * |opJ| - Jacobian
+% * |Gen_data| - Data generation function
+% * |Born| - Born modelling and RTM function
+% * |GS| - function that output [f,g] misfit and gradient for FWI
+%
+% _operators/misc_
+%
+% * |opLInterp1D| - 1D cubic Lagrange interpolation
+% * |opExtension| - Pads input with zeros or constant values
+% * |opSmooth| - 1D smoothing by convolution with triangular kernel
+%
+% _functions/misc_
+% 
+% * |grid2odn|, |odn2grid| - convert grid vectors to [origin, increment, size] triplet and vice
+% versa
+
+%% Examples
+% A few examples are included here
+%
+% * Some examples of the 2D modeling capabilities are shown in <Modelling_TTI_2D.html Modelling_TTI_2D.m>.
+% * Some examples of the 3D modeling capabilities are shown in <Modelling_3D.html Modelling_3D.m>
+
+
+%% References
+% <https://slim.gatech.edu/Publications/Private/TechReport/2015/witte2015TRoam/witte2015TRoam.html .[1]> Philipp Witte*, Mathias Louboutin and Felix J. Herrmann, Overview on anisotropic modeling and inversion, Technical report
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

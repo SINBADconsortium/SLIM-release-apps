@@ -1,0 +1,19 @@
+# run 'Scons' with help you fetch some data from our FTP sever.
+
+from rsf.proj import *
+
+########################################################################
+# RETRIEVE DATA
+########################################################################
+# define SLIM FTP server information
+FTPserver = {
+    # 'server': os.environ.get('SLIM_SERVER'),
+    'server': 'ftp.slim.gatech.edu',
+    'login': 'ftp',
+    'password':''}
+
+loc = os.path.join('users','lixiang','LSM')
+
+# fetch data from FTP server
+Fetch('BG_compass_model409x1401.mat',loc,FTPserver)
+Fetch('BG_DISCLAIMER.txt',loc,FTPserver)

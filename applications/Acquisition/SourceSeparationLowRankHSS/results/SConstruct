@@ -1,0 +1,23 @@
+import os
+from rsf.proj import *
+
+########################################################################
+# RETRIEVE DATA
+########################################################################
+
+# Define SLIM FTP server information
+FTPserver = {
+        'server': 'ftp.slim.gatech.edu',
+        'login': 'ftp',
+        'password':''}
+
+loc = os.path.join('SoftwareRelease','Acquisition','SourceSeparationLowRankHSS','Results')
+files = ['SourceSep_jit1src_HSS_params.mat', 'SourceSep_jit1src_HSS_D2_shifted.rsf', 'SourceSep_jit1src_HSS_blended_FRS.rsf', 'SourceSep_jit1src_HSS_blended_TRS.rsf', 'SourceSep_jit1src_HSS_src1recov_FRS.rsf', 'SourceSep_jit1src_HSS_src1recov_TRS.rsf', 'SourceSep_jit1src_HSS_src2recov_FRS.rsf', 'SourceSep_jit1src_HSS_src2recov_TRS.rsf']
+
+
+# Fetch data from FTP server
+for elm in files:
+        Fetch(elm,loc,FTPserver)
+
+End()
+

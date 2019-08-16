@@ -1,0 +1,372 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>example_publishInversion</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.1">
+      <meta name="date" content="2014-09-23">
+      <meta name="m-file" content="example_publishInversion">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1></h1>
+         <introduction>
+            <p>Written by Bas Peters (bpeters {at} eos.ubc.ca), September 2014.</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Wavefield Reconstruction Inversion</a></li>
+               <li><a href="#2">Models</a></li>
+               <li><a href="#3">plot objectives for WRI, split up into their PDE and DATA misfit parts</a></li>
+               <li><a href="#4">Crossections</a></li>
+               <li><a href="#5">(normalized) difference with the true model</a></li>
+               <li><a href="#6">First updates for both methods at first frequency batch</a></li>
+               <li><a href="#7">WRI model estimate after cycle 1 and cycle2 through the data</a></li>
+               <li><a href="#8">References</a></li>
+            </ul>
+         </div>
+         <h2>Wavefield Reconstruction Inversion<a name="1"></a></h2>
+         <p>This script will show examples of waveform inversion using the BG Compass model. The theory behind this method, named Wavefield
+            Reconstruction Inversion (WRI) is described in [1],[2] and the example shown here is based on [3].
+         </p>
+         <p>A short overview of the method can be found at our research webpage <a href="https://slim.gatech.edu/research/inversion#WRI">https://slim.gatech.edu/research/inversion#WRI</a></p>
+         <p>The modeling used in this example is described in <a href="https://slim.gatech.edu/SoftwareDemos/applications/Modeling/2DAcousticFreqModeling/modeling.html">https://slim.gatech.edu/SoftwareDemos/applications/Modeling/2DAcousticFreqModeling/modeling.html</a>.
+         </p>
+         <p><b>System requirements:</b></p>
+         <div>
+            <ul>
+               <li>This script was tested using Matlab 2013a with the parallel computing toolbox.</li>
+            </ul>
+         </div>
+         <div>
+            <ul>
+               <li>Parallelism is achieved by factorizing overdetermined systems (one for each frequency) in parallel. Each factorization requires
+                  about 15 GB.
+               </li>
+            </ul>
+         </div>
+         <div>
+            <ul>
+               <li>Runtime is about 48 hours when factorizing 5 overdetermined systems in parallel. Tested using 2.6GHz Intel processors.</li>
+            </ul>
+         </div>
+         <h2>Models<a name="2"></a></h2><pre class="codeinput">vr = reshape(1e3./sqrt(m_r_tmp),model.n);
+vp = reshape(1e3./sqrt(m_p_tmp2),n);
+v0 = reshape(1e3./sqrt(m0),n);
+
+figWidth = 1120; <span class="comment">% pixels</span>
+figHeight = 640;
+rect = [0 50 figWidth figHeight];
+figure(<span class="string">'OuterPosition'</span>, rect)
+subplot(2,2,1);set(gca,<span class="string">'Fontsize'</span>,10)
+imagesc(x,z,v,[1500 4500]);set(gca,<span class="string">'plotboxaspectratio'</span>,[3.2038 1 1]);title(<span class="string">'True velocity model'</span>)
+xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);
+
+p=subplot(2,2,2);set(gca,<span class="string">'Fontsize'</span>,10)
+imagesc(x,z,v0,[1500 4500]);title([<span class="string">'Initial velocity model'</span>])
+xlabel(<span class="string">'x [m]'</span>);<span class="comment">%ylabel('z [m]')</span>
+pos2=get(p,<span class="string">'Position'</span>);set(p,<span class="string">'Position'</span>,[pos2(1)-0.03 pos2(2) pos2(3) pos2(4)]);set(gca,<span class="string">'plotboxaspectratio'</span>,[3.2038 1 1])
+pos_sub=get(p,<span class="string">'Position'</span>);
+set(p,<span class="string">'Position'</span>,pos_sub)
+
+p3=subplot(2,2,3);set(gca,<span class="string">'Fontsize'</span>,10)
+imagesc(x,z,(vr),[1500 4500]);title(<span class="string">'Result FWI'</span>)
+xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);
+pos3=get(p3,<span class="string">'Position'</span>);set(p3,<span class="string">'Position'</span>,[pos3(1) pos3(2)+0.15 pos3(3) pos3(4)]);set(gca,<span class="string">'plotboxaspectratio'</span>,[3.2038 1 1])
+
+p=subplot(2,2,4);set(gca,<span class="string">'Fontsize'</span>,10)
+imagesc(x,z,(vp),[1500 4500]);title([<span class="string">'Result WRI, \lambda='</span>,num2str(params.lambda)])
+xlabel(<span class="string">'x [m]'</span>);
+pos4=get(p,<span class="string">'Position'</span>);set(p,<span class="string">'Position'</span>,[pos4(1)-0.03 pos4(2)+0.15 pos4(3) pos4(4)]);set(gca,<span class="string">'plotboxaspectratio'</span>,[3.2038 1 1])
+pos_sub=get(p,<span class="string">'Position'</span>);
+h = colorbar;ylabel(h, <span class="string">'Velocity [m/s]'</span>,<span class="string">'FontSize'</span>,10);
+pos=get(h, <span class="string">'Position'</span>);
+set(h, <span class="string">'Position'</span>, [pos(1)+0.08 pos(2)+0.13 0.5*pos(3) 1.53*pos(4)])
+set(p,<span class="string">'Position'</span>,pos_sub)
+</pre><img vspace="5" hspace="5" src="example_publishInversion_01.png"> <h2>plot objectives for WRI, split up into their PDE and DATA misfit parts<a name="3"></a></h2><pre class="codeinput">figWidth = 220; <span class="comment">% pixels</span>
+figHeight = 140;
+rect = [0 50 figWidth figHeight];
+figure(<span class="string">'OuterPosition'</span>, rect)
+f_p.obj_aux=reshape(f_p_tmp.obj_aux,1,length(f_p_tmp.obj_aux));
+<span class="keyword">for</span> i=1:length(f_p_tmp.obj_aux); mfp_aux_pde{i}=f_p_tmp.obj_aux{i}(:,1); <span class="keyword">end</span>;
+<span class="keyword">for</span> i=1:length(f_p_tmp.obj_aux); mfp_aux_dat{i}=f_p_tmp.obj_aux{i}(:,2); <span class="keyword">end</span>;
+figure;
+subplot(1,2,1);set(gca,<span class="string">'Fontsize'</span>,10);loglog(vec(cell2mat(mfp_aux_pde')),vec(cell2mat(mfp_aux_dat')),<span class="string">'r'</span>,<span class="string">'LineWidth'</span>,1);
+title(<span class="string">'Objective WRI, cycle 1'</span>);xlabel(<span class="string">'PDE-fit'</span>);ylabel(<span class="string">'Data-fit'</span>);<span class="comment">%pbaspect([2 1 1]);</span>
+
+
+f_p.obj_aux=reshape(f_p_tmp2.obj_aux,1,length(f_p_tmp2.obj_aux));
+<span class="keyword">for</span> i=1:length(f_p_tmp2.obj_aux); mfp_aux_pde{i}=f_p_tmp2.obj_aux{i}(:,1); <span class="keyword">end</span>;
+<span class="keyword">for</span> i=1:length(f_p_tmp2.obj_aux); mfp_aux_dat{i}=f_p_tmp2.obj_aux{i}(:,2); <span class="keyword">end</span>;
+subplot(1,2,2);set(gca,<span class="string">'Fontsize'</span>,10);loglog(vec(cell2mat(mfp_aux_pde')),vec(cell2mat(mfp_aux_dat')),<span class="string">'r'</span>,<span class="string">'LineWidth'</span>,1);
+title(<span class="string">'Objective WRI, cycle 2'</span>);xlabel(<span class="string">'PDE-fit'</span>);ylabel(<span class="string">'Data-fit'</span>);<span class="comment">%pbaspect([2 1 1])</span>
+;axis([2e-5 2e-3 1e-10 5e-8])
+</pre><img vspace="5" hspace="5" src="example_publishInversion_02.png"> <img vspace="5" hspace="5" src="example_publishInversion_03.png"> <h2>Crossections<a name="4"></a></h2><pre class="codeinput">l1=225; l2=400; l3=550;
+figWidth = 1120; <span class="comment">% pixels</span>
+figHeight = 540;
+rect = [0 50 figWidth figHeight];
+figure(<span class="string">'OuterPosition'</span>, rect);set(gca,<span class="string">'Fontsize'</span>,10)
+
+subplot(1,3,1);set(gca,<span class="string">'Fontsize'</span>,10);plot(v(:,l1),z,<span class="string">'LineWidth'</span>,1.5);set(gca,<span class="string">'YDir'</span>,<span class="string">'reverse'</span>);hold <span class="string">on</span>;title([<span class="string">'x ='</span>,num2str(x(l1)),<span class="string">'[m]'</span>]);xlabel(<span class="string">'Velocity [m/s]'</span>);ylabel(<span class="string">'z [m]'</span>);axis([1000 4500 0 1700]);pbaspect([0.5 1 1])
+subplot(1,3,2);set(gca,<span class="string">'Fontsize'</span>,10);plot(v(:,l2),z,<span class="string">'LineWidth'</span>,1.5);set(gca,<span class="string">'YDir'</span>,<span class="string">'reverse'</span>);hold <span class="string">on</span>;title([<span class="string">'x ='</span>,num2str(x(l2)),<span class="string">'[m]'</span>]);xlabel(<span class="string">'Velocity [m/s]'</span>);ylabel(<span class="string">'z [m]'</span>);axis([1000 4500 0 1700]);pbaspect([0.5 1 1])
+subplot(1,3,3);set(gca,<span class="string">'Fontsize'</span>,10);plot(v(:,l3),z,<span class="string">'LineWidth'</span>,1.5);set(gca,<span class="string">'YDir'</span>,<span class="string">'reverse'</span>);hold <span class="string">on</span>;title([<span class="string">'x ='</span>,num2str(x(l3)),<span class="string">'[m]'</span>]);xlabel(<span class="string">'Velocity [m/s]'</span>);ylabel(<span class="string">'z [m]'</span>);axis([1000 4500 0 1700]);pbaspect([0.5 1 1])
+
+subplot(1,3,1);plot(vp(:,l1),z,<span class="string">'r'</span>,<span class="string">'LineWidth'</span>,1.5);set(gca,<span class="string">'YDir'</span>,<span class="string">'reverse'</span>);hold <span class="string">on</span>;
+subplot(1,3,2);plot(vp(:,l2),z,<span class="string">'r'</span>,<span class="string">'LineWidth'</span>,1.5);set(gca,<span class="string">'YDir'</span>,<span class="string">'reverse'</span>);hold <span class="string">on</span>;
+subplot(1,3,3);plot(vp(:,l3),z,<span class="string">'r'</span>,<span class="string">'LineWidth'</span>,1.5);set(gca,<span class="string">'YDir'</span>,<span class="string">'reverse'</span>);hold <span class="string">on</span>;
+
+subplot(1,3,1);plot(v0(:,l1),z,<span class="string">'g'</span>,<span class="string">'LineWidth'</span>,1.5);set(gca,<span class="string">'YDir'</span>,<span class="string">'reverse'</span>);
+p=legend(<span class="string">'True model'</span>,<span class="string">'WRI'</span>,<span class="string">'start'</span>,<span class="string">'Location'</span>,<span class="string">'SouthOutside'</span>);
+subplot(1,3,2);plot(v0(:,l2),z,<span class="string">'g'</span>,<span class="string">'LineWidth'</span>,1.5);set(gca,<span class="string">'YDir'</span>,<span class="string">'reverse'</span>);
+p=legend(<span class="string">'True model'</span>,<span class="string">'WRI'</span>,<span class="string">'start'</span>,<span class="string">'Location'</span>,<span class="string">'SouthOutside'</span>);
+subplot(1,3,3);plot(v0(:,l3),z,<span class="string">'g'</span>,<span class="string">'LineWidth'</span>,1.5);set(gca,<span class="string">'YDir'</span>,<span class="string">'reverse'</span>);
+p=legend(<span class="string">'True model'</span>,<span class="string">'WRI'</span>,<span class="string">'start'</span>,<span class="string">'Location'</span>,<span class="string">'SouthOutside'</span>);
+</pre><img vspace="5" hspace="5" src="example_publishInversion_04.png"> <h2>(normalized) difference with the true model<a name="5"></a></h2><pre class="codeinput">figWidth = 1120; <span class="comment">% pixels</span>
+figHeight = 340;
+rect = [0 50 figWidth figHeight];
+figure(<span class="string">'OuterPosition'</span>, rect);set(gca,<span class="string">'Fontsize'</span>,10)
+subplot(1,2,1);set(gca,<span class="string">'Fontsize'</span>,10);plot(nonzeros(cell2mat(err_p_tmp)./err_p_tmp{1}(2)),<span class="string">'r'</span>,<span class="string">'LineWidth'</span>,3);ylabel(<span class="string">'Normalized error'</span>);
+title(<span class="string">'L2 difference with true model, cycle 1'</span>);xlabel(<span class="string">'Iteration nr.'</span>);axis([-5 350 .55 1]);pbaspect([3 1 1])
+subplot(1,2,2);set(gca,<span class="string">'Fontsize'</span>,10);plot(nonzeros(cell2mat(err_p_tmp2)./err_p_tmp2{1}(2)),<span class="string">'r'</span>,<span class="string">'LineWidth'</span>,3);ylabel(<span class="string">'Normalized error'</span>);
+title(<span class="string">'L2 difference with true model, cycle 2'</span>);xlabel(<span class="string">'Iteration nr.'</span>);axis([-5 350 .75 1]);  pbaspect([3 1 1])
+</pre><img vspace="5" hspace="5" src="example_publishInversion_05.png"> <h2>First updates for both methods at first frequency batch<a name="6"></a></h2><pre class="codeinput">figWidth = 1120; <span class="comment">% pixels</span>
+figHeight = 340;
+rect = [0 50 figWidth figHeight];
+figure(<span class="string">'OuterPosition'</span>, rect)
+subplot(1,2,1);set(gca,<span class="string">'Fontsize'</span>,10)
+imagesc(x,z,vp1-v0,[-200 200]);title(<span class="string">'First update WRI'</span>)
+xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);axis <span class="string">equal</span> <span class="string">tight</span>;
+
+p=subplot(1,2,2);set(gca,<span class="string">'Fontsize'</span>,10)
+imagesc(x,z,vr1-v0,[-200 200]);title([<span class="string">'First update FWI'</span>])
+xlabel(<span class="string">'x [m]'</span>);
+pos2=get(p,<span class="string">'Position'</span>);set(p,<span class="string">'Position'</span>,[pos2(1)-0.03 pos2(2) pos2(3) pos2(4)]);axis <span class="string">equal</span> <span class="string">tight</span>;
+pos_sub=get(p,<span class="string">'Position'</span>);
+set(p,<span class="string">'Position'</span>,pos_sub)
+
+h = colorbar;ylabel(h, <span class="string">'Velocity [m/s]'</span>,<span class="string">'FontSize'</span>,10);
+pos=get(h, <span class="string">'Position'</span>);
+set(h, <span class="string">'Position'</span>, [pos(1)+0.08 pos(2)-0.012 0.5*pos(3) 1.33*pos(4)])
+set(p,<span class="string">'Position'</span>,pos_sub)
+</pre><img vspace="5" hspace="5" src="example_publishInversion_06.png"> <h2>WRI model estimate after cycle 1 and cycle2 through the data<a name="7"></a></h2><pre class="codeinput">figWidth = 1120; <span class="comment">% pixels</span>
+figHeight = 340;
+rect = [0 50 figWidth figHeight];
+figure(<span class="string">'OuterPosition'</span>, rect)
+subplot(1,2,1);set(gca,<span class="string">'Fontsize'</span>,10)
+imagesc(x,z,vpc1,[1500 4500]);title([<span class="string">'Result WRI after cycle 1, \lambda='</span>,num2str(params.lambda)])
+xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);axis <span class="string">equal</span> <span class="string">tight</span>;
+
+p=subplot(1,2,2);set(gca,<span class="string">'Fontsize'</span>,10)
+imagesc(x,z,vpc2,[1500 4500]);title([<span class="string">'Result WRI after cycle 2, \lambda='</span>,num2str(params.lambda)])
+xlabel(<span class="string">'x [m]'</span>);
+pos2=get(p,<span class="string">'Position'</span>);set(p,<span class="string">'Position'</span>,[pos2(1)-0.03 pos2(2) pos2(3) pos2(4)]);axis <span class="string">equal</span> <span class="string">tight</span>;
+pos_sub=get(p,<span class="string">'Position'</span>);
+set(p,<span class="string">'Position'</span>,pos_sub)
+
+h = colorbar;ylabel(h, <span class="string">'Velocity [m/s]'</span>,<span class="string">'FontSize'</span>,10);
+pos=get(h, <span class="string">'Position'</span>);
+set(h, <span class="string">'Position'</span>, [pos(1)+0.08 pos(2)-0.012 0.5*pos(3) 1.33*pos(4)])
+set(p,<span class="string">'Position'</span>,pos_sub)
+</pre><img vspace="5" hspace="5" src="example_publishInversion_07.png"> <h2>References<a name="8"></a></h2>
+         <p><a href="http://dx.doi.org/10.1093/gji/ggt258">[1]</a> Tristan van Leeuwen, Felix J. Herrmann, Geophysical Journal International,2013. Mitigating local minima in full-waveform
+            inversion by expanding the search space.
+         </p>
+         <p><a href="https://slim.gatech.edu/content/penalty-method-pde-constrained-optimization">[2]</a> Tristan van Leeuwen, Felix J. Herrmann. 2013. A penalty method for PDE-constrained optimization.
+         </p>
+         <p><a href="https://slim.gatech.edu/content/wave-equation-based-inversion-penalty-method-adjoint-state-versus-wavefield-reconstruction-i">[3]</a> Bas Peters, Felix J. Herrmann, Tristan van Leeuwen. EAGE, 2014. Wave-equation based inversion with the penalty method: adjoint-state
+            versus wavefield-reconstruction inversion.
+         </p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%%
+% Written by Bas Peters (bpeters {at} eos.ubc.ca), September 2014.
+
+%% Wavefield Reconstruction Inversion
+%
+% This script will show examples of waveform inversion using the BG Compass model. The
+% theory behind this method, named Wavefield Reconstruction Inversion (WRI) is described in [1],[2]
+% and the example shown here is based on [3]. 
+%
+% A short overview of the method can be found at our research webpage 
+% <https://slim.gatech.edu/research/inversion#WRI>
+%
+% The modeling used in this example is described in
+% <https://slim.gatech.edu/SoftwareDemos/applications/Modeling/2DAcousticFreqModeling/modeling.html>.
+%
+% *System requirements:* 
+%
+% * This script was tested using Matlab 2013a with the parallel computing
+% toolbox.
+%
+% * Parallelism is achieved by factorizing overdetermined systems (one for each
+% frequency) in parallel. Each factorization requires about 15 GB.
+% 
+% * Runtime is about 48 hours when factorizing 5 overdetermined systems in
+% parallel. Tested using 2.6GHz Intel processors. 
+
+%% Models
+
+vr = reshape(1e3./sqrt(m_r_tmp),model.n);
+vp = reshape(1e3./sqrt(m_p_tmp2),n);
+v0 = reshape(1e3./sqrt(m0),n);
+
+figWidth = 1120; % pixels
+figHeight = 640;
+rect = [0 50 figWidth figHeight];
+figure('OuterPosition', rect)
+subplot(2,2,1);set(gca,'Fontsize',10)
+imagesc(x,z,v,[1500 4500]);set(gca,'plotboxaspectratio',[3.2038 1 1]);title('True velocity model')
+xlabel('x [m]');ylabel('z [m]');
+
+p=subplot(2,2,2);set(gca,'Fontsize',10)
+imagesc(x,z,v0,[1500 4500]);title(['Initial velocity model'])
+xlabel('x [m]');%ylabel('z [m]')
+pos2=get(p,'Position');set(p,'Position',[pos2(1)-0.03 pos2(2) pos2(3) pos2(4)]);set(gca,'plotboxaspectratio',[3.2038 1 1])
+pos_sub=get(p,'Position');
+set(p,'Position',pos_sub)
+
+p3=subplot(2,2,3);set(gca,'Fontsize',10)
+imagesc(x,z,(vr),[1500 4500]);title('Result FWI')
+xlabel('x [m]');ylabel('z [m]');
+pos3=get(p3,'Position');set(p3,'Position',[pos3(1) pos3(2)+0.15 pos3(3) pos3(4)]);set(gca,'plotboxaspectratio',[3.2038 1 1])
+
+p=subplot(2,2,4);set(gca,'Fontsize',10)
+imagesc(x,z,(vp),[1500 4500]);title(['Result WRI, \lambda=',num2str(params.lambda)])
+xlabel('x [m]');
+pos4=get(p,'Position');set(p,'Position',[pos4(1)-0.03 pos4(2)+0.15 pos4(3) pos4(4)]);set(gca,'plotboxaspectratio',[3.2038 1 1])
+pos_sub=get(p,'Position');
+h = colorbar;ylabel(h, 'Velocity [m/s]','FontSize',10);
+pos=get(h, 'Position');
+set(h, 'Position', [pos(1)+0.08 pos(2)+0.13 0.5*pos(3) 1.53*pos(4)])
+set(p,'Position',pos_sub)
+
+%% plot objectives for WRI, split up into their PDE and DATA misfit parts
+
+figWidth = 220; % pixels
+figHeight = 140;
+rect = [0 50 figWidth figHeight];
+figure('OuterPosition', rect)
+f_p.obj_aux=reshape(f_p_tmp.obj_aux,1,length(f_p_tmp.obj_aux));
+for i=1:length(f_p_tmp.obj_aux); mfp_aux_pde{i}=f_p_tmp.obj_aux{i}(:,1); end;
+for i=1:length(f_p_tmp.obj_aux); mfp_aux_dat{i}=f_p_tmp.obj_aux{i}(:,2); end;
+figure;
+subplot(1,2,1);set(gca,'Fontsize',10);loglog(vec(cell2mat(mfp_aux_pde')),vec(cell2mat(mfp_aux_dat')),'r','LineWidth',1);
+title('Objective WRI, cycle 1');xlabel('PDE-fit');ylabel('Data-fit');%pbaspect([2 1 1]);
+
+
+f_p.obj_aux=reshape(f_p_tmp2.obj_aux,1,length(f_p_tmp2.obj_aux));
+for i=1:length(f_p_tmp2.obj_aux); mfp_aux_pde{i}=f_p_tmp2.obj_aux{i}(:,1); end;
+for i=1:length(f_p_tmp2.obj_aux); mfp_aux_dat{i}=f_p_tmp2.obj_aux{i}(:,2); end;
+subplot(1,2,2);set(gca,'Fontsize',10);loglog(vec(cell2mat(mfp_aux_pde')),vec(cell2mat(mfp_aux_dat')),'r','LineWidth',1);
+title('Objective WRI, cycle 2');xlabel('PDE-fit');ylabel('Data-fit');%pbaspect([2 1 1])
+;axis([2e-5 2e-3 1e-10 5e-8])
+
+%% Crossections
+l1=225; l2=400; l3=550;
+figWidth = 1120; % pixels
+figHeight = 540;
+rect = [0 50 figWidth figHeight];
+figure('OuterPosition', rect);set(gca,'Fontsize',10)
+
+subplot(1,3,1);set(gca,'Fontsize',10);plot(v(:,l1),z,'LineWidth',1.5);set(gca,'YDir','reverse');hold on;title(['x =',num2str(x(l1)),'[m]']);xlabel('Velocity [m/s]');ylabel('z [m]');axis([1000 4500 0 1700]);pbaspect([0.5 1 1])
+subplot(1,3,2);set(gca,'Fontsize',10);plot(v(:,l2),z,'LineWidth',1.5);set(gca,'YDir','reverse');hold on;title(['x =',num2str(x(l2)),'[m]']);xlabel('Velocity [m/s]');ylabel('z [m]');axis([1000 4500 0 1700]);pbaspect([0.5 1 1])
+subplot(1,3,3);set(gca,'Fontsize',10);plot(v(:,l3),z,'LineWidth',1.5);set(gca,'YDir','reverse');hold on;title(['x =',num2str(x(l3)),'[m]']);xlabel('Velocity [m/s]');ylabel('z [m]');axis([1000 4500 0 1700]);pbaspect([0.5 1 1])
+
+subplot(1,3,1);plot(vp(:,l1),z,'r','LineWidth',1.5);set(gca,'YDir','reverse');hold on;
+subplot(1,3,2);plot(vp(:,l2),z,'r','LineWidth',1.5);set(gca,'YDir','reverse');hold on;
+subplot(1,3,3);plot(vp(:,l3),z,'r','LineWidth',1.5);set(gca,'YDir','reverse');hold on;
+
+subplot(1,3,1);plot(v0(:,l1),z,'g','LineWidth',1.5);set(gca,'YDir','reverse');
+p=legend('True model','WRI','start','Location','SouthOutside');
+subplot(1,3,2);plot(v0(:,l2),z,'g','LineWidth',1.5);set(gca,'YDir','reverse');
+p=legend('True model','WRI','start','Location','SouthOutside');
+subplot(1,3,3);plot(v0(:,l3),z,'g','LineWidth',1.5);set(gca,'YDir','reverse');
+p=legend('True model','WRI','start','Location','SouthOutside');
+
+
+
+%% (normalized) difference with the true model
+
+figWidth = 1120; % pixels
+figHeight = 340;
+rect = [0 50 figWidth figHeight];
+figure('OuterPosition', rect);set(gca,'Fontsize',10)
+subplot(1,2,1);set(gca,'Fontsize',10);plot(nonzeros(cell2mat(err_p_tmp)./err_p_tmp{1}(2)),'r','LineWidth',3);ylabel('Normalized error');
+title('L2 difference with true model, cycle 1');xlabel('Iteration nr.');axis([-5 350 .55 1]);pbaspect([3 1 1])
+subplot(1,2,2);set(gca,'Fontsize',10);plot(nonzeros(cell2mat(err_p_tmp2)./err_p_tmp2{1}(2)),'r','LineWidth',3);ylabel('Normalized error');
+title('L2 difference with true model, cycle 2');xlabel('Iteration nr.');axis([-5 350 .75 1]);  pbaspect([3 1 1])
+
+
+%% First updates for both methods at first frequency batch
+
+figWidth = 1120; % pixels
+figHeight = 340;
+rect = [0 50 figWidth figHeight];
+figure('OuterPosition', rect)
+subplot(1,2,1);set(gca,'Fontsize',10)
+imagesc(x,z,vp1-v0,[-200 200]);title('First update WRI')
+xlabel('x [m]');ylabel('z [m]');axis equal tight;
+
+p=subplot(1,2,2);set(gca,'Fontsize',10)
+imagesc(x,z,vr1-v0,[-200 200]);title(['First update FWI'])
+xlabel('x [m]');
+pos2=get(p,'Position');set(p,'Position',[pos2(1)-0.03 pos2(2) pos2(3) pos2(4)]);axis equal tight;
+pos_sub=get(p,'Position');
+set(p,'Position',pos_sub)
+
+h = colorbar;ylabel(h, 'Velocity [m/s]','FontSize',10);
+pos=get(h, 'Position');
+set(h, 'Position', [pos(1)+0.08 pos(2)-0.012 0.5*pos(3) 1.33*pos(4)])
+set(p,'Position',pos_sub)
+
+%% WRI model estimate after cycle 1 and cycle2 through the data
+
+figWidth = 1120; % pixels
+figHeight = 340;
+rect = [0 50 figWidth figHeight];
+figure('OuterPosition', rect)
+subplot(1,2,1);set(gca,'Fontsize',10)
+imagesc(x,z,vpc1,[1500 4500]);title(['Result WRI after cycle 1, \lambda=',num2str(params.lambda)])
+xlabel('x [m]');ylabel('z [m]');axis equal tight;
+
+p=subplot(1,2,2);set(gca,'Fontsize',10)
+imagesc(x,z,vpc2,[1500 4500]);title(['Result WRI after cycle 2, \lambda=',num2str(params.lambda)])
+xlabel('x [m]');
+pos2=get(p,'Position');set(p,'Position',[pos2(1)-0.03 pos2(2) pos2(3) pos2(4)]);axis equal tight;
+pos_sub=get(p,'Position');
+set(p,'Position',pos_sub)
+
+h = colorbar;ylabel(h, 'Velocity [m/s]','FontSize',10);
+pos=get(h, 'Position');
+set(h, 'Position', [pos(1)+0.08 pos(2)-0.012 0.5*pos(3) 1.33*pos(4)])
+set(p,'Position',pos_sub)
+
+
+%% References
+
+%%
+% <http://dx.doi.org/10.1093/gji/ggt258 [1]> Tristan van Leeuwen, Felix J.
+% Herrmann, Geophysical Journal International,2013. Mitigating local minima in full-waveform inversion by expanding the search space.
+
+%%
+% <https://slim.gatech.edu/content/penalty-method-pde-constrained-optimization
+% [2]> Tristan van Leeuwen, Felix J. Herrmann. 2013. A penalty method for PDE-constrained optimization.
+
+%%
+% <https://slim.gatech.edu/content/wave-equation-based-inversion-penalty-method-adjoint-state-versus-wavefield-reconstruction-i [3]> Bas
+% Peters, Felix J. Herrmann, Tristan van Leeuwen. EAGE, 2014. Wave-equation
+% based inversion with the penalty method: adjoint-state versus wavefield-reconstruction inversion.
+##### SOURCE END #####
+-->
+   </body>
+</html>

@@ -1,0 +1,375 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>2D constant-density acoustic frequency-domain modeling, linearized modeling and imaging: Modeling</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 7.12">
+      <meta name="date" content="2012-03-07">
+      <meta name="m-file" content="modeling">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>2D constant-density acoustic frequency-domain modeling, linearized modeling and imaging: Modeling</h1>
+         <introduction>
+            <p>The modeling operator is based on a 9-point mixed-grid discretization of the Helmholtz operator [1]. It solves the system
+               in parallel over frequencies using direct factorization (Matlab's <tt>mldivide</tt>). Source injection and receiver sampling is done via cubic interpolation. The Jacobian is derived by linearizing the discretized
+               system and its forward and adjoint action is calculated via the adjoint-state method.
+            </p>
+            <p>The basic syntax of the modeling operator is <tt>[D,J] = F(m,Q,model)</tt>, where
+            </p>
+            <div>
+               <ul>
+                  <li><tt>m</tt> is a vector with a gridded slowness-squared model [km^2/s^2],
+                  </li>
+                  <li><tt>Q</tt> is a matrix that defines the sources,
+                  </li>
+                  <li><tt>model</tt> is a struct with various other parameters,
+                  </li>
+                  <li><tt>D</tt> is a vectorized data-cube (receiver x source x frequency),
+                  </li>
+                  <li><tt>J</tt> is the Jacobian as SPOT operator.
+                  </li>
+               </ul>
+            </div>
+            <p>We illustrate the basic modeling capabilities on a simple layered model.</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Model</a></li>
+               <li><a href="#3">Sources/receivers</a></li>
+               <li><a href="#6">Parameters</a></li>
+               <li><a href="#7">Data</a></li>
+               <li><a href="#10">Born modeling</a></li>
+               <li><a href="#13">References</a></li>
+            </ul>
+         </div>
+         <h2>Model<a name="1"></a></h2>
+         <p>We define a simple layered model:</p><pre class="codeinput"><span class="comment">% grid</span>
+z = 0:20:1000;
+x = 0:20:2000;
+
+<span class="comment">% convert to [origin, increment, size] triplet</span>
+[o,d,n] = grid2odn(z,x);
+
+<span class="comment">% velocity</span>
+v = 1500*ones(n);
+v(z&gt;300,:) = 2000;
+v(z&gt;700,:) = 2500;
+
+<span class="comment">% plot</span>
+figure;
+imagesc(x,z,v);axis <span class="string">equal</span> <span class="string">tight</span>;colorbar;
+xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'velocity [m/s]'</span>);
+</pre><img vspace="5" hspace="5" src="modeling_01.png"> <p>Now, we define a vector with gridded slowness-squared values [km^2/s^2]</p><pre class="codeinput">m = 1e6./v(:).^2;
+</pre><h2>Sources/receivers<a name="3"></a></h2>
+         <p>The sources are defined on a separate grid, which is mapped to the computational grid via adjoint cubic interpolation. A monopole
+            source is then simply defined by putting a single spike on the source grid. For example,
+         </p><pre class="codeinput"><span class="comment">% source grid, 1D grid at z = 15</span>
+zsrc = 15;
+xsrc = 500:25:1500;
+
+<span class="comment">% point source at z = 15, x = 1225</span>
+q = 0*xsrc;
+q(xsrc==1225) = 1;
+
+<span class="comment">% define cubic interpolation operator that maps from the model-grid to the</span>
+<span class="comment">% source-grid:</span>
+
+L = opKron(opLInterp1D(x,xsrc),opLInterp1D(z,zsrc));
+
+<span class="comment">% plot source function on model grid</span>
+figure;
+imagesc(x,z,reshape(L'*q(:),n),[-0.01 0.01]);xlim([1200 1300]);ylim([0 50]);
+colormap([.8 0 0;1 0 0;1 1 1;0 0 1;0 0 .8]);
+set(gca,<span class="string">'xtick'</span>,x,<span class="string">'ytick'</span>,z,<span class="string">'xgrid'</span>,<span class="string">'on'</span>,<span class="string">'ygrid'</span>,<span class="string">'on'</span>);
+hold <span class="string">on</span>;plot(1225,15,<span class="string">'w*'</span>);
+xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'monopole source on model-grid'</span>);
+</pre><img vspace="5" hspace="5" src="modeling_02.png"> <p>Each column of the source matrix <tt>Q</tt> defines one gridded source function. To define a point source on each gridpoint of the source grid, we simply take <tt>Q</tt> to be an identity matrix:
+         </p><pre class="codeinput">Q = speye(length(xsrc));
+</pre><p>The receivers are defined on a similar grid, and the data is mapped to this grid via cubic interpolation.</p>
+         <h2>Parameters<a name="6"></a></h2>
+         <p>The struct model contains the following parameters</p>
+         <div>
+            <ul>
+               <li><tt>model.{o,d,n}</tt>     - physical grid: z = ox(1) + [0:nx(1)-1]*dx(1), etc.
+               </li>
+               <li><tt>model.nb</tt>          - number of points to add in each direction for absorbing boundary
+               </li>
+               <li><tt>model.freq</tt>        - frequencies in Herz
+               </li>
+               <li><tt>model.f0</tt>          - peak frequency of Ricker wavelet, 0 for no wavelet.
+               </li>
+               <li><tt>model.t0</tt>          - phase shift [s] of wavelet.
+               </li>
+               <li><tt>model.{zsrc,xsrc}</tt> - vectors describing source array
+               </li>
+               <li><tt>model.{zrec,xrec}</tt> - vectors describing receiver array.
+               </li>
+            </ul>
+         </div><pre class="codeinput"><span class="comment">% model grid</span>
+model.o = o;
+model.d = d;
+model.n = n;
+
+<span class="comment">% absorbing boundary</span>
+model.nb = [50 50];
+
+<span class="comment">% source/receiver grid</span>
+model.zsrc = zsrc;
+model.xsrc = xsrc;
+model.zrec = 5;
+model.xrec = 0:15:2000;
+
+<span class="comment">% frequencies in Herz.</span>
+model.freq = [4:2:15];
+
+<span class="comment">% wavelet</span>
+model.f0 = 10;
+model.t0 = 0.01;
+</pre><h2>Data<a name="7"></a></h2>
+         <p>Having defined al the parameters, we can simply generate data as follows</p><pre class="codeinput">D = F(m,Q,model,1);
+</pre><p>The number of source, receivers and frequencies are given by</p><pre class="codeinput">nrec  = length(model.xrec);
+nsrc  = size(Q,2);
+nfreq = length(model.freq);
+</pre><p>We can now reshape the data into a cube and plot a frequency slice</p><pre class="codeinput">D = reshape(D,nrec,nsrc,nfreq);
+
+figure;
+imagesc(real(D(:,:,3)));
+xlabel(<span class="string">'source number'</span>);ylabel(<span class="string">'receiver number'</span>);title([<span class="string">'Real part of data @ '</span> num2str(model.freq(3)) <span class="string">' Hz'</span>]);
+</pre><img vspace="5" hspace="5" src="modeling_03.png"> <h2>Born modeling<a name="10"></a></h2>
+         <p>We can model linearized data by using the Jacobian. First we define a smoothed model and reflectivity.</p><pre class="codeinput"><span class="comment">% smoothing operator</span>
+S = opKron(opSmooth(n(2),50),opSmooth(n(1),50));
+
+<span class="comment">% smooth model and perturbation</span>
+m0 = S*m;
+dm = m - m0;
+
+<span class="comment">% plot</span>
+figure;
+imagesc(x,z,reshape(m0,n));colorbar;
+xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'Smooth model [s^2/km^2]'</span>);
+
+figure;
+imagesc(x,z,reshape(dm,n));colorbar;
+xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'perturbation [s^2/km^2]'</span>);
+</pre><img vspace="5" hspace="5" src="modeling_04.png"> <img vspace="5" hspace="5" src="modeling_05.png"> <p>The Jacobian operator is constructed as follows:</p><pre class="codeinput">J = oppDF(m0,Q,model,1);
+</pre><p>Remember, <tt>J</tt> is <b>not</b> an explicit matrix. It is simply an object that looks like a matrix to matlab. Constructing it does not require any computation.
+            All the computations are done when multiplying it with a vector.
+         </p>
+         <p>The linearized data is now simply given by</p><pre class="codeinput">dD = J*dm;
+
+dD = reshape(dD,nrec,nsrc,nfreq);
+
+<span class="comment">% plot</span>
+figure;
+imagesc(real(dD(:,:,3)));
+xlabel(<span class="string">'source number'</span>);ylabel(<span class="string">'receiver number'</span>);title([<span class="string">'Real part of data @ '</span> num2str(model.freq(3)) <span class="string">' Hz'</span>]);
+</pre><img vspace="5" hspace="5" src="modeling_06.png"> <h2>References<a name="13"></a></h2>
+         <p><a href="http://dx.doi.org/10.1190/1.1443979">[1]</a> C-H Jo,* C. Shin,* and J.H. Suh, 1996. An optimal 9-point, finite-difference, frequency-space, 2-D scalar wave extrapolator
+            Geophysics 61(2), 529-537.
+         </p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% 2D constant-density acoustic frequency-domain modeling, linearized modeling and imaging: Modeling
+%
+% The modeling operator is based on a 9-point mixed-grid discretization of
+% the Helmholtz operator [1]. It solves the system in parallel over
+% frequencies using direct factorization (Matlab's |mldivide|). Source
+% injection and receiver sampling is done via cubic interpolation. The
+% Jacobian is derived by linearizing the discretized system and its forward
+% and adjoint action is calculated via the adjoint-state method.
+%
+% The basic syntax of the modeling operator is |[D,J] = F(m,Q,model)|,
+% where
+%
+% * |m| is a vector with a gridded slowness-squared model [km^2/s^2],
+% * |Q| is a matrix that defines the sources,
+% * |model| is a struct with various other parameters,
+% * |D| is a vectorized data-cube (receiver x source x frequency),
+% * |J| is the Jacobian as SPOT operator.
+%
+% We illustrate the basic modeling capabilities on a simple layered model.
+
+%% Model
+% We define a simple layered model:
+
+% grid
+z = 0:20:1000;
+x = 0:20:2000;
+
+% convert to [origin, increment, size] triplet
+[o,d,n] = grid2odn(z,x);
+
+% velocity
+v = 1500*ones(n);
+v(z>300,:) = 2000;
+v(z>700,:) = 2500;
+
+% plot
+figure;
+imagesc(x,z,v);axis equal tight;colorbar;
+xlabel('x [m]');ylabel('z [m]');title('velocity [m/s]');
+
+%%
+% Now, we define a vector with gridded slowness-squared values [km^2/s^2] 
+%
+
+m = 1e6./v(:).^2;
+
+%% Sources/receivers
+%
+% The sources are defined on a separate grid, which is mapped to the
+% computational grid via adjoint cubic interpolation. A monopole source is
+% then simply defined by putting a single spike on the source grid. For
+% example,
+%
+
+% source grid, 1D grid at z = 15 
+zsrc = 15;
+xsrc = 500:25:1500;
+
+% point source at z = 15, x = 1225
+q = 0*xsrc;
+q(xsrc==1225) = 1;
+
+% define cubic interpolation operator that maps from the model-grid to the
+% source-grid:
+
+L = opKron(opLInterp1D(x,xsrc),opLInterp1D(z,zsrc));
+
+% plot source function on model grid
+figure;
+imagesc(x,z,reshape(L'*q(:),n),[-0.01 0.01]);xlim([1200 1300]);ylim([0 50]);
+colormap([.8 0 0;1 0 0;1 1 1;0 0 1;0 0 .8]);
+set(gca,'xtick',x,'ytick',z,'xgrid','on','ygrid','on');
+hold on;plot(1225,15,'w*');
+xlabel('x [m]');ylabel('z [m]');title('monopole source on model-grid');
+
+%%
+% Each column of the source matrix |Q| defines one gridded source function.
+% To define a point source on each gridpoint of the source grid, we simply
+% take |Q| to be an identity matrix:
+
+Q = speye(length(xsrc));
+
+
+%% 
+% The receivers are defined on a similar grid, and the data is mapped to
+% this grid via cubic interpolation.
+
+
+%% Parameters 
+%
+% The struct model contains the following parameters
+%
+% * |model.{o,d,n}|     - physical grid: z = ox(1) + [0:nx(1)-1]*dx(1), etc.
+% * |model.nb|          - number of points to add in each direction for absorbing boundary
+% * |model.freq|        - frequencies in Herz
+% * |model.f0|          - peak frequency of Ricker wavelet, 0 for no wavelet.
+% * |model.t0|          - phase shift [s] of wavelet.
+% * |model.{zsrc,xsrc}| - vectors describing source array
+% * |model.{zrec,xrec}| - vectors describing receiver array.
+
+% model grid
+model.o = o;
+model.d = d;
+model.n = n;
+
+% absorbing boundary
+model.nb = [50 50];
+
+% source/receiver grid
+model.zsrc = zsrc; 
+model.xsrc = xsrc;
+model.zrec = 5;
+model.xrec = 0:15:2000;
+
+% frequencies in Herz.
+model.freq = [4:2:15];
+
+% wavelet
+model.f0 = 10;
+model.t0 = 0.01;
+
+%% Data
+% 
+% Having defined al the parameters, we can simply generate data as follows
+
+D = F(m,Q,model,1);
+
+%% 
+% The number of source, receivers and frequencies are given by 
+
+nrec  = length(model.xrec);
+nsrc  = size(Q,2);
+nfreq = length(model.freq);
+
+%%
+% We can now reshape the data into a cube and plot a frequency slice
+
+D = reshape(D,nrec,nsrc,nfreq);
+
+figure;
+imagesc(real(D(:,:,3)));
+xlabel('source number');ylabel('receiver number');title(['Real part of data @ ' num2str(model.freq(3)) ' Hz']);
+
+
+%% Born modeling
+% 
+% We can model linearized data by using the Jacobian. First we define a
+% smoothed model and reflectivity.
+
+% smoothing operator
+S = opKron(opSmooth(n(2),50),opSmooth(n(1),50));
+
+% smooth model and perturbation
+m0 = S*m;
+dm = m - m0;
+
+% plot
+figure;
+imagesc(x,z,reshape(m0,n));colorbar;
+xlabel('x [m]');ylabel('z [m]');title('Smooth model [s^2/km^2]');
+
+figure;
+imagesc(x,z,reshape(dm,n));colorbar;
+xlabel('x [m]');ylabel('z [m]');title('perturbation [s^2/km^2]');
+
+%%
+% The Jacobian operator is constructed as follows:
+
+J = oppDF(m0,Q,model,1);
+
+%%
+% Remember, |J| is *not* an explicit matrix. It is simply an object that
+% looks like a matrix to matlab. Constructing it does not require any computation. 
+% All the computations are done when multiplying it with a vector.
+%
+% The linearized data is now simply given by
+
+dD = J*dm;
+
+dD = reshape(dD,nrec,nsrc,nfreq);
+
+% plot
+figure;
+imagesc(real(dD(:,:,3)));
+xlabel('source number');ylabel('receiver number');title(['Real part of data @ ' num2str(model.freq(3)) ' Hz']);
+
+%% References
+% <http://dx.doi.org/10.1190/1.1443979 [1]> C-H Jo,* C. Shin,* and J.H. Suh, 1996. An optimal 9-point, finite-difference, frequency-space, 2-D scalar wave extrapolator
+% Geophysics 61(2), 529-537.
+##### SOURCE END #####
+-->
+   </body>
+</html>

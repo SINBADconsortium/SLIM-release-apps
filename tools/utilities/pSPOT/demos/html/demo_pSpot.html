@@ -1,0 +1,275 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>DEMO FOR PSPOT</title><meta name="generator" content="MATLAB 8.2"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-04-10"><meta name="DC.source" content="demo_pSpot.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, tt, code { font-size:12px; }
+pre { margin:0px 0px 20px; }
+pre.error { color:red; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>DEMO FOR PSPOT</h1><!--introduction--><p>Demonstration for SLIM group's pSpot Toolbox</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#5">Example 1: Inverting a large block-diagonal linear system with multiple data-columns</a></li><li><a href="#10">Example 2: Convolve every trace of a seismic datacube with a fixed signal</a></li><li><a href="#11">Example 3: Defining seperable sparsity transforms over different axes</a></li><li><a href="#13">Example 4: Constructing large linear systems in parallel using Stack</a></li></ul></div><p>There are two main reasons for using pSPOT:</p><p>1)Improved computational efficiency from parallel multiprocessing</p><p>2)Ability to hadle larger dataset by distributing amongst the memory space of multiple computers</p><p>The examples below serve to illustrate these points. Note: For this demo, please use an even number of workers in parallel pool</p><h2>Example 1: Inverting a large block-diagonal linear system with multiple data-columns<a name="5"></a></h2><pre class="codeinput"><span class="keyword">if</span> parpool_size() == 0 <span class="comment">% Setup parallel pool</span>
+    pool=parpool_open(2);
+<span class="keyword">end</span>
+
+n   = 1000;
+n_col  = 10;
+n_blocks = 6;
+</pre><pre class="codeoutput">Starting parallel pool (parpool) using the 'local' profile ... connected to 2 workers.
+</pre><p>Set up iid Gaussian matrices and data for each block using SPOT operators</p><pre class="codeinput"><span class="keyword">for</span> k = 1:n_blocks
+    Ac{k} = opGaussian(n,n);  <span class="comment">% n-by-n linear system</span>
+    bc{k} = opGaussian(n,n_col);  <span class="comment">% data</span>
+<span class="keyword">end</span>
+</pre><p>Collect matrices for each block into a block-diagonal system using pSPOT operators</p><pre class="codeinput">A  = oppBlockDiag(Ac{:});
+b  = double(oppStack(bc{:}));
+</pre><pre class="codeoutput">Error using oppStack&gt;(spmd) (line 142)
+Error detected on lab(s) 1 2.
+
+Error in oppStack/double (line 142)
+            spmd
+
+Error in demo_pSpot (line 33)
+b  = double(oppStack(bc{:}));
+
+Caused by:
+    Error using codistributor1d (line 446)
+    The sum of the distribution partition must be equal to the global size in the distribution dimension.
+        Error using codistributor1d (line 446)
+        The sum of the distribution partition must be equal to the global size in the distribution dimension.
+    Error using codistributor1d (line 446)
+    The sum of the distribution partition must be equal to the global size in the distribution dimension.
+        Error using codistributor1d (line 446)
+        The sum of the distribution partition must be equal to the global size in the distribution dimension.</pre><p>Note: Please make sure that the size of the individual inputs match the operators</p><p>Solve the system</p><pre class="codeinput">xt  = A\b;
+</pre><p>Check (there is some margin of error because SPOT automatically uses 10 LSQR iterations to invert the matrix. This can be made more accurate by overloading divide() for your own oeprators )</p><pre class="codeinput">bt = A*xt;
+norm(b(:)-bt(:))/norm(b(:))
+</pre><h2>Example 2: Convolve every trace of a seismic datacube with a fixed signal<a name="10"></a></h2><p>Create datacube x, and fixed signal s</p><pre class="codeinput">n1 = 128; <span class="comment">% time samples</span>
+n2 = 20; <span class="comment">% trace-per-gather</span>
+n3 = 12; <span class="comment">% shot gathers</span>
+<span class="keyword">spmd</span>
+    <span class="comment">% Create a random 3d-array x that is distributed along 3rd dimension</span>
+    x = randn(n1,n2,n3/numlabs);
+    xpart = (n3/numlabs)*ones(1,numlabs);
+    xcodist = codistributor1d(3,xpart,[n1 n2 n3]);
+    x = codistributed.build(x,xcodist,<span class="string">'noCommunication'</span>);
+<span class="keyword">end</span>
+
+<span class="comment">% Use FFT for the convolution, create the FFT operators</span>
+F = opDFT(n1);
+I = opDirac(n2*n3);
+
+<span class="comment">% Create fixed signal s</span>
+s = randn(n1,1);
+S = opDiag(F*s);
+
+<span class="comment">% Create the per-trace convolution operator</span>
+C = oppKron2Lo(I,F'*S*F); <span class="comment">% Kronecker product of a convolution operator and an identity over all the traces</span>
+
+<span class="comment">% Apply the convolution by a simple multiplication</span>
+x_convolved = C * x(:);
+</pre><h2>Example 3: Defining seperable sparsity transforms over different axes<a name="11"></a></h2><p>Here we define a sparsity transform S that performs Wavelet analysis on the first dimension and a 2D Curvelet analysis on the second &amp; third dimension</p><pre class="codeinput">dim=[64,32,32];
+C = opCurvelet(dim(2),dim(3));
+W = opWavelet(dim(1),1);
+S = oppKron2Lo(C,W',1);
+</pre><p>Make a random 3d data-array</p><pre class="codeinput">D = distributed.randn(dim(1),prod(dim(2:end)));
+
+<span class="comment">% Check to see if the analysis followed by synthesis returns the original signal</span>
+norm(D(:)-S'*S*D(:))
+</pre><h2>Example 4: Constructing large linear systems in parallel using Stack<a name="13"></a></h2><pre class="codeinput">m = 100;
+n = 10;
+U1 = opGaussian(m,n,1);
+U2 = opGaussian(m,n,1);
+V1 = opGaussian(m,n,1);
+V2 = opGaussian(m,n,1);
+
+<span class="comment">% Construct larger U and V using oppStack. This distributes the subblocks U1, U2, V1, V2 to different machines</span>
+U = oppStack(U1,U2);
+V = oppStack(V1,V2,1);
+
+<span class="comment">% Can combine these oparators to creater even larger ones, for example the outer product of U and V</span>
+A = U*V';
+</pre><p>A is never computed directly, instead only U and V are stored (in a distributed fashion) We probe the properties of A by getting its action on a vector w:</p><pre class="codeinput">w1 = opGaussian(m,1);
+w2 = opGaussian(m,1);
+w = double(oppStack(w1,w2)); <span class="comment">% w is re-cast as a native MATLAB distrtibuted vector</span>
+<span class="comment">% The action of A on w can now be computed in a distributed fashion</span>
+y = A * w;
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2013b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% DEMO FOR PSPOT
+% Demonstration for SLIM group's pSpot Toolbox
+%%
+% There are two main reasons for using pSPOT:
+%%
+% 1)Improved computational efficiency from parallel multiprocessing
+%%
+% 2)Ability to hadle larger dataset by distributing amongst the memory space of multiple computers
+%% 
+% The examples below serve to illustrate these points.
+% Note: For this demo, please use an even number of workers in parallel pool
+
+%% Example 1: Inverting a large block-diagonal linear system with multiple data-columns
+%
+if parpool_size() == 0 % Setup parallel pool
+    pool=parpool_open(2);
+end
+
+n   = 1000;
+n_col  = 10;
+n_blocks = 6;
+
+%%
+% Set up iid Gaussian matrices and data for each block using SPOT operators
+for k = 1:n_blocks
+    Ac{k} = opGaussian(n,n);  % n-by-n linear system
+    bc{k} = opGaussian(n,n_col);  % data
+end
+
+%%
+% Collect matrices for each block into a block-diagonal system using pSPOT operators
+A  = oppBlockDiag(Ac{:});
+b  = double(oppStack(bc{:}));
+%%
+% Note: Please make sure that the size of the individual inputs match the
+% operators
+%
+% Solve the system
+xt  = A\b;
+%%
+% Check (there is some margin of error because SPOT automatically uses 
+% 10 LSQR iterations to invert the matrix. This can be made more accurate by
+% overloading divide() for your own oeprators ) 
+bt = A*xt;
+norm(b(:)-bt(:))/norm(b(:))
+
+%% Example 2: Convolve every trace of a seismic datacube with a fixed signal
+% Create datacube x, and fixed signal s
+n1 = 128; % time samples
+n2 = 20; % trace-per-gather
+n3 = 12; % shot gathers
+spmd
+    % Create a random 3d-array x that is distributed along 3rd dimension
+    x = randn(n1,n2,n3/numlabs);
+    xpart = (n3/numlabs)*ones(1,numlabs);
+    xcodist = codistributor1d(3,xpart,[n1 n2 n3]);
+    x = codistributed.build(x,xcodist,'noCommunication');
+end
+
+% Use FFT for the convolution, create the FFT operators
+F = opDFT(n1);
+I = opDirac(n2*n3);
+
+% Create fixed signal s
+s = randn(n1,1);
+S = opDiag(F*s);
+
+% Create the per-trace convolution operator
+C = oppKron2Lo(I,F'*S*F); % Kronecker product of a convolution operator and an identity over all the traces
+
+% Apply the convolution by a simple multiplication
+x_convolved = C * x(:);
+
+%% Example 3: Defining seperable sparsity transforms over different axes
+% Here we define a sparsity transform S that performs Wavelet analysis on the first dimension
+% and a 2D Curvelet analysis on the second & third dimension
+dim=[64,32,32];
+C = opCurvelet(dim(2),dim(3));
+W = opWavelet(dim(1),1);
+S = oppKron2Lo(C,W',1);
+%%
+% Make a random 3d data-array
+D = distributed.randn(dim(1),prod(dim(2:end)));
+ 
+% Check to see if the analysis followed by synthesis returns the original signal
+norm(D(:)-S'*S*D(:))
+
+
+%% Example 4: Constructing large linear systems in parallel using Stack
+m = 100;
+n = 10;
+U1 = opGaussian(m,n,1);
+U2 = opGaussian(m,n,1);
+V1 = opGaussian(m,n,1);
+V2 = opGaussian(m,n,1);
+
+% Construct larger U and V using oppStack. This distributes the subblocks U1, U2, V1, V2 to different machines
+U = oppStack(U1,U2);
+V = oppStack(V1,V2,1);
+
+% Can combine these oparators to creater even larger ones, for example the outer product of U and V
+A = U*V'; 
+%%
+% A is never computed directly, instead only U and V are stored (in a distributed fashion)
+% We probe the properties of A by getting its action on a vector w:
+w1 = opGaussian(m,1);
+w2 = opGaussian(m,1);
+w = double(oppStack(w1,w2)); % w is re-cast as a native MATLAB distrtibuted vector 
+% The action of A on w can now be computed in a distributed fashion
+y = A * w;
+
+
+
+
+
+
+
+
+
+
+##### SOURCE END #####
+--></body></html>

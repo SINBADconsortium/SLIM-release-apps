@@ -1,0 +1,17 @@
+import os
+from rsf.proj import *
+
+########################################################################
+# RETRIEVE DATA
+########################################################################
+# define SLIM FTP server information
+FTPserver = {
+        'server': 'ftp.slim.gatech.edu',
+        'login': 'ftp',
+        'password':''}
+
+loc   = os.path.join('SoftwareRelease','WaveformInversion','3DParallelBatching','models')
+files = ['overthrust-small.rsf'];
+# fetch data from FTP server
+for elm in files:
+        Fetch(elm,loc,FTPserver)

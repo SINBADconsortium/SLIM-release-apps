@@ -1,0 +1,246 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>MGNFWI_camenbert</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 7.13">
+      <meta name="date" content="2012-03-12">
+      <meta name="m-file" content="MGNFWI_camenbert">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#2">camenbert example</a></li>
+               <li><a href="#3">define velocity model</a></li>
+               <li><a href="#4">setup parameters for reflection experiment</a></li>
+               <li><a href="#5">simulate observation data of reflection data</a></li>
+               <li><a href="#6">inversion</a></li>
+               <li><a href="#7">setup modeling parameters for transmission experiment</a></li>
+               <li><a href="#8">inversion</a></li>
+            </ul>
+         </div><pre class="codeinput"><span class="comment">% This example use a small model to test the FWI algorithum</span>
+<span class="comment">% -----------------------------------------------</span>
+<span class="comment">%</span>
+<span class="comment">% In this example, we process FWI from low frequency band to high frequency</span>
+<span class="comment">% band. 10 GN subproblems are solved for each frequency band which contains</span>
+<span class="comment">% 10 frequencies. For each GN subproblem, we use 7 randomly selected simultaneous</span>
+<span class="comment">% shots and roughly 20 L1 solver iterations</span>
+<span class="comment">%</span>
+<span class="comment">% We sugguest you run this script with parallel matlab, 10 workers will be the best</span>
+<span class="comment">%</span>
+<span class="comment">% Results will be saved as a mat file under results directory.</span>
+<span class="comment">% ------------------------------------------------</span>
+<span class="comment">%</span>
+<span class="comment">% setup a random seed</span>
+RandStream.setDefaultStream(RandStream(<span class="string">'mt19937ar'</span>,<span class="string">'seed'</span>,1));
+clear;  close <span class="string">all</span>;
+</pre><h2>camenbert example<a name="2"></a></h2>
+         <h2>define velocity model<a name="3"></a></h2><pre class="codeinput"><span class="comment">% grid</span>
+z = 0:10:1000;
+x = 0:10:1000;
+[o,d,n] = grid2odn(z,x);
+[zz,xx] = ndgrid(z,x);
+
+<span class="comment">% background velocity 2500 [m/s]</span>
+m0 = 2500 + 0*xx;
+
+<span class="comment">% circular perturbation with radius 250 m and strenth 10%</span>
+dv = 0*xx; dv((xx-500).^2 + (zz-500).^2 &lt;= 250^2) = .1*2500;
+
+<span class="comment">% plot</span>
+m  = m0 + dv;
+figure;imagesc(x,z,m);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'velocity [m/s]'</span>);colorbar;
+m0 = m0(:);
+m  = m(:);
+</pre><h2>setup parameters for reflection experiment<a name="4"></a></h2><pre class="codeinput">model.minf        = 2.9; <span class="comment">% minimal frequency (Hz)</span>
+model.maxf        = 22;  <span class="comment">% maximal frequency (Hz)</span>
+model.sourcet     = 1; <span class="comment">% source type: 1 sim source; 2 sequential source.</span>
+model.name        = [<span class="string">'/example_camenbert/FWIresult_camenbert'</span>]; <span class="comment">% name of result</span>
+model.vmin  = 2000;model.vmax  = 3000;<span class="comment">% min vel and max vel for the projection</span>
+model.nf          = 10; <span class="comment">% number of frequencies in each frequency band</span>
+model.snf         = 10; <span class="comment">% number of frequencies for each GN updates</span>
+model.ol          = 5;  <span class="comment">% number of overlap frequencies for two adjacent bands</span>
+model.gl          = 10; <span class="comment">% grid length</span>
+model.xbound      = .1; <span class="comment">% x dimension boundary size, percentage</span>
+model.zbound      = .1; <span class="comment">% z dimension boundary size, percentage</span>
+model.nshot       = 25;<span class="comment">% number of shot positions</span>
+model.nsim        = 3; <span class="comment">% Number of sim-shots for each GN subproblem</span>
+model.sdep        = 30; <span class="comment">% source depth, unit: meters</span>
+model.sp          = round(linspace(1,101,model.nshot)); <span class="comment">% source position</span>
+model.rdep        = 20; <span class="comment">% receiver depth, unit: meters</span>
+model.nrec        = 51; <span class="comment">% number of receivers</span>
+model.rp          = round(linspace(1,101,51)); <span class="comment">% receiver positions</span>
+model.water       = 3; <span class="comment">% estimated water depth, unit: number of grid</span>
+
+<span class="comment">% setup optimazation parameters</span>
+opts = Set_Paras( <span class="keyword">...</span>
+<span class="string">'miter'</span>,1, <span class="keyword">...</span><span class="comment">		                  % iteration number for frequency band.</span>
+<span class="string">'mlinm'</span>,10, <span class="keyword">...</span><span class="comment">			 	  		  % iteration number for relinearization for each freq band</span>
+<span class="string">'sptrans'</span>,<span class="string">'no'</span>, <span class="keyword">...</span><span class="comment">                   % process in the physical domain</span>
+<span class="string">'iterations'</span>,20, <span class="keyword">...</span><span class="comment"> 				  % iteration number for L1 solver ...</span>
+<span class="string">'dispresult'</span>,1);
+</pre><h2>simulate observation data of reflection data<a name="5"></a></h2><pre class="codeinput"><span class="comment">% define a wavelet</span>
+model.t0 = .2;
+model.f0 = 12;
+model.freq = linspace(model.minf,model.maxf,30);
+
+<span class="comment">% Setup forward modeling parameters.(do NOT modifed this part)</span>
+model.o = [0 0 0];
+model.d = [d 1];
+model.n = [n 1];
+model.nb = [floor(model.xbound*n(2)) floor(model.zbound*n(1)) 0];
+model.zsrc = model.sdep * model.gl;
+model.xsrc = (model.sp - 1) * model.gl ;
+model.zrec = model.rdep * model.gl;
+model.xrec = (model.rp - 1) * model.gl ;
+Q = (speye(model.nshot)./(model.gl^2));
+Dobs  = F(1e6./m.^2,Q,model,1);
+Dobs  = reshape(Dobs,model.nrec,model.nshot,length(model.freq));
+
+<span class="comment">% wavelet information</span>
+wavelet.t0 = model.t0;
+wavelet.f0 = model.f0;
+wavelet.faxis = model.freq;
+</pre><h2>inversion<a name="6"></a></h2><pre class="codeinput">[results] = MGNFWI(reshape(m0,n),Dobs,wavelet,model,opts);
+</pre><h2>setup modeling parameters for transmission experiment<a name="7"></a></h2><pre class="codeinput">model.rdep = 950;
+model.name        = [<span class="string">'/example_camenbert/FWIresult_camenbert_transmission'</span>]; <span class="comment">% name o</span>
+model.zrec = model.rdep;
+Dobs  = F(1e6./m.^2,Q,model,1);
+Dobs  = reshape(Dobs,model.nrec,model.nshot,length(model.freq));
+</pre><h2>inversion<a name="8"></a></h2><pre class="codeinput">[results] = MGNFWI(reshape(m0,n),Dobs,wavelet,model,opts);
+</pre><p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+% This example use a small model to test the FWI algorithum
+% REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+%
+% In this example, we process FWI from low frequency band to high frequency
+% band. 10 GN subproblems are solved for each frequency band which contains 
+% 10 frequencies. For each GN subproblem, we use 7 randomly selected simultaneous
+% shots and roughly 20 L1 solver iterations
+% 
+% We sugguest you run this script with parallel matlab, 10 workers will be the best
+%
+% Results will be saved as a mat file under results directory.
+% REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH
+%
+% setup a random seed
+RandStream.setDefaultStream(RandStream('mt19937ar','seed',1));
+clear;  close all;
+
+%% camenbert example
+
+%% define velocity model
+
+% grid
+z = 0:10:1000;
+x = 0:10:1000;
+[o,d,n] = grid2odn(z,x);
+[zz,xx] = ndgrid(z,x);
+
+% background velocity 2500 [m/s]
+m0 = 2500 + 0*xx;
+
+% circular perturbation with radius 250 m and strenth 10%
+dv = 0*xx; dv((xx-500).^2 + (zz-500).^2 <= 250^2) = .1*2500;
+
+% plot
+m  = m0 + dv;
+figure;imagesc(x,z,m);xlabel('x [m]');ylabel('z [m]');title('velocity [m/s]');colorbar;
+m0 = m0(:);
+m  = m(:);
+
+%% setup parameters for reflection experiment
+model.minf        = 2.9; % minimal frequency (Hz)
+model.maxf        = 22;  % maximal frequency (Hz)
+model.sourcet     = 1; % source type: 1 sim source; 2 sequential source.
+model.name        = ['/example_camenbert/FWIresult_camenbert']; % name of result
+model.vmin  = 2000;model.vmax  = 3000;% min vel and max vel for the projection
+model.nf          = 10; % number of frequencies in each frequency band
+model.snf         = 10; % number of frequencies for each GN updates 
+model.ol          = 5;  % number of overlap frequencies for two adjacent bands
+model.gl          = 10; % grid length
+model.xbound      = .1; % x dimension boundary size, percentage
+model.zbound      = .1; % z dimension boundary size, percentage
+model.nshot       = 25;% number of shot positions
+model.nsim        = 3; % Number of sim-shots for each GN subproblem
+model.sdep        = 30; % source depth, unit: meters
+model.sp          = round(linspace(1,101,model.nshot)); % source position
+model.rdep        = 20; % receiver depth, unit: meters
+model.nrec        = 51; % number of receivers
+model.rp          = round(linspace(1,101,51)); % receiver positions
+model.water       = 3; % estimated water depth, unit: number of grid
+
+% setup optimazation parameters
+opts = Set_Paras( ...
+'miter',1, ...		                  % iteration number for frequency band.
+'mlinm',10, ...			 	  		  % iteration number for relinearization for each freq band
+'sptrans','no', ...                   % process in the physical domain
+'iterations',20, ... 				  % iteration number for L1 solver ...
+'dispresult',1);   
+
+
+%% simulate observation data of reflection data
+
+% define a wavelet
+model.t0 = .2;
+model.f0 = 12;
+model.freq = linspace(model.minf,model.maxf,30);
+
+% Setup forward modeling parameters.(do NOT modifed this part)
+model.o = [0 0 0];
+model.d = [d 1];
+model.n = [n 1];        
+model.nb = [floor(model.xbound*n(2)) floor(model.zbound*n(1)) 0];
+model.zsrc = model.sdep * model.gl; 
+model.xsrc = (model.sp - 1) * model.gl ;
+model.zrec = model.rdep * model.gl; 
+model.xrec = (model.rp - 1) * model.gl ;
+Q = (speye(model.nshot)./(model.gl^2));
+Dobs  = F(1e6./m.^2,Q,model,1); 
+Dobs  = reshape(Dobs,model.nrec,model.nshot,length(model.freq));
+
+% wavelet information
+wavelet.t0 = model.t0;
+wavelet.f0 = model.f0;
+wavelet.faxis = model.freq;
+
+
+
+
+%% inversion
+
+[results] = MGNFWI(reshape(m0,n),Dobs,wavelet,model,opts);
+
+
+
+%% setup modeling parameters for transmission experiment
+model.rdep = 950;
+model.name        = ['/example_camenbert/FWIresult_camenbert_transmission']; % name o
+model.zrec = model.rdep;
+Dobs  = F(1e6./m.^2,Q,model,1); 
+Dobs  = reshape(Dobs,model.nrec,model.nshot,length(model.freq));
+
+
+%% inversion
+
+[results] = MGNFWI(reshape(m0,n),Dobs,wavelet,model,opts);
+
+
+
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

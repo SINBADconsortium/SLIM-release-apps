@@ -1,0 +1,257 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Joint Recovery Method:  Examples and results</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 8.1">
+      <meta name="date" content="2014-06-11">
+      <meta name="m-file" content="results">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>Joint Recovery Method:  Examples and results</h1>
+         <introduction></introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#2">Plotting parameters</a></li>
+               <li><a href="#3">Original data</a></li>
+               <li><a href="#5">Measured data with randomly missing shots in both vintages</a></li>
+               <li><a href="#7">Estimated data after joint recovery method</a></li>
+               <li><a href="#9">Residual : Original - Estimate</a></li>
+            </ul>
+         </div>
+         <p>Load the data and results from the output directory</p><pre class="codeinput">label = <span class="string">'MissShots_OneReceiverGather'</span>;
+datadir = <span class="string">'../data/'</span>;
+outputdir = [<span class="string">'../results/'</span> label];
+load([outputdir, <span class="string">'/SymmetricSamples.mat'</span>]);
+
+dim = size(D1);
+D1_rec = reshape(D1_rec,dim(1),dim(2));
+D2_rec = reshape(D2_rec,dim(1),dim(2));
+
+y1 = reshape(Ry1,dim(1),dim(2));
+y2 = reshape(Ry2,dim(1),dim(2));
+</pre><h2>Plotting parameters<a name="2"></a></h2><pre class="codeinput">cax = 0.5;
+cmap = <span class="string">'gray'</span>;
+fs = 18;
+xval = 600;yval = 1500;zval = 200;
+</pre><h2>Original data<a name="3"></a></h2><pre class="codeinput">figure(1);
+set(gcf,<span class="string">'Position'</span>,[100 100 yval xval]);
+subplot(131);imagesc(D1);
+colormap(cmap); caxis([-cax cax]);
+xlabel(<span class="string">'Trace number'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+ylabel(<span class="string">'Time samples'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+title(<span class="string">'Baseline'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+pbaspect([xval yval zval]);
+set(gca,<span class="string">'fontsize'</span>,fs,<span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>,<span class="string">'LineWidth'</span>,2);
+subplot(132);imagesc(D2);
+colormap(cmap); caxis([-cax cax]);
+xlabel(<span class="string">'Trace number'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+ylabel(<span class="string">'Time samples'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+title(<span class="string">'Monitor'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+pbaspect([xval yval zval]);
+set(gca,<span class="string">'fontsize'</span>,fs,<span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>,<span class="string">'LineWidth'</span>,2);
+subplot(133);imagesc(D1-D2);
+colormap(cmap); caxis(0.1*[-cax cax]);
+xlabel(<span class="string">'Trace number'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+ylabel(<span class="string">'Time samples'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+title(<span class="string">'True 4-D signal'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+pbaspect([xval yval zval]);
+set(gca,<span class="string">'fontsize'</span>,fs,<span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>,<span class="string">'LineWidth'</span>,2);
+</pre><img vspace="5" hspace="5" src="results_01.png"> <h2>Measured data with randomly missing shots in both vintages<a name="5"></a></h2><pre class="codeinput">figure(2);
+set(gcf,<span class="string">'Position'</span>,[100 100 yval xval]);
+subplot(121);imagesc(y1); colormap(cmap); caxis([-cax cax]);
+title(<span class="string">'Observed Baseline'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+xlabel(<span class="string">'Trace number'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+ylabel(<span class="string">'Time samples'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+pbaspect([xval yval 100]);
+set(gca,<span class="string">'fontsize'</span>,fs,<span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>,<span class="string">'LineWidth'</span>,2);
+subplot(122);imagesc(y2); colormap(cmap); caxis([-cax cax]);
+title(<span class="string">'Observed Monitor'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+xlabel(<span class="string">'Trace number'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+ylabel(<span class="string">'Time samples'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+pbaspect([xval yval 100]);
+set(gca,<span class="string">'fontsize'</span>,fs,<span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>,<span class="string">'LineWidth'</span>,2);
+</pre><img vspace="5" hspace="5" src="results_02.png"> <h2>Estimated data after joint recovery method<a name="7"></a></h2><pre class="codeinput">figure(3);
+set(gcf,<span class="string">'Position'</span>,[100 100 yval xval]);
+subplot(131);imagesc(D1_rec);
+colormap(cmap); caxis([-cax cax]);
+xlabel(<span class="string">'Trace number'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+ylabel(<span class="string">'Time samples'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+title(<span class="string">'Estimated Baseline'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+pbaspect([xval yval zval]);
+set(gca,<span class="string">'fontsize'</span>,fs,<span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>,<span class="string">'LineWidth'</span>,2);
+subplot(132);imagesc(D2_rec);
+colormap(cmap); caxis([-cax cax]);
+xlabel(<span class="string">'Trace number'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+ylabel(<span class="string">'Time samples'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+title(<span class="string">'Estimated Monitor'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+pbaspect([xval yval zval]);
+set(gca,<span class="string">'fontsize'</span>,fs,<span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>,<span class="string">'LineWidth'</span>,2);
+subplot(133);imagesc(D1_rec-D2_rec);
+colormap(cmap); caxis(0.1*[-cax cax]);
+xlabel(<span class="string">'Trace number'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+ylabel(<span class="string">'Time samples'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+title(<span class="string">'Estimated 4-D signal'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+pbaspect([xval yval zval]);
+set(gca,<span class="string">'fontsize'</span>,fs,<span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>,<span class="string">'LineWidth'</span>,2);
+</pre><img vspace="5" hspace="5" src="results_03.png"> <h2>Residual : Original - Estimate<a name="9"></a></h2><pre class="codeinput">figure(4);
+set(gcf,<span class="string">'Position'</span>,[100 100 yval xval]);
+subplot(131);imagesc(D1-D1_rec);
+colormap(cmap); caxis([-cax cax]);
+xlabel(<span class="string">'Trace number'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+ylabel(<span class="string">'Time samples'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+title(<span class="string">'Error in Baseline'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+pbaspect([xval yval zval]);
+set(gca,<span class="string">'fontsize'</span>,fs,<span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>,<span class="string">'LineWidth'</span>,2);
+subplot(132);imagesc(D2-D2_rec);
+colormap(cmap); caxis([-cax cax]);
+xlabel(<span class="string">'Trace number'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+ylabel(<span class="string">'Time samples'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+title(<span class="string">'Error in Monitor'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+pbaspect([xval yval zval]);
+set(gca,<span class="string">'fontsize'</span>,fs,<span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>,<span class="string">'LineWidth'</span>,2);
+subplot(133);imagesc((D1-D2)-(D1_rec-D2_rec));
+colormap(cmap); caxis(0.1*[-cax cax]);
+xlabel(<span class="string">'Trace number'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+ylabel(<span class="string">'Time samples'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+title(<span class="string">'Error in 4-D signal'</span>,<span class="string">'FontSize'</span>,fs, <span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>);
+pbaspect([xval yval zval]);
+set(gca,<span class="string">'fontsize'</span>,fs,<span class="string">'FontName'</span>,<span class="string">'verdana'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>,<span class="string">'LineWidth'</span>,2);
+</pre><img vspace="5" hspace="5" src="results_04.png"> <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Joint Recovery Method:  Examples and results
+%%
+% Load the data and results from the output directory
+label = 'MissShots_OneReceiverGather';
+datadir = '../data/';
+outputdir = ['../results/' label];
+load([outputdir, '/SymmetricSamples.mat']);
+
+dim = size(D1);
+D1_rec = reshape(D1_rec,dim(1),dim(2));
+D2_rec = reshape(D2_rec,dim(1),dim(2));
+
+y1 = reshape(Ry1,dim(1),dim(2));
+y2 = reshape(Ry2,dim(1),dim(2));
+
+%% Plotting parameters
+cax = 0.5;
+cmap = 'gray';
+fs = 18;
+xval = 600;yval = 1500;zval = 200;
+
+%% Original data 
+%%
+figure(1); 
+set(gcf,'Position',[100 100 yval xval]);
+subplot(131);imagesc(D1); 
+colormap(cmap); caxis([-cax cax]);
+xlabel('Trace number','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+ylabel('Time samples','FontSize',fs, 'FontName','verdana','FontWeight','bold');
+title('Baseline','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+pbaspect([xval yval zval]);
+set(gca,'fontsize',fs,'FontName','verdana','FontWeight','bold','LineWidth',2);
+subplot(132);imagesc(D2);
+colormap(cmap); caxis([-cax cax]); 
+xlabel('Trace number','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+ylabel('Time samples','FontSize',fs, 'FontName','verdana','FontWeight','bold');
+title('Monitor','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+pbaspect([xval yval zval]);
+set(gca,'fontsize',fs,'FontName','verdana','FontWeight','bold','LineWidth',2);
+subplot(133);imagesc(D1-D2);
+colormap(cmap); caxis(0.1*[-cax cax]); 
+xlabel('Trace number','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+ylabel('Time samples','FontSize',fs, 'FontName','verdana','FontWeight','bold');
+title('True 4-D signal','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+pbaspect([xval yval zval]);
+set(gca,'fontsize',fs,'FontName','verdana','FontWeight','bold','LineWidth',2);
+
+
+%% Measured data with randomly missing shots in both vintages
+%%
+figure(2); 
+set(gcf,'Position',[100 100 yval xval]);
+subplot(121);imagesc(y1); colormap(cmap); caxis([-cax cax]); 
+title('Observed Baseline','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+xlabel('Trace number','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+ylabel('Time samples','FontSize',fs, 'FontName','verdana','FontWeight','bold');
+pbaspect([xval yval 100]);
+set(gca,'fontsize',fs,'FontName','verdana','FontWeight','bold','LineWidth',2);
+subplot(122);imagesc(y2); colormap(cmap); caxis([-cax cax]); 
+title('Observed Monitor','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+xlabel('Trace number','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+ylabel('Time samples','FontSize',fs, 'FontName','verdana','FontWeight','bold');
+pbaspect([xval yval 100]);
+set(gca,'fontsize',fs,'FontName','verdana','FontWeight','bold','LineWidth',2);
+
+
+%% Estimated data after joint recovery method
+%%
+figure(3); 
+set(gcf,'Position',[100 100 yval xval]);
+subplot(131);imagesc(D1_rec); 
+colormap(cmap); caxis([-cax cax]);
+xlabel('Trace number','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+ylabel('Time samples','FontSize',fs, 'FontName','verdana','FontWeight','bold');
+title('Estimated Baseline','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+pbaspect([xval yval zval]);
+set(gca,'fontsize',fs,'FontName','verdana','FontWeight','bold','LineWidth',2);
+subplot(132);imagesc(D2_rec);
+colormap(cmap); caxis([-cax cax]); 
+xlabel('Trace number','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+ylabel('Time samples','FontSize',fs, 'FontName','verdana','FontWeight','bold');
+title('Estimated Monitor','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+pbaspect([xval yval zval]);
+set(gca,'fontsize',fs,'FontName','verdana','FontWeight','bold','LineWidth',2);
+subplot(133);imagesc(D1_rec-D2_rec);
+colormap(cmap); caxis(0.1*[-cax cax]); 
+xlabel('Trace number','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+ylabel('Time samples','FontSize',fs, 'FontName','verdana','FontWeight','bold');
+title('Estimated 4-D signal','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+pbaspect([xval yval zval]);
+set(gca,'fontsize',fs,'FontName','verdana','FontWeight','bold','LineWidth',2);
+
+
+%% Residual : Original - Estimate
+%%
+figure(4); 
+set(gcf,'Position',[100 100 yval xval]);
+subplot(131);imagesc(D1-D1_rec); 
+colormap(cmap); caxis([-cax cax]);
+xlabel('Trace number','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+ylabel('Time samples','FontSize',fs, 'FontName','verdana','FontWeight','bold');
+title('Error in Baseline','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+pbaspect([xval yval zval]);
+set(gca,'fontsize',fs,'FontName','verdana','FontWeight','bold','LineWidth',2);
+subplot(132);imagesc(D2-D2_rec);
+colormap(cmap); caxis([-cax cax]); 
+xlabel('Trace number','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+ylabel('Time samples','FontSize',fs, 'FontName','verdana','FontWeight','bold');
+title('Error in Monitor','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+pbaspect([xval yval zval]);
+set(gca,'fontsize',fs,'FontName','verdana','FontWeight','bold','LineWidth',2);
+subplot(133);imagesc((D1-D2)-(D1_rec-D2_rec));
+colormap(cmap); caxis(0.1*[-cax cax]); 
+xlabel('Trace number','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+ylabel('Time samples','FontSize',fs, 'FontName','verdana','FontWeight','bold');
+title('Error in 4-D signal','FontSize',fs, 'FontName','verdana','FontWeight','bold'); 
+pbaspect([xval yval zval]);
+set(gca,'fontsize',fs,'FontName','verdana','FontWeight','bold','LineWidth',2);
+
+%%
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

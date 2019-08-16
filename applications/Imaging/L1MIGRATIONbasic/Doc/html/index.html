@@ -1,0 +1,145 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Efficient least-squares imaging with sparsity promotion and compressive sensing</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 7.13">
+      <meta name="date" content="2013-04-22">
+      <meta name="m-file" content="index">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>Efficient least-squares imaging with sparsity promotion and compressive sensing</h1>
+         <introduction>
+            <p>This application is available only in the software release for members of SINBAD consortium.</p>
+            <p>This software release includes an parallel framework in Matlab for L1 migration [1,2], which based on the ideas from compressive-sensing
+               and stochastic optimization, where the least-squares imaging result are computed from random subsets of the data via curvelet-domain
+               sparsity-promotion. There are two different subset sampling strategies are considered in this package: randomized source encoding,
+               and drawing sequential shots firing at random source locations from marine data with missing near and far offsets. In both
+               cases, we obtain excellent inversion results compared to conventional methods at reduced computational costs. There is also
+               a small example based on a small one- layer model which can allow users to test the algorithm in a short time
+            </p>
+            <p>Author: Xiang Li Date  : April, 2013</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Downloading &amp; Dependencies</a></li>
+               <li><a href="#2">Running &amp; Parallelism</a></li>
+               <li><a href="#3">Examples and results</a></li>
+               <li><a href="#4">References</a></li>
+               <li><a href="#5">Acknowledgements</a></li>
+            </ul>
+         </div>
+         <h2>Downloading &amp; Dependencies<a name="1"></a></h2>
+         <p>The code can be found in the <a href="https://slim.gatech.edu/consortiumsoftware/">SLIM sofware release</a> under <tt>/applications/Imaging/L1MIGRATIONbasic/</tt>.
+         </p>
+         <p>The code has been tested with <i>Matlab b2012b</i> and requires the Parallel Computing Toolbox.
+         </p>
+         <p>This code uses the following packages, also found in the <tt>tools</tt> part of the <a href="https://slim.gatech.edu/consortiumsoftware/">SLIM software release</a>.
+         </p>
+         <div>
+            <ul>
+               <li><i>utilities/SPOT</i> - object oriented framework for matrix-free linear algebra.
+               </li>
+               <li><i>utilities/pSPOT</i> - parallel extension of SPOT.
+               </li>
+               <li><i>transforms/CurveLab-2.1.2-SLIM/</i> - Curvelet transform toolbox
+               </li>
+            </ul>
+         </div>
+         <h2>Running &amp; Parallelism<a name="2"></a></h2>
+         <p>All the examples and results are produced by the scripts found in this software release under <tt>/applications/Imaging/L1MIGRATIONbasic/</tt>. Start matlab from that directory or run <tt>startup</tt> in that directory to add the appropriate paths.
+         </p>
+         <p>To run the scripts follow the instrictions in the README file enclosed with the code. The scripts can be run in serial mode
+            but parallel mode is advised.
+         </p>
+         <p>Read more about <a href="https://slim.gatech.edu/SoftwareDemos/tools/">SLIM's approach to parallel computing in Matlab</a>.
+         </p>
+         <h2>Examples and results<a name="3"></a></h2>
+         <p>Scripts to reproduce imaging from one-layer model,  as well as results from sevaral papers [1],[2] can be foundin the <tt>scripts</tt> directory. <a href="examples.html">The results are shown here</a>.
+         </p>
+         <h2>References<a name="4"></a></h2>
+         <p><a href="https://slim.gatech.edu/content/efficient-least-squares-imaging-sparsity-promotion-and-compressive-sensing">[1]</a> Felix J. Herrmann and Xiang Li, &acirc;&#128;&#156;Efficient least-squares imaging with sparsity promotion and compressive sensing&acirc;&#128;&#157;, Geophysical
+            Prospecting, vol. 60, p. 696-712, 2012.
+         </p>
+         <p><a href="https://slim.gatech.edu/content/randomized-dimensionality-reduction-full-waveform-inversion">[2]</a> Felix J. Herrmann and Xiang Li, &acirc;&#128;&#156;Randomized dimensionality reduction for full-waveform inversion&acirc;&#128;&#157;, in EAGE Technical
+            Program Expanded Abstracts, 2010.
+         </p>
+         <h2>Acknowledgements<a name="5"></a></h2>
+         <p>The synthetic Compass model was provided by the BG-GROUP, see also the <a href="BG_DISCLAIMER.txt">disclaimer</a>.
+         </p>
+         <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Efficient least-squares imaging with sparsity promotion and compressive sensing
+%
+% This software release includes an parallel framework in Matlab for L1 
+% migration [1,2], which based on the ideas from compressive-sensing and
+% stochastic optimization, where the least-squares imaging result are 
+% computed from random subsets of the data via curvelet-domain 
+% sparsity-promotion. There are two different subset sampling strategies 
+% are considered in this package: randomized source encoding, and drawing 
+% sequential shots firing at random source locations from marine data 
+% with missing near and far offsets. In both cases, we obtain excellent 
+% inversion results compared to conventional methods at reduced 
+% computational costs. There is also a small example based on a small one-
+% layer model which can allow users to test the algorithm in a short time 
+%
+% Author: Xiang Li
+% Date  : April, 2013
+
+%% Downloading & Dependencies
+% The code can be found in the <https://slim.gatech.edu/consortiumsoftware/ SLIM sofware release> under
+% |/applications/Imaging/L1MIGRATIONbasic/|.
+%
+% The code has been tested with _Matlab R2012b_ and requires the Parallel
+% Computing Toolbox.
+%
+% This code uses the following packages, also found in the |tools| part
+% of the <https://slim.gatech.edu/consortiumsoftware/ SLIM software release>.
+%
+% * _utilities/SPOT_ - object oriented framework for matrix-free linear algebra.
+% * _utilities/pSPOT_ - parallel extension of SPOT.
+% * _transforms/CurveLab-2.1.2-SLIM/_ - Curvelet transform toolbox
+
+
+%% Running & Parallelism
+% All the examples and results are produced by the scripts found in
+% this software release under |/applications/Imaging/L1MIGRATIONbasic/|. 
+% Start matlab from that directory or run |startup| in that directory to add the appropriate paths.
+%
+% To run the scripts follow the instrictions in the README file enclosed
+% with the code.
+% The scripts can be run in serial mode but parallel mode is advised.
+% 
+% Read more about <https://slim.gatech.edu/SoftwareDemos/tools/ SLIM's approach to parallel computing in Matlab>.
+
+%% Examples and results
+%
+% Scripts to reproduce imaging from one-layer model,  as well as
+% results from sevaral papers [1],[2] can be foundin the |scripts| directory. <examples.html
+% The results are shown here>.
+%
+
+%% References
+%
+% <https://slim.gatech.edu/content/efficient-least-squares-imaging-sparsity-promotion-and-compressive-sensing [1]> Felix J. Herrmann and Xiang Li, âEfficient least-squares imaging with sparsity promotion and compressive sensingâ, Geophysical Prospecting, vol. 60, p. 696-712, 2012. 
+%
+% <https://slim.gatech.edu/content/randomized-dimensionality-reduction-full-waveform-inversion [2]> Felix J. Herrmann and Xiang Li, âRandomized dimensionality reduction for full-waveform inversionâ, in EAGE Technical Program Expanded Abstracts, 2010.
+%
+%% Acknowledgements
+% The synthetic Compass model was provided by the BG-GROUP, see also the
+% <BG_DISCLAIMER.txt disclaimer>.
+##### SOURCE END #####
+-->
+   </body>
+</html>

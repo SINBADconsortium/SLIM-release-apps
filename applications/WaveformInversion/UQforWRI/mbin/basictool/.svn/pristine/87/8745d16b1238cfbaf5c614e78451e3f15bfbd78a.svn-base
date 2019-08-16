@@ -1,0 +1,16 @@
+function PrintFigure(fidx, Papersize, strfile)
+	%% PrintFigure(fidx, Papersize)
+	%  fidx  - index of figure
+	%  Papersize - paper size
+	%  strfile   - file name
+	
+    figure(fidx);
+	set(gcf, 'PaperSize', Papersize);
+	set(gcf, 'PaperPositionMode', 'manual');
+	set(gcf, 'PaperPosition', [0 0 Papersize(1) Papersize(2)]);
+	set(gcf, 'renderer', 'painters');
+	print(fidx,'-depsc',[strfile '.eps']);
+	scommand                = ['unset DYLD_LIBRARY_PATH;convert ' strfile '.eps ' strfile '.png'];
+	[status,result]=system(scommand);
+        scommand                = ['eps2pdf ' strfile '.eps ' strfile '.pdf'];
+        [status,result]=system(scommand); 

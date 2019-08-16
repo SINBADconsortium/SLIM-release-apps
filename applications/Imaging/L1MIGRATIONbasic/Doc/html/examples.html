@@ -1,0 +1,181 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>2D Efficient least-squares imaging with sparsity promotion and compressive sensing</title><script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><meta name="generator" content="MATLAB 7.13">
+      <meta name="date" content="2013-04-22">
+      <meta name="m-file" content="examples">
+      <LINK REL="stylesheet" HREF="slim.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>2D Efficient least-squares imaging with sparsity promotion and compressive sensing</h1>
+         <introduction>
+            <p>Author: Xiang Li</p><pre>       Seismic Laboratory for Imaging and Modeling
+       Department of Earch &amp; Ocean Sciences
+       The University of British Columbia</pre><p>Date: 02, 2012</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">One-layer example</a></li>
+               <li><a href="#3">BG model example</a></li>
+            </ul>
+         </div>
+         <h2>One-layer example<a name="1"></a></h2>
+         <p>This is an demonstration of l1 migration algorithm based on One-layer model, please visit the script 'MGNFWI_camenbert.m'
+            for detail
+         </p>
+         <p>true model and initial model</p><pre class="codeinput">z = 0:10:500;
+x = 0:10:500;
+vel = 1500*ones(51,51);
+vel(20,:)=2000;
+vels = 1500*ones(51,51);
+
+<span class="comment">%</span>
+figure(1);imagesc(x,z,vel);caxis([1500,2000]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'true model [m/s]'</span>);colorbar;
+figure(2);imagesc(x,z,vels);caxis([1500,2000]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'initial model [m/s]'</span>);colorbar;
+</pre><img vspace="5" hspace="5" src="examples_01.png"> <img vspace="5" hspace="5" src="examples_02.png"> <pre class="codeinput"><span class="comment">% l1 migration</span>
+
+<span class="comment">% reflection example, source and receivers are on the top of the model</span>
+
+load <span class="string">LSM_Toy_model_L1_WRSeqOffset3Shots3FsIvc.mat</span>
+figure(3);imagesc(x,z,updates(:,:,13));colormap <span class="string">gray</span>;xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'l1 imaging result'</span>);
+</pre><img vspace="5" hspace="5" src="examples_03.png"> <h2>BG model example<a name="3"></a></h2>
+         <p>This is an demonstration of l1 migration algorithm based on BG Compass model [1,2], please visit the script <a href="MGNFWI_BG.html">MGNFWI_BG.html</a> for detail
+         </p>
+         <p>true model and initial model</p><pre class="codeinput">load <span class="string">BG_compass_model409x1401.mat</span>
+z = 0:5:2040;
+x = 0:5:7000;
+scrsz = get(0,<span class="string">'ScreenSize'</span>);
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);imagesc(x,z,vel);set(gca,<span class="string">'plotboxaspectratio'</span>,[7 2 2]);caxis([1480,4680]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'true model [m/s]'</span>);colorbar;
+</pre><img vspace="5" hspace="5" src="examples_04.png"> <pre class="codeinput">scrsz = get(0,<span class="string">'ScreenSize'</span>);
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);imagesc(x,z,vels);set(gca,<span class="string">'plotboxaspectratio'</span>,[7 2 2]);caxis([1480,4680]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'initial model [m/s]'</span>);colorbar;
+
+scrsz = get(0,<span class="string">'ScreenSize'</span>);
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);imagesc(x,z,diff(1./vels-1./vel));set(gca,<span class="string">'plotboxaspectratio'</span>,[7 2 2]);caxis(1e-5*[-2 2]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'true perturbation [s/m]'</span>);colorbar;colormap <span class="string">gray</span>
+</pre><img vspace="5" hspace="5" src="examples_05.png"> <img vspace="5" hspace="5" src="examples_06.png"> <pre class="codeinput"><span class="comment">% L1 migration with 3 simultaneous shots and 10 frequencies</span>
+<span class="comment">% in this case we use inverse crime data to test our algorithm</span>
+
+load <span class="string">LSM_BGcompass_model2d_L1_WRSim3Shots10FsIvc.mat</span>
+
+scrsz = get(0,<span class="string">'ScreenSize'</span>);
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);imagesc(x,z,updates(:,:,end));set(gca,<span class="string">'plotboxaspectratio'</span>,[7 2 2]);caxis(1e-5*[-2 2]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'l1 migration from inverse crime data'</span>);colorbar;colormap <span class="string">gray</span>
+
+
+<span class="comment">% plot differential of the image to get rid of those low frequency turning wave compenents</span>
+scrsz = get(0,<span class="string">'ScreenSize'</span>);
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);imagesc(x,z,diff(updates(:,:,end)));set(gca,<span class="string">'plotboxaspectratio'</span>,[7 2 2]);caxis(1e-5*[-2 2]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'l1 migration from inverse crime data (filtered plotting)'</span>);colorbar;colormap <span class="string">gray</span>
+
+
+
+<span class="comment">% L1 migration with 3 simultaneous shots and 10 frequencies</span>
+<span class="comment">% in this case we use wavefield from frequency domain forward modeling method to test our algorithm</span>
+load <span class="string">LSM_BGcompass_model2d_L1_WRSim3Shots10Fs.mat</span>
+
+scrsz = get(0,<span class="string">'ScreenSize'</span>);
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);imagesc(x,z,updates(:,:,end));set(gca,<span class="string">'plotboxaspectratio'</span>,[7 2 2]);caxis(1e-5*[-2 2]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'l1 migration from modelling data'</span>);colorbar;colormap <span class="string">gray</span>
+
+
+<span class="comment">% plot differential of the image to get rid of those low frequency turning wave compenents</span>
+scrsz = get(0,<span class="string">'ScreenSize'</span>);
+figure(<span class="string">'Position'</span>,[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);imagesc(x,z,diff(updates(:,:,end)));set(gca,<span class="string">'plotboxaspectratio'</span>,[7 2 2]);caxis(1e-5*[-2 2]);xlabel(<span class="string">'x [m]'</span>);ylabel(<span class="string">'z [m]'</span>);title(<span class="string">'l1 migration from modelling data (filtered plotting)'</span>);colorbar;colormap <span class="string">gray</span>
+</pre><img vspace="5" hspace="5" src="examples_07.png"> <img vspace="5" hspace="5" src="examples_08.png"> <img vspace="5" hspace="5" src="examples_09.png"> <img vspace="5" hspace="5" src="examples_10.png"> <p class="footer"><br><br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% 2D Efficient least-squares imaging with sparsity promotion and compressive sensing
+%
+% Author: Xiang Li
+%
+%         Seismic Laboratory for Imaging and Modeling
+%         Department of Earch & Ocean Sciences
+%         The University of British Columbia
+%         
+% Date: 02, 2012
+%
+
+%% One-layer example
+% 
+% This is an demonstration of l1 migration algorithm based on One-layer model, 
+% please visit the script 'MGNFWI_camenbert.m' for detail
+%
+% true model and initial model
+z = 0:10:500;
+x = 0:10:500;
+vel = 1500*ones(51,51);
+vel(20,:)=2000;
+vels = 1500*ones(51,51);
+
+% 
+figure(1);imagesc(x,z,vel);caxis([1500,2000]);xlabel('x [m]');ylabel('z [m]');title('true model [m/s]');colorbar;
+figure(2);imagesc(x,z,vels);caxis([1500,2000]);xlabel('x [m]');ylabel('z [m]');title('initial model [m/s]');colorbar;
+
+%%
+
+% l1 migration
+
+% reflection example, source and receivers are on the top of the model
+
+load LSM_Toy_model_L1_WRSeqOffset3Shots3FsIvc.mat
+figure(3);imagesc(x,z,updates(:,:,13));colormap gray;xlabel('x [m]');ylabel('z [m]');title('l1 imaging result');
+
+%% BG model example
+%
+% This is an demonstration of l1 migration algorithm based on BG Compass
+% model [1,2], please visit the script <MGNFWI_BG.html> for detail
+%
+% true model and initial model
+load BG_compass_model409x1401.mat
+z = 0:5:2040;
+x = 0:5:7000;
+scrsz = get(0,'ScreenSize');
+figure('Position',[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);imagesc(x,z,vel);set(gca,'plotboxaspectratio',[7 2 2]);caxis([1480,4680]);xlabel('x [m]');ylabel('z [m]');title('true model [m/s]');colorbar;
+%%
+scrsz = get(0,'ScreenSize');
+figure('Position',[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);imagesc(x,z,vels);set(gca,'plotboxaspectratio',[7 2 2]);caxis([1480,4680]);xlabel('x [m]');ylabel('z [m]');title('initial model [m/s]');colorbar;
+
+scrsz = get(0,'ScreenSize');
+figure('Position',[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);imagesc(x,z,diff(1./vels-1./vel));set(gca,'plotboxaspectratio',[7 2 2]);caxis(1e-5*[-2 2]);xlabel('x [m]');ylabel('z [m]');title('true perturbation [s/m]');colorbar;colormap gray
+
+%%
+
+% L1 migration with 3 simultaneous shots and 10 frequencies
+% in this case we use inverse crime data to test our algorithm
+
+load LSM_BGcompass_model2d_L1_WRSim3Shots10FsIvc.mat
+
+scrsz = get(0,'ScreenSize');
+figure('Position',[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);imagesc(x,z,updates(:,:,end));set(gca,'plotboxaspectratio',[7 2 2]);caxis(1e-5*[-2 2]);xlabel('x [m]');ylabel('z [m]');title('l1 migration from inverse crime data');colorbar;colormap gray
+
+
+% plot differential of the image to get rid of those low frequency turning wave compenents
+scrsz = get(0,'ScreenSize');
+figure('Position',[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);imagesc(x,z,diff(updates(:,:,end)));set(gca,'plotboxaspectratio',[7 2 2]);caxis(1e-5*[-2 2]);xlabel('x [m]');ylabel('z [m]');title('l1 migration from inverse crime data (filtered plotting)');colorbar;colormap gray
+
+
+
+% L1 migration with 3 simultaneous shots and 10 frequencies
+% in this case we use wavefield from frequency domain forward modeling method to test our algorithm
+load LSM_BGcompass_model2d_L1_WRSim3Shots10Fs.mat
+
+scrsz = get(0,'ScreenSize');
+figure('Position',[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);imagesc(x,z,updates(:,:,end));set(gca,'plotboxaspectratio',[7 2 2]);caxis(1e-5*[-2 2]);xlabel('x [m]');ylabel('z [m]');title('l1 migration from modelling data');colorbar;colormap gray
+
+
+% plot differential of the image to get rid of those low frequency turning wave compenents
+scrsz = get(0,'ScreenSize');
+figure('Position',[1 scrsz(4)/4 scrsz(3)/2 scrsz(4)/4]);imagesc(x,z,diff(updates(:,:,end)));set(gca,'plotboxaspectratio',[7 2 2]);caxis(1e-5*[-2 2]);xlabel('x [m]');ylabel('z [m]');title('l1 migration from modelling data (filtered plotting)');colorbar;colormap gray
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

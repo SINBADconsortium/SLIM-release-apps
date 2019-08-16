@@ -1,0 +1,187 @@
+#! /usr/bin/env python
+import os
+import subprocess
+import tempfile
+from optparse import OptionParser
+
+# Robust EPSI v1.1
+# Author      : Tim Lin
+#               Seismic Laboratory for Imaging and Modeling
+#               Department of Earth & Ocean Sciences
+#               The University of British Columbia
+#         
+# Date        : Faburary, 2011
+# 
+# You may use this code only under the conditions and terms of the
+# license contained in the file LICENSE provided with this source
+# code. If you do not agree to these terms you may not use this
+# software.
+
+# Determin path to the main Robust EPSI driver
+if os.environ.has_key('SLIM_APPS'):
+    # this is part of the SLIM software release
+    matlab_path = os.path.join(os.environ['SLIM_APPS'],'tools','algorithms','REPSI')
+else:
+    # To make the script portable to other parts of your filesystem, modify the following line to a full system path
+    # that contain the main driver 'EPSI_SLIM_main.m'
+    matlab_path = '../matfcts'
+
+
+# Change this to your desired parallel-pool configuration name
+parpool_config = 'local'
+# (or you can leave this blank to simply use the default configuration), ie 
+# parpool_config = ' '
+
+# Below is a dictionary of preset options, feel free to copy the script and modify these to suit your own data
+dict_Preset = {}
+dict_Preset["useSparsity"] = 0
+dict_Preset["parallel"] = 1
+dict_Preset["invertQ"] = 1
+dict_Preset["maxTotalIter"] = 100
+dict_Preset["topmuteT"] = 0.05
+dict_Preset['q_estlength_posT'] = 0.06
+dict_Preset['q_estlength_negT'] = 0.06
+dict_Preset['relError'] = 0.1
+
+# Below is a list of mandatory options
+list_mandatoryOptions = [ \
+    'input_file',          # name of seismic data to process (presume d1=time, d2=receiver, d3=shot)                                                         \
+    'output_primary_file', # name of output file for the primary wavefield                                                                                   \
+    'output_wavelet_file', # name of output file for the estimated wavelet                                                                                   \
+    'topmuteT',            # muting time on top (prevent trivial solution)                                                                                   \
+    ]
+
+# Below is a list of recognized string-valued options, see PARAMETERS_LIST.txt for their default values and description
+list_validStrOptions = [ \
+    'input_file',                   \
+    'output_primary_file',          \
+    'output_primaryIR_file',        \
+    'output_wavelet_file',          \
+    'input_endian',                 \
+    'wavelet_file',                 \
+    'preview_file',                 \
+    'sol_file',                     \
+    'coef_file',                    \
+    ]
+    
+# Below is a list of recognized integer-valued options, see PARAMETERS_LIST.txt for their default values and description
+list_validIntOptions = [ \
+    'input_ns',                     \
+    'padtime',                      \
+    'useSparsity',                  \
+    'maxTotalIter',                 \
+    'invertS',                      \
+    'alterloop_iter',               \
+    'alterloopiterdelt',            \
+    'useOblique',                   \
+    'polishWavelet',                \
+    'downshift',                    \
+    'renormData',                   \
+    'parallel',                     \
+    'test_readData',                \
+    'verbosity',                    \
+    'savepreviewmat',               \
+    'savesolmat',                   \
+    'savecoefmat',                  \
+    ]
+
+# Below is a list of recognized floating point-valued options, see PARAMETERS_LIST.txt for their default values and description
+list_validFloatOptions = [ \
+    'topmuteT',                     \
+    'timeweightgamma',              \
+    'relError',                     \
+    'q_estlength_posT',             \
+    'q_estlength_negT',             \
+    'window_startT',                \
+    'window_endT',                  \
+    'dt',                           \
+    'wavelet_reg_lambda',           \
+    'wavelet_taperperc',            \
+    ]
+
+
+
+# The following section enables all the above options as command-line options
+usage = "usage: %prog --input_file=input.su --output_primary_file=output.su --output_wavelet_file=output_wavelet.su --topmuteT=muting_time [--test_dataread] [options]"
+parser = OptionParser(usage)
+
+parser.add_option("--test_dataread", dest="test_dataread", action="store_true", 
+    help="use this flag to test whether Matlab has read the input datafile correctly, when invoked only --input_file need to be set")
+
+for opt_name in list_validIntOptions:
+    parser.add_option("--"+opt_name, dest=opt_name, type="int")
+
+for opt_name in list_validStrOptions:
+    parser.add_option("--"+opt_name, dest=opt_name, type="string")
+
+for opt_name in list_validFloatOptions:
+    parser.add_option("--"+opt_name, dest=opt_name, type="float")
+
+# Parse options and turn into dict form
+parsed_options, parsed_args = parser.parse_args()
+options = vars(parsed_options)
+
+# Enforce mandatory options
+for mandatory_opt in list_mandatoryOptions:
+    if (options[mandatory_opt] is None) and not (mandatory_opt is not 'input_file' and options['test_dataread'] is True):
+        raise Exception('Mandatory options not set')
+
+# Add the command line options to the dict
+for option, val in options.iteritems():
+    if (val is not None) and (option is not "test_dataread"):
+        dict_Preset[option] = val
+
+# Check for test_dataread mode
+if options['test_dataread']:
+    dict_Preset["test_readData"] = 1
+
+# Make sure Matlab gets the correct files
+list_filenameOptions = ['input_file', 'output_primary_file', 'output_wavelet_file', 'wavelet_file', 'preview_file', 'sol_file', 'coef_file']
+for option in list_filenameOptions:
+    if option in dict_Preset and dict_Preset[option] is not None:
+        dict_Preset[option] = os.path.abspath(dict_Preset[option])
+
+# define matlab argument parser
+def matlab_argumentlist_2_string(arguments,keys_not_passed):
+    """
+    Turns a argument dict pair into a string form for Matlab functions
+    using process_options.m, but ignores keys listed in keys_not_passed
+    """
+    
+    matlab_func_arguments = []
+    for k,v in arguments.items():
+        if k not in keys_not_passed:
+            if isinstance(v,str):
+                matlab_func_arguments.append("""'%(k)s','%(v)s'"""%vars())
+            else:
+                matlab_func_arguments.append("""'%(k)s',%(v)g"""%vars())
+                
+    stringform = ",".join(matlab_func_arguments)
+    return stringform
+
+# parse the dictionary arguments as Matlab function arguments
+matlab_func_argument_string = matlab_argumentlist_2_string(dict_Preset,[])
+
+# Note: Arguments to Matlab are constructed as contigious string of key,value pairs
+# Matlab functions designed for this script should accept this kind of arguments
+if not os.path.isabs(matlab_path):
+    matlab_path = os.path.abspath(os.path.join(os.path.dirname(__file__),matlab_path))
+parpool_open_string = "parpool('"+parpool_config+"');\n"
+parpool_close_string = "delete(gcp('nocreate'));\n"
+matlab_run_string = parpool_open_string+"""addpath(genpath('%(matlab_path)s'));EPSI_SLIM_main(%(matlab_func_argument_string)s);\n"""%vars()+parpool_close_string
+print 'Running the following matlab command:'
+print matlab_run_string
+
+# Use subprocess module to call matlab
+tempscript = tempfile.NamedTemporaryFile(mode='w',suffix='_script.m',prefix='EPSI_')
+try:
+    tempscript.write('try\n')
+    tempscript.write(matlab_run_string)
+    tempscript.write('catch exception\n')
+    tempscript.write("disp(['ERROR: ' exception.message])\n")
+    tempscript.write('end\n')
+    tempscript.flush()
+    retcode = subprocess.call('matlab -nodesktop -nosplash -r "clear all; run '+tempscript.name+'; quit force"', shell=True)    
+finally:
+    tempscript.close()
+
