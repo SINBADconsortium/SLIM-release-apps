@@ -2,7 +2,8 @@
 ##  DESCRIPTION
 This package contains basic demonstration for 2D TTI modelling and 3D acoustic modelling with domain decomposition
 ##  ON-LINE DOCUMENTATION
-https://slim.gatech.edu/SoftwareDemos/applications/Modeling/TTITimeModeling/
+<https://slim.gatech.edu/SoftwareDemos/applications/Modeling/TTITimeModeling/>
+
 ##  COPYRIGHT
  You may use this code only under the conditions and terms of the
  license contained in the files LICENSE or COPYING provided with this
@@ -35,7 +36,8 @@ functions/misc
  comp[onents.
 ##  DOCUMENTATION
 You can view the documentation for the example at 
-https://slim.gatech.edu/SoftwareDemos/applications/Modeling/TTITimeModeling/
+<https://slim.gatech.edu/SoftwareDemos/applications/Modeling/TTITimeModeling/>
+
 ##  RUNNING
 In order to run the example you only need to go in the scripts directory and directly run one of the two scripts.
 ###  Preparing shell environment
@@ -53,4 +55,4 @@ You can change the basic layer model by any velocity or anisotropy model. If you
 ##  SUPPORT
  You may contact SLIM's developers of SINBAD software via issue tracker for this repository. We do not have resources to actively support public version of our software. However, we will try to answer the questions as much as possible.
 ##  REFERENCES
- 1. https://slim.gatech.edu/Publications/Private/TechReport/2015/witte2015TRoam/witte2015TRoam.html 
+ 1. <https://slim.gatech.edu/Publications/Private/TechReport/2015/witte2015TRoam/witte2015TRoam.html>

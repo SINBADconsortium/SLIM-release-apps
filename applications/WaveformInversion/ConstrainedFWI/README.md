@@ -131,4 +131,4 @@ All codes which setup constraints, apply projections or do the optimization have
 This package includes the work described in:
 
 1. [https://slim.gatech.edu/content/regularizing-waveform-inversion-projection-intersections-convex-sets](https://slim.gatech.edu/content/regularizing-waveform-inversion-projection-intersections-convex-sets)
-2. [https://slim.gatech.edu/content/regularizing-waveform-inversion-projections-convex-sets-–-application-2d-chevron-2014-synthe](https://slim.gatech.edu/content/regularizing-waveform-inversion-projections-convex-sets-–-application-2d-chevron-2014-synthe)
+2. [https://slim.gatech.edu/content/regularizing-waveform-inversion-projections-convex-sets-–-application-2d-chevron-2014](https://slim.gatech.edu/content/regularizing-waveform-inversion-projections-convex-sets-–-application-2d-chevron-2014)

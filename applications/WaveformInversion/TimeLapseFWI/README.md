@@ -79,12 +79,12 @@ The model and data information need to be provided.
 seismic without repetition: reaping the benefits from randomized
 sampling and joint recovery. Presented at the 76th EAGE Conference and
 Exhibition 2014. Available at
-https://slim.gatech.edu/content/time-lapse-seismic-without-repetition-reaping-benefits-randomized-sampling-and-joint-recover.
+<https://slim.gatech.edu/content/time-lapse-seismic-without-repetition-reaping-benefits-randomized-sampling-and-joint>.
 
 [2] Felix J. Herrmann, Xiang Li, Aleksandr Y. Aravkin, and Tristan van Leeuwen, A modified, sparsity promoting, Gauss-Newton algorithm for seismic waveform inversion, in Proc. SPIE, 2011, vol. 2011.
-https://slim.gatech.edu/content/modified-sparsity-promoting-gauss-newton-algorithm-seismic-waveform-inversion
+<https://slim.gatech.edu/content/modified-sparsity-promoting-gauss-newton-algorithm-seismic-waveform-inversion>
 
 [3] Xiang Li, Aleksandr Y. Aravkin, Tristan van Leeuwen, and Felix J. Herrmann, Fast randomized full-waveform inversion with compressive sensing. 2011. Geophysics.
-https://slim.gatech.edu/content/fast-randomized-full-waveform-inversion-compressive-sensing
+<https://slim.gatech.edu/content/fast-randomized-full-waveform-inversion-compressive-sensing>
 
 

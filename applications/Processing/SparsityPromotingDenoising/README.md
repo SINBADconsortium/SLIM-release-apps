@@ -9,7 +9,7 @@ minimization.
 
 ##  ON-LINE DOCUMENTATION
 
-https://slim.gatech.edu/SoftwareDemos/applications/Processing/SparsityPromotingDenoising
+<https://slim.gatech.edu/SoftwareDemos/applications/Processing/SparsityPromotingDenoising>
 
 
 ##  COPYRIGHT
@@ -80,7 +80,7 @@ Javanmehri, Rajiv Kumar, Tristan van Leeuwen, Xiang Li, Brendan
 Smithyman, Eric Takam Takougang, and Haneet Wason. Frugal
 full-waveform inversion: from theory to a practical algorithm, The
 Leading Edge (2013), vol. 32, pp. 1082-1092. Available at
-https://slim.gatech.edu/content/frugal-full-waveform-inversion-theory-practical-algorithm.
+<https://slim.gatech.edu/content/frugal-full-waveform-inversion-theory-practical-algorithm>.
 
-[2] SLIM research webpage on processing: https://slim.gatech.edu/research/processing.
+[2] SLIM research webpage on processing: <https://slim.gatech.edu/research/processing>.
 

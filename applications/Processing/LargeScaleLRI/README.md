@@ -40,5 +40,5 @@ The parameters for each matrix completion experiment are encapsulated in the spg
  You may contact SLIM's developers of SINBAD software via issue tracker for this repository. We do not have resources to actively support public version of our software. However, we will try to answer the questions as much as possible.
 
 ##  REFERENCES
-1. C. Da Silva, F. Herrmann "Large-scale seismic data interpolation in a parallel computing environment." Available at https://slim.gatech.edu/content/large-scale-seismic-data-interpolation-parallel-computing-environment.
-2. A. Y. Aravkin, et al. "Fast methods for denoising matrix completion formulations, with applications to robust seismic data interpolation", SIAM Journal on Scientific Computing, 2014. Available at https://slim.gatech.edu/content/fast-methods-denoising-matrix-completion-formulations-applications-robust-seismic-data-inter 
+1. C. Da Silva, F. Herrmann "Large-scale seismic data interpolation in a parallel computing environment." Available at <https://slim.gatech.edu/content/large-scale-seismic-data-interpolation-parallel-computing-environment>.
+2. A. Y. Aravkin, et al. "Fast methods for denoising matrix completion formulations, with applications to robust seismic data interpolation", SIAM Journal on Scientific Computing, 2014. Available at <https://slim.gatech.edu/content/fast-methods-denoising-matrix-completion-formulations-applications-robust-seismic-data>.

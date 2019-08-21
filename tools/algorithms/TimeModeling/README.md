@@ -4,6 +4,7 @@ This package illustrates the main features of the time-stepping modeling code
 ##  ON-LINE DOCUMENTATION
 An overview of the results can be found in the ./doc directory and online: <br />
 <https://slim.gatech.edu/SoftwareDemos/applications/Modeling/AcousticTimeModeling/>
+
 ##  COPYRIGHT
  You may use this code only under the conditions and terms of the
  license contained in the files LICENSE or COPYING provided with this

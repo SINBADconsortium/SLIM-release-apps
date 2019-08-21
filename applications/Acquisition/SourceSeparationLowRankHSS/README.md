@@ -12,7 +12,7 @@ representation.
 
 ## ON-LINE DOCUMENTATION
    
-https://slim.gatech.edu/SoftwareDemos/applications/Acquisition/SourceSeparationLowRankHSS
+<https://slim.gatech.edu/SoftwareDemos/applications/Acquisition/SourceSeparationLowRankHSS>
 
 
 ## COPYRIGHT
@@ -85,18 +85,18 @@ README.md file in the ./examples directory.
 J. Herrmann. "Source separation via SVD-free rank minimization in the
 hierarchical semi-separable representation", to be presented at the
 2014 SEG Conference. Available at
-https://slim.gatech.edu/content/source-separation-svd-free-rank-minimization-hierarchical-semi-separable-representation.
+<https://slim.gatech.edu/content/source-separation-svd-free-rank-minimization-hierarchical-semi-separable-representation>.
 
 [2] Aleksandr Y. Aravkin, Rajiv Kumar, Hassan Mansour, Ben Recht, and
 Felix J. Herrmann. "Fast methods for denoising matrix completion
 formulations, with application to robust seismic data interpolation",
 submitted to the SIAM Journal on Scientific Computing
 (SISC). Available at
-https://slim.gatech.edu/content/fast-methods-denoising-matrix-completion-formulations-application-robust-seismic-data-interp.
+<https://slim.gatech.edu/content/source-separation-simultaneous-towed-streamer-marine-acquisition-–-compressed-sensing>.
 
 [3] Rajiv Kumar, Hassan Mansour, Aleksandr Y. Aravkin, and Felix
 J. Herrmann. "Reconstruction of seismic wavefields via low-rank matrix
 factorization in the hierarchical-separable matrix representation",
 presented at the 2013 SEG Conference. Available at
-https://slim.gatech.edu/content/reconstruction-seismic-wavefields-low-rank-matrix-factorization-hierarchical-separable-matri
+<https://slim.gatech.edu/content/reconstruction-seismic-wavefields-low-rank-matrix-factorization-hierarchical-separable>
 

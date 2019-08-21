@@ -2,7 +2,7 @@
 ##  DESCRIPTION
  This application creates images of the interfaces in the medium, given an estimate of the velocity model (background velocity). It has the same goal as other migration methods, but the method is new. It is based on the WRI objective function and is described in [1,2] and an example is shown in [3].
 ##  ON-LINE DOCUMENTATION
- https://slim.gatech.edu/SoftwareDemos/applications/Imaging/WRimaging/
+ <https://slim.gatech.edu/SoftwareDemos/applications/Imaging/WRimaging/>
 ##  COPYRIGHT
  You may use this code only under the conditions and terms of the
  license contained in the files LICENSE or COPYING provided with this

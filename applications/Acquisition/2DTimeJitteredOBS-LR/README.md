@@ -10,6 +10,7 @@ However, we offer an efficient deblending algorithm using rank-minimization base
 
 ## ON-LINE DOCUMENTATION
 <https://slim.gatech.edu/SoftwareDemos/applications/Acquisition/2DTimeJitteredOBS-LR>
+
 ## COPYRIGHT
 You may use this code only under the conditions and terms of the
      license contained in the file LICENSE or COPYING.txt provided with

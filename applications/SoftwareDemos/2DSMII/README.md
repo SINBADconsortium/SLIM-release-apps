@@ -5,7 +5,7 @@ The scripts reproduce the examples presented in the paper:
     
 T. van Leeuwen, 2012. 
 A parallel matrix-free framework for frequency-domain seismic modelling, imaging and inversion in Matlab.<br />
-    Submitted. <https://slim.gatech.edu/node/27141>
+    Submitted. <https://slim.gatech.edu/content/parallel-matrix-free-framework-frequency-domain-seismic-modelling-imaging-and-inversion>
 
 ##COPYRIGHT
 You may use this code only under the conditions and terms of the

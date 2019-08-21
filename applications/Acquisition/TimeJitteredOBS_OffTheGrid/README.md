@@ -11,7 +11,7 @@ curvelet transform.
 
 ##  ON-LINE DOCUMENTATION
 
-https://slim.gatech.edu/SoftwareDemos/applications/Acquisition/TimeJitteredOBS_OffTheGrid
+<https://slim.gatech.edu/SoftwareDemos/applications/Acquisition/TimeJitteredOBS_OffTheGrid>
 
 
 ##  COPYRIGHT
@@ -80,18 +80,18 @@ in the README.md file in the ./examples directory.
 [1] Haneet Wason, and Felix J. Herrmann. Time-jittered ocean bottom
 seismic acquisition, SEG Technical Program Expanded Abstracts (2013),
 vol. 32, pp. 1-6. Available at
-https://slim.gatech.edu/content/time-jittered-ocean-bottom-seismic-acquisition.
+<https://slim.gatech.edu/content/time-jittered-ocean-bottom-seismic-acquisition>.
 
 [2] Gilles Hennenfent, Lloyd Fenelon, and Felix
 J. Herrmann. Nonequispaced curvelet transform for seismic data
 reconstruction: a sparsity-promoting approach, Geophysics (2010),
 vol. 75, pp. WB203-WB210. Available at
-https://slim.gatech.edu/content/nonequispaced-curvelet-transform-seismic-data-reconstruction-sparsity-promoting-approach
+<https://slim.gatech.edu/content/nonequispaced-curvelet-transform-seismic-data-reconstruction-sparsity-promoting-approach>
 
 [3] Haneet Wason, Felix Oghenekohwo, and Felix J. Herrmann. Compressed
 sensing in 4-D marine – recovery of dense time-lapse data from
 subsampled data without repetition. Presented at the 77th EAGE
 Conference & Exhibition (2015), doi:
 10.3997/2214-4609.201413088. Available at
-https://slim.gatech.edu/content/compressed-sensing-4-d-marine–-recovery-dense-time-lapse-data-subsampled-data-without-repeti
+<https://slim.gatech.edu/content/compressed-sensing-4-d-marine–-recovery-dense-time-lapse-data-subsampled-data-without>
 

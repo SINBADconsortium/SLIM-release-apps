@@ -10,7 +10,7 @@ inversion (via L1 minimization).
 
 ## ON-LINE DOCUMENTATION
 
-https://slim.gatech.edu/SoftwareDemos/applications/Acquisition/2DTimeJitteredOBS
+<https://slim.gatech.edu/SoftwareDemos/applications/Acquisition/2DTimeJitteredOBS>
 
 
 ## COPYRIGHT
