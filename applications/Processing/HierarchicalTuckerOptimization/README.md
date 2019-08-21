@@ -34,9 +34,9 @@ Start Matlab from this directory or run startup.m to set the correct paths. The 
 
 ## REFERENCES ##
 Primary paper
-C. Da Silva and F. J. Herrmann. "Optimization on the Hierarchical Tucker manifold - applications to tensor completion", SLIM Tech Report. Available at https://slim.gatech.edu/content/optimization-hierarchical-tucker-manifold-applications-tensor-completion 
+C. Da Silva and F. J. Herrmann. "Optimization on the Hierarchical Tucker manifold - applications to tensor completion", SLIM Tech Report. Available at <https://slim.gatech.edu/content/optimization-hierarchical-tucker-manifold-applications-tensor-completion>
 
 Secondary papers
-C. Da Silva and F. J. Herrmann. "Hierarchical Tucker Tensor Optimization - Applications to 4D Seismic Data Interpolation", EAGE 2013, available at https://slim.gatech.edu/content/hierarchical-tucker-tensor-optimization-applications-4d-seismic-data-interpolation-0
+C. Da Silva and F. J. Herrmann. "Hierarchical Tucker Tensor Optimization - Applications to 4D Seismic Data Interpolation", EAGE 2013, available at <https://slim.gatech.edu/content/hierarchical-tucker-tensor-optimization-applications-4d-seismic-data-interpolation-0>
 
-C. Da Silva and F. J. Herrmann. "Hierarchical Tucker Tensor Optimization - Applications to Tensor Completion", SAMPTA 2013, available at https://slim.gatech.edu/content/hierarchical-tucker-tensor-optimization-applications-tensor-completion
+C. Da Silva and F. J. Herrmann. "Hierarchical Tucker Tensor Optimization - Applications to Tensor Completion", SAMPTA 2013, available at <https://slim.gatech.edu/content/hierarchical-tucker-tensor-optimization-applications-tensor-completion>

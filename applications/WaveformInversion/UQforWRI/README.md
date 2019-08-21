@@ -4,7 +4,7 @@ This application implements the uncertainty quantification for wavefield reconst
 ##  ON-LINE DOCUMENTATION
  You can find the on-line documentation of this application by clicking the following link:
 
-  https://slim.gatech.edu/SoftwareDemos/applications/WaveformInversion/UQforWRI/
+  <https://slim.gatech.edu/SoftwareDemos/applications/WaveformInversion/UQforWRI/>
 
 ##  COPYRIGHT
  You may use this code only under the conditions and terms of the
@@ -58,4 +58,4 @@ toolbox.
  You may contact SLIM's developers of SINBAD software via issue tracker for this repository. We do not have resources to actively support public version of our software. However, we will try to answer the questions as much as possible.
 
 ##  REFERENCES
- 1. https://slim.gatech.edu/content/uncertainty-quantification-inverse-problems-weak-pde-constraints Zhilong Fang, Rongrong Wang, and Felix J. Herrmann, Submitted to Geophysics, 2017, Source estimation for wavefield-reconstruction inversion.
+ 1. <https://slim.gatech.edu/content/uncertainty-quantification-inverse-problems-weak-pde-constraints> Zhilong Fang, Rongrong Wang, and Felix J. Herrmann, Submitted to Geophysics, 2017, Source estimation for wavefield-reconstruction inversion.

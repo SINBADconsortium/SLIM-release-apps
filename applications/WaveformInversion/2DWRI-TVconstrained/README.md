@@ -41,12 +41,12 @@ This code was developed using MATLAB R2013a.
 
 ##  REFERENCES
 
-[1] http://dx.doi.org/10.1093/gji/ggt258 Tristan van Leeuwen, Felix J. Herrmann, Geophysical Journal International,2013. Mitigating local minima in full-waveform inversion by expanding the search space.
+[1] <http://dx.doi.org/10.1093/gji/ggt258> Tristan van Leeuwen, Felix J. Herrmann, Geophysical Journal International,2013. Mitigating local minima in full-waveform inversion by expanding the search space.
 
-[2] https://slim.gatech.edu/content/penalty-method-pde-constrained-optimization Tristan van Leeuwen, Felix J. Herrmann. 2013. A penalty method for PDE-constrained optimization.
+[2] <https://slim.gatech.edu/content/penalty-method-pde-constrained-optimization> Tristan van Leeuwen, Felix J. Herrmann. 2013. A penalty method for PDE-constrained optimization.
 
-[3] https://slim.gatech.edu/content/scaled-gradient-projection-method-total-variation-regularized-full-waveform-inversion Ernie Esser, Tristan van Leeuwen, Aleksandr Aravkin and Felix Herrmann.  Technical Report, 2014.  A scaled gradient projection method for total variation regularized full waveform inversion
+[3] <https://slim.gatech.edu/content/scaled-gradient-projection-method-total-variation-regularized-full-waveform-inversion> Ernie Esser, Tristan van Leeuwen, Aleksandr Aravkin and Felix Herrmann.  Technical Report, 2014.  A scaled gradient projection method for total variation regularized full waveform inversion
 
-[4] https://slim.gatech.edu/content/scaled-gradient-projection-method-total-variation-regularized-full-waveform-inversion-0 Ernie Esser. SINBAD Meeting, Spring 2014.  A scaled gradient projection method for total variation regularized full waveform inversion
+[4] <https://slim.gatech.edu/content/scaled-gradient-projection-method-total-variation-regularized-full-waveform-inversion-0> Ernie Esser. SINBAD Meeting, Spring 2014.  A scaled gradient projection method for total variation regularized full waveform inversion
 
-[5] https://slim.gatech.edu/content/examples-penalty-method Bas Peters, Felix J. Herrmann, Tristan van Leeuwen. EAGE, 2014. Wave-equation based inversion with the penalty method: adjoint-state versus wavefield-reconstruction inversion.
+[5] <https://slim.gatech.edu/content/examples-penalty-method> Bas Peters, Felix J. Herrmann, Tristan van Leeuwen. EAGE, 2014. Wave-equation based inversion with the penalty method: adjoint-state versus wavefield-reconstruction inversion.

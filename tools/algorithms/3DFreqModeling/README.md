@@ -65,13 +65,13 @@ Hmvp.m | Hmvp_MT_mex - C-based code for explicit compressed band-storage matrix 
  You may contact SLIM's developers of SINBAD software via issue tracker for this repository. We do not have resources to actively support public version of our software. However, we will try to answer the questions as much as possible.
 
 ##  REFERENCES
- <http://dx.doi.org/10.1190/1.2759835 [1]> Operto, S., J. Virieux, P. Amestoy, 
+ <https://doi.org/10.1190/1.2759835> Operto, S., J. Virieux, P. Amestoy, 
  J.-Y. L’Excellent, L. Giraud, and H. B. H. Ali, 2007, 3D finite-difference 
  frequency-domain modeling of visco-acoustic wave propagation using a 
  massively parallel direct solver: A feasibility study: Geophysics, 72, no. 5, 
  SM195–SM211
  
- <http://ethesis.inp-toulouse.fr/archive/00001221/01/pinel.pdf [2]> Pinel, X.,
+ <http://oatao.univ-toulouse.fr/7217/> Pinel, X.,
  2010, A perturbed two-level preconditioner for the solution of 
  three- dimensional heterogeneous Helmholtz problems with applications to 
  geophysics, INPT PhD Thesis

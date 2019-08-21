@@ -3,7 +3,7 @@
 This application is an interface to use iWAVE++ in MATLAB. We provide easy functions to simulate the acoustic wave-equation, perform the born modeling and migration by using iWAVE++ from MATLAB. We provide simple scripts to use the forward modeling, linearized modeling and adjoint of linearized modeling. We also provide simple scripts to do RTM, least-squared Migration and FWI. This application only support the iWave in the Madagascar version 9520. In this new version, we provide functions for regularly sampled data, randomly sampled data and simultaneous sampled data. The usage of regular sampling does not require the support of Parallel matlab toolbox, while the usage of random sampling ang simultaneous sampling require the support of Parallel matlab toolbox. In this version, we only support the acquisition system that all shots are located at the same depth. We will release a version that supports source located at any arbitrary positon later. 
 
 ##  ON-LINE DOCUMENTATION
- https://slim.gatech.edu/SoftwareDemos/misc/iWAVE/index.html
+ <https://slim.gatech.edu/SoftwareDemos/misc/iWAVE/index.html>
 
 ##  COPYRIGHT
  You may use this code only under the conditions and terms of the

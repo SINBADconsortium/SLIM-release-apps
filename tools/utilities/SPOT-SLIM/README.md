@@ -33,4 +33,4 @@ is to add the "spotbox" directory to your Matlab path:
  addpath /path/to/spotbox/directory
 
 See
-the [MATLAB documentation for setting the search path](http://www.mathworks.com/access/helpdesk/help/techdoc/matlab_env/f10-26235.html).
+the [MATLAB documentation for setting the search path](https://www.mathworks.com/help/matlab/ref/addpath.html).

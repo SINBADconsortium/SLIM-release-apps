@@ -172,7 +172,7 @@
  applications to change parameters and/or use them with other input
  data. On-line documentation  for all applications can be found at
  [slim.gatech.edu]
- (https://slim.gatech.edu/software-documentation).
+ (https://slim.gatech.edu/software/sinbad/documentation).
 ## 9 SLIM software's components
  The SLIM's software is divided into to main components: applications
  and tools. Tools are mostly for general use or are typically problem
@@ -265,7 +265,7 @@
  Scripts to reproduce the examples of the paper by T. van Leeuwen, 2012.
  ["A parallel matrix-free framework for frequency-domain seismic
  modeling, imaging and inversion."]
- (https://slim.gatech.edu/node/27141)
+ (https://slim.gatech.edu/content/parallel-matrix-free-framework-frequency-domain-seismic-modelling-imaging-and-inversion)
  
 #### 9.1.38 applications/SoftwareDemos/iWAVE
  Examples for using iWAVE interface for different applications

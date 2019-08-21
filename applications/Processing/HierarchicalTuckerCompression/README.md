@@ -42,5 +42,5 @@ From the home of this application directory, you can follow several steps to get
 
 
 ## REFERENCES 
-1. Y. Zhang, C. Da Silva, R. Kumar and F. J. Herrmann, "Massive 3D seismic data compression and inversion with hierarchical Tucker", SEG Technical Program Expanded Abstracts, 2017. Available at https://slim.gatech.edu/content/massive-3d-seismic-data-compression-and-inversion-hierarchical-tucker
-2. C. Da Silva, Y. Zhang, R. Kumar and F. J. Herrmann, "Applications of low-rank compressed seismic data to full waveform inversion and extended image volumes", Submitted to Geophysics, 2018. Available at https://slim.gatech.edu/content/applications-low-rank-compressed-seismic-data-full-waveform-inversion-and-extended-image-vol
+1. Y. Zhang, C. Da Silva, R. Kumar and F. J. Herrmann, "Massive 3D seismic data compression and inversion with hierarchical Tucker", SEG Technical Program Expanded Abstracts, 2017. Available at <https://slim.gatech.edu/content/massive-3d-seismic-data-compression-and-inversion-hierarchical-tucker>
+2. C. Da Silva, Y. Zhang, R. Kumar and F. J. Herrmann, "Applications of low-rank compressed seismic data to full waveform inversion and extended image volumes", Submitted to Geophysics, 2018. Available at <https://slim.gatech.edu/content/applications-low-rank-compressed-seismic-data-full-waveform-inversion-and-extended-image>

@@ -15,6 +15,7 @@ This package is an application for the Efficient least-squares imaging. In
     An overview of the results can be found in the ./Doc directory.
 ## ON-LINE DOCUMENTATION
 <https://slim.gatech.edu/SoftwareDemos/applications/Imaging/L1MIGRATIONbasic>
+
 ## COPYRIGHT
 You may use this code only under the conditions and terms of the
 license contained in the file LICENSE or COPYING.txt provided with

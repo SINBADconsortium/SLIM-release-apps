@@ -4,7 +4,7 @@ This application implements the source estimation for wavefield reconstruction i
 ##  ON-LINE DOCUMENTATION
  You can find the on-line documentation of this application by clicking the following link:
 
-  https://slim.gatech.edu/SoftwareDemos/applications/WaveformInversion/2DWRI-SourceEstimation/
+  <https://slim.gatech.edu/SoftwareDemos/applications/WaveformInversion/2DWRI-SourceEstimation/>
   
 ##  COPYRIGHT
  You may use this code only under the conditions and terms of the
@@ -48,4 +48,4 @@ toolbox.
  You may contact SLIM's developers of SINBAD software via issue tracker for this repository. We do not have resources to actively support public version of our software. However, we will try to answer the questions as much as possible.
 
 ##  REFERENCES
- 1. https://slim.gatech.edu/content/source-estimation-wavefield-reconstruction-inversion-0 Zhilong Fang, Rongrong Wang, and Felix J. Herrmann, Submitted to Geophysics, 2017, Source estimation for wavefield-reconstruction inversion.
+ 1. <https://slim.gatech.edu/content/source-estimation-wavefield-reconstruction-inversion-0> Zhilong Fang, Rongrong Wang, and Felix J. Herrmann, Submitted to Geophysics, 2017, Source estimation for wavefield-reconstruction inversion.

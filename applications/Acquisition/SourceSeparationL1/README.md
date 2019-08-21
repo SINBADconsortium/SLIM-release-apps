@@ -10,7 +10,7 @@ curvelet domain using L1 minimization.
 
 
 ##  ON-LINE DOCUMENTATION
-https://slim.gatech.edu/SoftwareDemos/applications/Acquisition/SourceSeparationL1
+<https://slim.gatech.edu/SoftwareDemos/applications/Acquisition/SourceSeparationL1>
 
 
 ##  COPYRIGHT
@@ -89,5 +89,5 @@ README.md file in the ./examples directory.
 separation for simultaneous towed-streamer marine acquisition --- a
 compressed sensing approach", Geophysics, vol. 80, pp. WD73-WD88.
 Available at
-https://slim.gatech.edu/content/source-separation-simultaneous-towed-streamer-marine-acquisition-–-compressed-sensing-approa.
+<https://slim.gatech.edu/content/source-separation-simultaneous-towed-streamer-marine-acquisition-–-compressed-sensing>.
 

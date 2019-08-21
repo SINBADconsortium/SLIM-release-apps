@@ -9,7 +9,7 @@ sparse inversion (via L1 minimization).
  
 ## ON-LINE DOCUMENTATION
 
-https://slim.gatech.edu/SoftwareDemos/applications/Acquisition/TimelapseJRM
+<https://slim.gatech.edu/SoftwareDemos/applications/Acquisition/TimeLapseJRM>
 
 
 ## COPYRIGHT
@@ -98,17 +98,17 @@ own data, see the instructions in the README.md file in the
 from randomized sampling and joint recovery." Presented at the 76th
 EAGE Conference and Exhibition, doi:
 10.3997/2214-4609.20141478. Available at
-https://slim.gatech.edu/content/time-lapse-seismic-without-repetition-reaping-benefits-randomized-sampling-and-joint-recover.
+<https://slim.gatech.edu/content/time-lapse-seismic-without-repetition-reaping-benefits-randomized-sampling-and-joint>.
 	 
 [2] Haneet Wason, Felix Oghenekohwo, and Felix J. Herrmann
 [2014]. "Randomization and repeatability in time-lapse marine
 acquisition." EAGE Workshop on Land and Ocean Bottom; Broadband Full
 Azimuth Seismic Surveys, Spain. Available at
-https://slim.gatech.edu/content/randomization-and-repeatability-time-lapse-marine-acquisition-0.
+<https://slim.gatech.edu/content/randomization-and-repeatability-time-lapse-marine-acquisition-0>.
 	 
 [3] Haneet Wason, Felix Oghenekohwo, and Felix J. Herrmann
 [2014]. "Randomization and repeatability in time-lapse marine
 acquisition." SEG Technical Program Expanded Abstracts,
 pp. 46-51. Available at
-https://slim.gatech.edu/content/randomization-and-repeatability-time-lapse-marine-acquisition.
+<https://slim.gatech.edu/content/randomization-and-repeatability-time-lapse-marine-acquisition>.
 

@@ -6,7 +6,7 @@ This package contains matlab scripts that reproduce examples from [1,2]
     using robust penalties, source-estimation and fast optimization without source-encoding. 
     It also includes a small demo that reproduces the famous Camembert example [3].
     An overview of the results can be found in the ./doc directory and online: <br />
-    <https://slim.gatech.edu/SoftwareDemos/applications/WaveformInversion/2DRobustBatching/>
+    <https://slim.gatech.edu/SoftwareDemos/applications/WaveformInversion/2DRobustBatching>
 ##COPYRIGHT
 You may use this code only under the conditions and terms of the
     license contained in the file LICENSE or COPYING.txt provided with

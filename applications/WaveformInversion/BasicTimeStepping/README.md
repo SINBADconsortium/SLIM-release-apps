@@ -2,7 +2,8 @@
 ##  DESCRIPTION
 This demo is a basic example of time-domain full-waveform inversion on the 2D BG compass model. We use gradient descent with line-search and we show the result for acoustic isotropic inversion and acoustic anisotropic inversion.
 ##  ON-LINE DOCUMENTATION
-https://slim.gatech.edu/SoftwareDemos/applications/WaveformInversion/BasicTimeStepping/
+<https://slim.gatech.edu/SoftwareDemos/applications/WaveformInversion/BasicTimeStepping/>
+
 ##  COPYRIGHT
  You may use this code only under the conditions and terms of the
  license contained in the files LICENSE or COPYING provided with this
@@ -37,7 +38,8 @@ functions/misc
  components.
 ##  DOCUMENTATION
 You can view the documentation for the example at 
-https://slim.gatech.edu/SoftwareDemos/applications/WaveformInversion/BasicTimeStepping/FWI_TTI_2D.html
+<https://slim.gatech.edu/SoftwareDemos/applications/WaveformInversion/BasicTimeStepping/FWI_TTI_2D.html>
+
 ##  RUNNING
 To use this software
 	add the data folder to the path
@@ -67,4 +69,4 @@ by your own data.
  You may contact SLIM's developers of SINBAD software via issue tracker for this repository. We do not have resources to actively support public version of our software. However, we will try to answer the questions as much as possible.
 
 ##  REFERENCES
- 1. https://slim.gatech.edu/Publications/Private/TechReport/2015/witte2015TRoam/witte2015TRoam.html 
+ 1. <https://slim.gatech.edu/Publications/Private/TechReport/2015/witte2015TRoam/witte2015TRoam.html> 

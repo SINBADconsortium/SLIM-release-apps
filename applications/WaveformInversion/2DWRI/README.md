@@ -2,7 +2,8 @@
 ##  DESCRIPTION
  This application solves the waveform inversion problem using the Wavefield Reconstruction Inversion method.
 ##  ON-LINE DOCUMENTATION
-https://slim.gatech.edu/SoftwareDemos/applications/WaveformInversion/2DWRI/
+<https://slim.gatech.edu/SoftwareDemos/applications/WaveformInversion/2DWRI/>
+
 ##  COPYRIGHT
  You may use this code only under the conditions and terms of the
  license contained in the files LICENSE or COPYING provided with this

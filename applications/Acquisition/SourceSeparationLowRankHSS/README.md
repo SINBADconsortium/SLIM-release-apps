@@ -13,7 +13,7 @@ parallel mode.
 
 ## ON-LINE DOCUMENTATION
    
-https://slim.gatech.edu/SoftwareDemos/applications/Acquisition/SourceSeparationLowRankHSS
+<https://slim.gatech.edu/SoftwareDemos/applications/Acquisition/SourceSeparationLowRankHSS>
 
 
 ## COPYRIGHT
@@ -92,25 +92,25 @@ README.md file in the ./examples directory.
 separation for simultaneous towed-streamer marine acquisition --- a
 compressed sensing approach", Geophysics, vol. 80, pp. WD73-WD88.
 Available at
-https://slim.gatech.edu/content/source-separation-simultaneous-towed-streamer-marine-acquisition-–-compressed-sensing-approa.
+<https://slim.gatech.edu/content/source-separation-simultaneous-towed-streamer-marine-acquisition-–-compressed-sensing>.
 
 [2] Haneet Wason, Rajiv Kumar, Aleksandr Y. Aravkin, and Felix
 J. Herrmann [2014]. "Source separation via SVD-free rank minimization
 in the hierarchical semi-separable representation", SEG Technical
 Program Expanded Abstracts, pp. 120-126. Available at
-https://slim.gatech.edu/content/source-separation-svd-free-rank-minimization-hierarchical-semi-separable-representation.
+<https://slim.gatech.edu/content/source-separation-svd-free-rank-minimization-hierarchical-semi-separable-representation>.
 
 [3] Aleksandr Y. Aravkin, Rajiv Kumar, Hassan Mansour, Ben Recht, and
 Felix J. Herrmann [2014]. "Fast methods for denoising matrix
 completion formulations, with application to robust seismic data
 interpolation", SIAM Journal on Scientific Computing (SISC), vol. 36,
 pp. S237-S266. Available at
-https://slim.gatech.edu/content/fast-methods-denoising-matrix-completion-formulations-applications-robust-seismic-data-inter.
+<https://slim.gatech.edu/content/fast-methods-denoising-matrix-completion-formulations-applications-robust-seismic-data>.
 
 [4] Rajiv Kumar, Hassan Mansour, Aleksandr Y. Aravkin, and Felix
 J. Herrmann [2013]. "Reconstruction of seismic wavefields via low-rank
 matrix factorization in the hierarchical-separable matrix
 representation", SEG Technical Program Expanded Abstracts,
 pp. 3628-3633. Available at
-https://slim.gatech.edu/content/reconstruction-seismic-wavefields-low-rank-matrix-factorization-hierarchical-separable-matri
+<https://slim.gatech.edu/content/reconstruction-seismic-wavefields-low-rank-matrix-factorization-hierarchical-separable>
 

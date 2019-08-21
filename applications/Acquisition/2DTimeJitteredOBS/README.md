@@ -10,7 +10,7 @@ inversion (via L1 minimization).
 
 ## ON-LINE DOCUMENTATION
 
-https://slim.gatech.edu/SoftwareDemos/applications/Acquisition/2DTimeJitteredOBS
+<https://slim.gatech.edu/SoftwareDemos/applications/Acquisition/2DTimeJitteredOBS>
 
 
 ## COPYRIGHT
@@ -76,18 +76,18 @@ directory.
 [1] Haneet Wason, and Felix J. Herrmann [2013]. "Time-jittered ocean
 bottom seismic acquisition." SEG Technical Program Expanded Abstracts,
 pp. 1-6. Available at
-https://slim.gatech.edu/content/time-jittered-ocean-bottom-seismic-acquisition.
+<https://slim.gatech.edu/content/time-jittered-ocean-bottom-seismic-acquisition>.
 
 [2] Haneet Wason, and Felix J. Herrmann [2013]. "Ocean bottom seismic
 acquisition via jittered sampling." Presented at the 75th EAGE
 Conference and Exhibition, doi: 10.3997/2214-4609.20130379. Available
 at
-https://slim.gatech.edu/content/ocean-bottom-seismic-acquisition-jittered-sampling-0.
+<https://slim.gatech.edu/content/ocean-bottom-seismic-acquisition-jittered-sampling-0>.
 
 [3] Hassan Mansour, Haneet Wason, Tim T.Y. Lin, and Felix J. Herrmann
 [2012]. "Randomized marine acquisition with compressive sampling
 matrices." Geophysical Prospecting, vol. 60, pp. 648-662. Available at
-https://slim.gatech.edu/content/randomized-marine-acquisition-compressive-sampling-matrices.
+<https://slim.gatech.edu/content/randomized-marine-acquisition-compressive-sampling-matrices>.
     
 
 ## NOTE: 
